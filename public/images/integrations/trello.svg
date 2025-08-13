@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" id="trello">
+  <g id="Icons" fill="none" fill-rule="evenodd" stroke="none" stroke-width="1">
+    <g id="Color-" fill="#007AC2" transform="translate(-200 -760)">
+      <path id="Trello" d="M206 769v27a3 3 0 0 0 3 3h9a3 3 0 0 0 3-3v-27a3 3 0 0 0-3-3h-9a3 3 0 0 0-3 3zm21 0v15a3 3 0 0 0 3 3h9a3 3 0 0 0 3-3v-15a3 3 0 0 0-3-3h-9a3 3 0 0 0-3 3zm-21-9c-3.314 0-6 2.688-6 6v36c0 3.313 2.688 6 6 6h36c3.314 0 6-2.688 6-6v-36c0-3.313-2.688-6-6-6h-36z"></path>
+    </g>
+  </g>
+</svg>
