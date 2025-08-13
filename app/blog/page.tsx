@@ -1,10 +1,10 @@
 import { Metadata } from 'next';
 import { getAllPosts } from '@/lib/blog';
-import Navigation from '@/components/Navigation';
+import Navigation from '@/components/navigation';
 import BlogCard from '@/components/blog/BlogCard';
 import BlogHeader from '@/components/blog/BlogHeader';
 import Pagination from '@/components/blog/Pagination';
-import Footer from '@/components/Footer';
+import Footer from '@/components/footer';
 
 interface BlogPageProps {
     searchParams: Promise<{ page?: string }>;

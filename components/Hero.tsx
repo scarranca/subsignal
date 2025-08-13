@@ -1,4 +1,4 @@
-import VideoPlayer from './VideoPlayer';
+import VideoPlayer from './video-player';
 
 export default function Hero() {
     return (
