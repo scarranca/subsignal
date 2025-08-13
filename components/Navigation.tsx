@@ -31,7 +31,10 @@ export default function Navigation() {
 
     return (
         <header className="sticky top-0 z-50 w-full py-4 px-6 md:px-12 flex justify-between items-center backdrop-blur-md">
-            <Link href="/" className="font-bold text-xl hover:opacity-80 transition-opacity">
+            <Link
+                href="/"
+                className="font-semibold text-xl hover:opacity-80 transition-opacity font-lora"
+            >
                 Subsignal
             </Link>
             <nav className="hidden md:flex space-x-8"></nav>

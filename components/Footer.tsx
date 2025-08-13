@@ -66,14 +66,6 @@ export default function Footer() {
                                         Integrations
                                     </Link>
                                 </li>
-                                <li>
-                                    <a
-                                        href="mailto:hey@subsignal.app"
-                                        className="text-sm text-zinc-400 hover:text-white transition-colors"
-                                    >
-                                        Contact
-                                    </a>
-                                </li>
                             </ul>
                         </div>
 
@@ -96,6 +88,14 @@ export default function Footer() {
                                     >
                                         Terms of Service
                                     </Link>
+                                </li>
+                                <li>
+                                    <a
+                                        href="mailto:hey@subsignal.app"
+                                        className="text-sm text-zinc-400 hover:text-white transition-colors"
+                                    >
+                                        Contact
+                                    </a>
                                 </li>
                             </ul>
                         </div>

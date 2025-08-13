@@ -45,17 +45,17 @@ const SignupPage = () => {
         <div className="flex min-h-screen">
             <div className="flex flex-1 flex-col bg-white relative">
                 <nav className="absolute top-0 left-0 w-full flex items-center h-20 px-8">
-                    <Link href="/" className="text-xl font-semibold">
+                    <Link href="/" className="text-xl font-semibold font-lora">
                         Subsignal
                     </Link>
                 </nav>
                 <div className="flex flex-1 flex-col items-center justify-center min-h-screen">
                     <div className="w-full max-w-sm flex flex-col items-center">
-                        <h1 className="text-2xl font-semibold mb-2 text-center">
+                        <h1 className="text-2xl font-semibold mb-2 text-center font-lora">
                             We&apos;re almost there
                         </h1>
-                        <p className="text-base text-muted-foreground mb-6 text-center">
-                            Connect your calendar and kickoff scheduling
+                        <p className="text-base text-muted-foreground mb-6 text-center font-lora">
+                            Deliver more than just capital
                         </p>
                         <Button
                             onClick={signUpWithGoogle}
