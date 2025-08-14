@@ -339,17 +339,23 @@ curl -X PATCH "{{baseURL}}/api/v1/pages/{page_id}" \
 - `title`: String (optional, min length: 1)
 - `url`: String (optional, valid URL)
 
-### Delete Page
+### Delete Pages
+
+Supports deleting single or multiple pages with a single endpoint:
 
 ```bash
-curl -X DELETE "{{baseURL}}/api/v1/pages/{page_id}" \
-  -H "Cookie: subsignal.session_token={{sessionToken}}"
+# Delete single page
+curl -X DELETE "{{baseURL}}/api/v1/pages" \
+  -H "Content-Type: application/json" \
+  -H "Cookie: subsignal.session_token={{sessionToken}}" \
+  -d '{
+    "pageIds": ["123e4567-e89b-12d3-a456-426614174001"]
+  }'
 ```
 
-### Bulk Delete Pages
-
 ```bash
-curl -X POST "{{baseURL}}/api/v1/pages/bulk-delete" \
+# Delete multiple pages
+curl -X DELETE "{{baseURL}}/api/v1/pages" \
   -H "Content-Type: application/json" \
   -H "Cookie: subsignal.session_token={{sessionToken}}" \
   -d '{

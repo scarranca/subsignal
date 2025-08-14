@@ -171,30 +171,6 @@ export async function handleUpdatePage(c: Context) {
 }
 
 /**
- * Handle DELETE request to soft delete a page and check if company should be deleted
- */
-export async function handleDeletePage(c: Context) {
-    try {
-        const user = getUser(c);
-        const pageId = c.req.param('id');
-
-        if (!pageId) {
-            return c.json({ error: 'Page ID is required' }, 400);
-        }
-
-        const result = await pageQueries.deletePageWithCompanyCleanup(pageId, user.id);
-
-        return c.json(result);
-    } catch (error) {
-        if (error instanceof Error && error.message === 'Page not found') {
-            return c.json({ error: 'Page not found' }, 404);
-        }
-        console.error('Error deleting page:', error);
-        return c.json({ error: 'Failed to delete page' }, 500);
-    }
-}
-
-/**
  * Handle POST request to bulk delete pages and cleanup empty companies
  */
 export async function handleBulkDeletePages(c: Context) {

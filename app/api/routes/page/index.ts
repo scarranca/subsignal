@@ -6,7 +6,6 @@ import {
     handleGetPage,
     handleCreatePage,
     handleUpdatePage,
-    handleDeletePage,
     handleBulkDeletePages,
 } from '@/app/api/handlers/page';
 
@@ -43,13 +42,8 @@ pages.post('/', handleCreatePage);
 pages.patch('/:id', handleUpdatePage);
 
 /**
- * DELETE /api/pages/:id - Soft delete page
+ * DELETE /api/pages - Delete pages (supports single or multiple page IDs)
  */
-pages.delete('/:id', handleDeletePage);
-
-/**
- * POST /api/pages/bulk-delete - Bulk delete pages
- */
-pages.post('/bulk-delete', handleBulkDeletePages);
+pages.delete('/', handleBulkDeletePages);
 
 export default pages;
