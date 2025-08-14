@@ -5,6 +5,9 @@ import { logger } from 'hono/logger';
 
 import health from '../routes/health';
 import auth from '../routes/auth';
+import preferences from '../routes/preference';
+import companies from '../routes/company';
+import pages from '../routes/page';
 
 /**
  * Force Node.js runtime to support googleapis and other Node.js modules
@@ -27,11 +30,8 @@ app.use(
             // --- Local domains ---
             'http://localhost:3000',
             // --- Prod domains ---
-            'https://cruso.app',
-            'https://www.cruso.app',
-            // --- Pre-Prod domains ---
-            'https://crusolabs.com',
-            'https://www.crusolabs.com',
+            'https://subsignal.app',
+            'https://www.subsignal.app',
         ],
         allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
         allowHeaders: ['Content-Type', 'Authorization'],
@@ -56,6 +56,9 @@ const v1 = new Hono();
 /**
  * Versioned Routes (requires backwards compatibility)
  */
+v1.route('/preferences', preferences);
+v1.route('/companies', companies);
+v1.route('/pages', pages);
 
 app.route('/v1', v1);
 
