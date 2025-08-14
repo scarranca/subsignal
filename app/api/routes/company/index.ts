@@ -6,6 +6,7 @@ import {
     handleCreateCompany,
     handleUpdateCompany,
     handleDeleteCompany,
+    handleBatchCreateCompanies,
 } from '@/app/api/handlers/company';
 
 const companies = new Hono();
@@ -39,5 +40,10 @@ companies.patch('/:id', handleUpdateCompany);
  * DELETE /api/companies/:id - Soft delete company
  */
 companies.delete('/:id', handleDeleteCompany);
+
+/**
+ * POST /api/companies/batch - Batch create companies from URLs
+ */
+companies.post('/batch', handleBatchCreateCompanies);
 
 export default companies;

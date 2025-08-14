@@ -73,6 +73,30 @@ export interface CreateCompanyRequest {
     };
 }
 
+export interface BatchCreateCompaniesRequest {
+    urls: string[];
+}
+
+export interface BatchCreateCompaniesResponse {
+    success: boolean;
+    results: Array<{
+        url: string;
+        success: true;
+        company: Company;
+        page: Page;
+    }>;
+    errors: Array<{
+        url: string;
+        success: false;
+        error: string;
+    }>;
+    summary: {
+        total: number;
+        successful: number;
+        failed: number;
+    };
+}
+
 export interface UpdateCompanyRequest {
     name?: string;
     url?: string;
@@ -291,6 +315,20 @@ class ApiClient {
     async deleteCompany(companyId: string): Promise<ApiResponse<{ success: boolean }>> {
         return this.request<{ success: boolean }>(`/companies/${companyId}`, {
             method: 'DELETE',
+        });
+    }
+
+    /**
+     * Batch create companies from URLs
+     * @param data - Object containing array of URLs
+     * @returns Promise with batch creation results
+     */
+    async batchCreateCompanies(
+        data: BatchCreateCompaniesRequest,
+    ): Promise<ApiResponse<BatchCreateCompaniesResponse>> {
+        return this.request<BatchCreateCompaniesResponse>('/companies/batch', {
+            method: 'POST',
+            body: JSON.stringify(data),
         });
     }
 

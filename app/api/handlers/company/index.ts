@@ -1,7 +1,13 @@
 import { Context } from 'hono';
 import { companyQueries } from '@/db/queries';
 import { USER_MIDDLEWARE_CONTEXT_KEY } from '@/constants/middleware';
-import { createCompanySchema, updateCompanySchema, paginationSchema } from '@/schema/api';
+import {
+    createCompanySchema,
+    updateCompanySchema,
+    paginationSchema,
+    batchCreateCompaniesSchema,
+} from '@/schema/api';
+import { extractCompanyName, extractBaseUrl, fetchPageTitle } from '@/lib/url-utils';
 import { z } from 'zod';
 
 export const getUser = (c: Context) => {
@@ -148,5 +154,76 @@ export async function handleDeleteCompany(c: Context) {
         }
         console.error('Error deleting company:', error);
         return c.json({ error: 'Failed to delete company' }, 500);
+    }
+}
+
+/**
+ * Handle POST request to batch create companies from URLs
+ */
+export async function handleBatchCreateCompanies(c: Context) {
+    try {
+        const user = getUser(c);
+        const body = await c.req.json();
+
+        const validatedData = batchCreateCompaniesSchema.parse(body);
+
+        const results = [];
+        const errors = [];
+
+        // Process each URL
+        for (const url of validatedData.urls) {
+            try {
+                // Extract company information
+                const companyName = extractCompanyName(url);
+                const companyUrl = extractBaseUrl(url);
+
+                // Fetch page title
+                const pageTitle = await fetchPageTitle(url);
+
+                // Create company with initial page
+                const result = await companyQueries.createCompanyWithInitialPage(user.id, {
+                    name: companyName,
+                    url: companyUrl,
+                    initialPage: {
+                        title: pageTitle,
+                        url: url,
+                    },
+                });
+
+                results.push({
+                    url: url,
+                    success: true,
+                    company: result.company,
+                    page: result.initialPage,
+                });
+            } catch (error) {
+                console.error(`Error processing URL ${url}:`, error);
+                errors.push({
+                    url: url,
+                    success: false,
+                    error: error instanceof Error ? error.message : 'Unknown error',
+                });
+            }
+        }
+
+        return c.json(
+            {
+                success: true,
+                results: results,
+                errors: errors,
+                summary: {
+                    total: validatedData.urls.length,
+                    successful: results.length,
+                    failed: errors.length,
+                },
+            },
+            201,
+        );
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return c.json({ error: 'Invalid data', details: error.errors }, 400);
+        }
+        console.error('Error batch creating companies:', error);
+        return c.json({ error: 'Failed to batch create companies' }, 500);
     }
 }

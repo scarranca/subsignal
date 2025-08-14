@@ -232,6 +232,67 @@ curl -X DELETE "{{baseURL}}/api/v1/companies/{company_id}" \
   -H "Cookie: subsignal.session_token={{sessionToken}}"
 ```
 
+### Batch Create Companies
+
+Create multiple companies from a list of URLs. The system will automatically:
+
+- Extract company name from domain (e.g., "stripe.com" → "Stripe")
+- Use base URL as company URL (e.g., "https://stripe.com/pricing" → "https://stripe.com")
+- Fetch page title from the URL
+- Create each company with the provided URL as the initial page
+
+```bash
+curl -X POST "{{baseURL}}/api/v1/companies/batch" \
+  -H "Content-Type: application/json" \
+  -H "Cookie: subsignal.session_token={{sessionToken}}" \
+  -d '{
+    "urls": [
+      "https://stripe.com/pricing",
+      "https://github.com/features",
+      "https://vercel.com/dashboard"
+    ]
+  }'
+```
+
+**Payload Schema:**
+
+- `urls`: Array of strings (required, 1-50 URLs, each must be valid URL)
+
+**Response:**
+
+```json
+{
+    "success": true,
+    "results": [
+        {
+            "url": "https://stripe.com/pricing",
+            "success": true,
+            "company": {
+                "id": "123e4567-e89b-12d3-a456-426614174000",
+                "name": "Stripe",
+                "url": "https://stripe.com",
+                "createdAt": "2024-01-01T00:00:00.000Z",
+                "updatedAt": "2024-01-01T00:00:00.000Z"
+            },
+            "page": {
+                "id": "123e4567-e89b-12d3-a456-426614174001",
+                "title": "Pricing - Stripe",
+                "url": "https://stripe.com/pricing",
+                "companyId": "123e4567-e89b-12d3-a456-426614174000",
+                "createdAt": "2024-01-01T00:00:00.000Z",
+                "updatedAt": "2024-01-01T00:00:00.000Z"
+            }
+        }
+    ],
+    "errors": [],
+    "summary": {
+        "total": 3,
+        "successful": 3,
+        "failed": 0
+    }
+}
+```
+
 ---
 
 ## Pages API (v1)
