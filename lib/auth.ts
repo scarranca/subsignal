@@ -1,0 +1,90 @@
+import { betterAuth } from 'better-auth';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { db } from '@/db';
+import { authCookiePrefix } from '@/constants/auth';
+
+// Re-export for backward compatibility
+export { authCookiePrefix };
+
+/**
+ * Google OAuth scopes
+ * https://developers.google.com/identity/protocols/oauth2/scopes
+ */
+const googleScopes = [
+    'openid', // required for Google OAuth
+    'email', // read-only access to email
+    'profile', // read-only access to profile
+];
+
+/**
+ * Better Auth configuration
+ */
+export const auth = betterAuth({
+    /**
+     * Database Configuration - Drizzle Adapter
+     */
+    database: drizzleAdapter(db, {
+        provider: 'pg', // or "mysql", "sqlite"
+    }),
+
+    /**
+     * Secret and URL
+     */
+    secret: process.env.BETTER_AUTH_SECRET,
+    url: process.env.BETTER_AUTH_URL,
+
+    /**
+     * Email and password - disabled for now
+     */
+    emailAndPassword: {
+        enabled: false,
+    },
+
+    /**
+     * Social providers
+     */
+    socialProviders: {
+        google: {
+            clientId: process.env.GOOGLE_CLIENT_ID!,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+            scope: googleScopes,
+            accessType: 'offline',
+            prompt: 'consent',
+        },
+    },
+
+    /**
+     * Account linking
+     * https://www.better-auth.com/docs/concepts/users-accounts#account-linking
+     * Allows users to associate more than one calendars to their account
+     */
+    account: {
+        accountLinking: {
+            enabled: true,
+            allowDifferentEmails: true,
+            trustedProviders: ['google'],
+        },
+    },
+
+    /**
+     * Session - 30 days
+     * https://better-auth.com/docs/reference/configuration/session
+     */
+    session: {
+        expiresIn: 60 * 60 * 24 * 30, // 30 days
+        updateAge: 60 * 60 * 24, // 1 day
+    },
+
+    /**
+     * Cookie Prefix
+     */
+    advanced: {
+        cookiePrefix: authCookiePrefix,
+    },
+
+    /**
+     * Trusted origins
+     * https://better-auth.com/docs/reference/configuration/trusted-origins
+     */
+    trustedOrigins: [process.env.BETTER_AUTH_URL || 'http://localhost:3000'],
+});

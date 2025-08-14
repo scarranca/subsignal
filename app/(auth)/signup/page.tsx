@@ -7,16 +7,45 @@ import { Testimonials } from '@/components/onboarding/Testimonials';
 import { useState, useEffect } from 'react';
 import { showToast } from '@/lib/toast';
 import { SIGNUP_TESTIMONIALS } from '@/constants/testimonials';
+import { authClient } from '@/client/auth';
 
 const testimonials = SIGNUP_TESTIMONIALS;
 
 const SignupPage = () => {
     const [loading, setLoading] = useState(false);
 
+    // Sign up with Google
     const signUpWithGoogle = async () => {
         setLoading(true);
+
         try {
-            showToast.success('Google auth coming soon!');
+            const response = await authClient.signIn.social({
+                provider: 'google',
+                callbackURL: '/get-started',
+                fetchOptions: {
+                    onError: (error) => {
+                        console.error('Error signing up with Google:', error);
+                        showToast.error('Failed to sign up with Google. Please try again.');
+                        setLoading(false);
+                    },
+                },
+            });
+
+            // Check for error in response
+            if (response?.error) {
+                throw new Error(response.error.message || 'Authentication failed');
+            }
+
+            // Check for URL in data property
+            if (response?.data?.url) {
+                window.location.href = response.data.url;
+                return;
+            }
+
+            // If no URL is returned, something went wrong
+            const errorMessage = 'Failed to get Google OAuth URL. Please try again.';
+            console.error(errorMessage);
+            showToast.error(errorMessage);
             setLoading(false);
         } catch (error) {
             const errorMessage =
@@ -29,6 +58,7 @@ const SignupPage = () => {
         }
     };
 
+    // Add keyboard shortcut for Cmd+Enter
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
             if ((event.metaKey || event.ctrlKey) && event.key === 'Enter' && !loading) {
@@ -55,7 +85,7 @@ const SignupPage = () => {
                             We&apos;re almost there
                         </h1>
                         <p className="text-base text-muted-foreground mb-6 text-center font-lora">
-                            Deliver more than just capital
+                            Quick auth and we&apos;ll get you on your way
                         </p>
                         <Button
                             onClick={signUpWithGoogle}

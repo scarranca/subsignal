@@ -7,16 +7,45 @@ import { Testimonials } from '@/components/onboarding/Testimonials';
 import { useState, useEffect } from 'react';
 import { showToast } from '@/lib/toast';
 import { LOGIN_TESTIMONIALS } from '@/constants/testimonials';
+import { authClient } from '@/client/auth';
 
 const testimonials = LOGIN_TESTIMONIALS;
 
 const LoginPage = () => {
     const [loading, setLoading] = useState(false);
 
-    const signUpWithGoogle = async () => {
+    // Sign in with Google
+    const signInWithGoogle = async () => {
         setLoading(true);
+
         try {
-            showToast.success('google auth coming soon!');
+            const response = await authClient.signIn.social({
+                provider: 'google',
+                callbackURL: '/dashboard',
+                fetchOptions: {
+                    onError: (error) => {
+                        console.error('Error signing in with Google:', error);
+                        showToast.error('Failed to sign in with Google. Please try again.');
+                        setLoading(false);
+                    },
+                },
+            });
+
+            // Check for error in response
+            if (response?.error) {
+                throw new Error(response.error.message || 'Authentication failed');
+            }
+
+            // Check for URL in data property
+            if (response?.data?.url) {
+                window.location.href = response.data.url;
+                return;
+            }
+
+            // If no URL is returned, something went wrong
+            const errorMessage = 'Failed to get Google OAuth URL. Please try again.';
+            console.error(errorMessage);
+            showToast.error(errorMessage);
             setLoading(false);
         } catch (error) {
             const errorMessage =
@@ -29,11 +58,12 @@ const LoginPage = () => {
         }
     };
 
+    // Add keyboard shortcut for Cmd+Enter
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
             if ((event.metaKey || event.ctrlKey) && event.key === 'Enter' && !loading) {
                 event.preventDefault();
-                signUpWithGoogle();
+                signInWithGoogle();
             }
         };
 
@@ -58,7 +88,7 @@ const LoginPage = () => {
                             Quick auth and we&apos;ll get you on your way
                         </p>
                         <Button
-                            onClick={signUpWithGoogle}
+                            onClick={signInWithGoogle}
                             disabled={loading}
                             className="w-full h-10 text-base font-normal justify-center mt-2"
                             variant="outline"

@@ -28,7 +28,7 @@ health.get('/', (c) => {
     const healthResponse = healthResponseSchema.parse({
         status: 'ok',
         service: 'subsignal-api',
-        version: '0.1.0',
+        version: '0.0.1',
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'development',
     });
