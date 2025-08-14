@@ -202,11 +202,11 @@ curl -X POST "{{baseURL}}/api/v1/companies" \
 **Payload Schema:**
 
 - `company`: Object (required)
-  - `name`: String (required, min length: 1)
-  - `url`: String (required, valid URL)
+    - `name`: String (required, min length: 1)
+    - `url`: String (required, valid URL)
 - `page`: Object (required)
-  - `title`: String (required, min length: 1)
-  - `url`: String (required, valid URL)
+    - `title`: String (required, min length: 1)
+    - `url`: String (required, valid URL)
 
 ### Update Company
 
@@ -318,14 +318,14 @@ curl -X POST "{{baseURL}}/api/v1/pages" \
 **Payload Schema:**
 
 - `page`: Object (required)
-  - `title`: String (required, min length: 1)
-  - `url`: String (required, valid URL)
+    - `title`: String (required, min length: 1)
+    - `url`: String (required, valid URL)
 - `company`: Object (required)
-  - `id`: String (optional, UUID format) - Use for existing company
-  - `name`: String (optional, min length: 1) - Use for new company
-  - `url`: String (optional, valid URL) - Use for new company
+    - `id`: String (optional, UUID format) - Use for existing company
+    - `name`: String (optional, min length: 1) - Use for new company
+    - `url`: String (optional, valid URL) - Use for new company
 
-*Note: Either provide `company.id` for existing company, or both `company.name` and `company.url` for new company*
+_Note: Either provide `company.id` for existing company, or both `company.name` and `company.url` for new company_
 
 ### Update Page
 

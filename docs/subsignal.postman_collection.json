@@ -1,659 +1,541 @@
 {
-	"info": {
-		"_postman_id": "e8e69880-c825-439c-89da-381670ee3adc",
-		"name": "Subsignal",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "38905328"
-	},
-	"item": [
-		{
-			"name": "Companies",
-			"item": [
-				{
-					"name": "Get All Companies",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							},
-							{
-								"key": "Cookie",
-								"value": "subsignal.session_token={{sessionToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseURL}}/api/v1/companies?page=1&pageSize=10&sortBy=createdAt&sortOrder=desc",
-							"host": [
-								"{{baseURL}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"companies"
-							],
-							"query": [
-								{
-									"key": "page",
-									"value": "1"
-								},
-								{
-									"key": "pageSize",
-									"value": "10"
-								},
-								{
-									"key": "sortBy",
-									"value": "createdAt"
-								},
-								{
-									"key": "sortOrder",
-									"value": "desc"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Specific Company",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							},
-							{
-								"key": "Cookie",
-								"value": "subsignal.session_token={{sessionToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseURL}}/api/v1/companies/{{companyId}}",
-							"host": [
-								"{{baseURL}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"companies",
-								"{{companyId}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Create New Company",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Cookie",
-								"value": "subsignal.session_token={{sessionToken}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"page\": {\n        \"title\": \"Startups\",\n        \"url\": \"https://stripe.com/in/startups\"\n    },\n    \"company\": {\n        \"name\": \"Stripe\",\n        \"url\": \"https://stripe.com\"\n    }\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseURL}}/api/v1/companies",
-							"host": [
-								"{{baseURL}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"companies"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Update Company",
-					"request": {
-						"method": "PATCH",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Cookie",
-								"value": "subsignal.session_token={{sessionToken}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"name\": \"Updated Company Name\",\n    \"url\": \"https://updated-example.com\"\n  }",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseURL}}/api/v1/companies/{{companyId}}",
-							"host": [
-								"{{baseURL}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"companies",
-								"{{companyId}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Delete Company",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Cookie",
-								"value": "subsignal.session_token={{sessionToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseURL}}/api/v1/companies/{{companyId}}",
-							"host": [
-								"{{baseURL}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"companies",
-								"{{companyId}}"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Pages",
-			"item": [
-				{
-					"name": "Get All Pages for User",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							},
-							{
-								"key": "Cookie",
-								"value": "subsignal.session_token={{sessionToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseURL}}/api/v1/pages?page=1&pageSize=10&sortBy=title&sortOrder=asc",
-							"host": [
-								"{{baseURL}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"pages"
-							],
-							"query": [
-								{
-									"key": "page",
-									"value": "1"
-								},
-								{
-									"key": "pageSize",
-									"value": "10"
-								},
-								{
-									"key": "sortBy",
-									"value": "title"
-								},
-								{
-									"key": "sortOrder",
-									"value": "asc"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Specific Page",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							},
-							{
-								"key": "Cookie",
-								"value": "subsignal.session_token={{sessionToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseURL}}/api/v1/pages/{{pageId}}",
-							"host": [
-								"{{baseURL}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"pages",
-								"{{pageId}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Pages by Company",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							},
-							{
-								"key": "Cookie",
-								"value": "subsignal.session_token={{sessionToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseURL}}/api/v1/pages/company/{{companyId}}?page=1&pageSize=20&sortBy=updatedAt&sortOrder=desc",
-							"host": [
-								"{{baseURL}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"pages",
-								"company",
-								"{{companyId}}"
-							],
-							"query": [
-								{
-									"key": "page",
-									"value": "1"
-								},
-								{
-									"key": "pageSize",
-									"value": "20"
-								},
-								{
-									"key": "sortBy",
-									"value": "updatedAt"
-								},
-								{
-									"key": "sortOrder",
-									"value": "desc"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Create Page with Existing Company",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Cookie",
-								"value": "subsignal.session_token={{sessionToken}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"page\": {\n        \"title\": \"Startups\",\n        \"url\": \"https://stripe.com/in/startups\"\n    },\n    \"company\": {\n        \"id\": \"{{companyId}}\"\n    }\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseURL}}/api/v1/pages",
-							"host": [
-								"{{baseURL}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"pages"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Create Page with New Company",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Cookie",
-								"value": "subsignal.session_token={{sessionToken}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"page\": {\n        \"title\": \"Startups\",\n        \"url\": \"https://stripe.com/in/startups\"\n    },\n    \"company\": {\n        \"name\": \"Stripe\",\n        \"url\": \"https://stripe.com\"\n    }\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseURL}}/api/v1/pages",
-							"host": [
-								"{{baseURL}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"pages"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Update Page",
-					"request": {
-						"method": "PATCH",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Cookie",
-								"value": "subsignal.session_token={{sessionToken}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"title\": \"Stripe for SaaS\",\n    \"url\": \"https://stripe.com/in/use-cases/saas\"\n  }",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseURL}}/api/v1/pages/{{pageId}}",
-							"host": [
-								"{{baseURL}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"pages",
-								"{{pageId}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Delete Pages",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Cookie",
-								"value": "subsignal.session_token={{sessionToken}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"pageIds\": [\n        \"{{pageId}}\"\n    ]\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseURL}}/api/v1/pages",
-							"host": [
-								"{{baseURL}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"pages"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Preferences",
-			"item": [
-				{
-					"name": "Create/Update User Preferences",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Cookie",
-								"value": "subsignal.session_token={{sessionToken}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"properties\": [\n        \"pricing\",\n        \"product\",\n        \"customer\"\n    ],\n    \"frequency\": \"7_day\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseURL}}/api/v1/preferences",
-							"host": [
-								"{{baseURL}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"preferences"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get User Preferences",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Cookie",
-								"value": "subsignal.session_token={{sessionToken}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{baseURL}}/api/v1/preferences",
-							"host": [
-								"{{baseURL}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"preferences"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Delete User Preferences",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Cookie",
-								"value": "subsignal.session_token={{sessionToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseURL}}/api/v1/preferences",
-							"host": [
-								"{{baseURL}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"preferences"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Health",
-			"item": [
-				{
-					"name": "Check Service Health",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseURL}}/api/health",
-							"host": [
-								"{{baseURL}}"
-							],
-							"path": [
-								"api",
-								"health"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Check Service Readiness",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseURL}}/api/health/ready",
-							"host": [
-								"{{baseURL}}"
-							],
-							"path": [
-								"api",
-								"health",
-								"ready"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Check Service Liveness",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseURL}}/api/health/live",
-							"host": [
-								"{{baseURL}}"
-							],
-							"path": [
-								"api",
-								"health",
-								"live"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		}
-	],
-	"event": [
-		{
-			"listen": "prerequest",
-			"script": {
-				"type": "text/javascript",
-				"packages": {},
-				"exec": [
-					""
-				]
-			}
-		},
-		{
-			"listen": "test",
-			"script": {
-				"type": "text/javascript",
-				"packages": {},
-				"exec": [
-					""
-				]
-			}
-		}
-	],
-	"variable": [
-		{
-			"key": "baseURL",
-			"value": "http://localhost:3000",
-			"type": "default"
-		},
-		{
-			"key": "sessionToken",
-			"value": "a8bVDIZ8nCgjhXGrm68LhJTLrjTkyR0j.W7Ex6Ousz4xdDfb0Xc5efNxUBPFFtz6dT770nmhdsn4%3D",
-			"type": "string"
-		},
-		{
-			"key": "companyId",
-			"value": "31910aa1-c6a2-4381-96d6-810f095fceb5",
-			"type": "default"
-		},
-		{
-			"key": "pageId",
-			"value": "06990aeb-28f8-4acf-8b2b-e92de0c7860f",
-			"type": "default"
-		}
-	]
+    "info": {
+        "_postman_id": "e8e69880-c825-439c-89da-381670ee3adc",
+        "name": "Subsignal",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "_exporter_id": "38905328"
+    },
+    "item": [
+        {
+            "name": "Companies",
+            "item": [
+                {
+                    "name": "Get All Companies",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "subsignal.session_token={{sessionToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseURL}}/api/v1/companies?page=1&pageSize=10&sortBy=createdAt&sortOrder=desc",
+                            "host": ["{{baseURL}}"],
+                            "path": ["api", "v1", "companies"],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "pageSize",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "sortBy",
+                                    "value": "createdAt"
+                                },
+                                {
+                                    "key": "sortOrder",
+                                    "value": "desc"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Specific Company",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "subsignal.session_token={{sessionToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseURL}}/api/v1/companies/{{companyId}}",
+                            "host": ["{{baseURL}}"],
+                            "path": ["api", "v1", "companies", "{{companyId}}"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create New Company",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "subsignal.session_token={{sessionToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"page\": {\n        \"title\": \"Startups\",\n        \"url\": \"https://stripe.com/in/startups\"\n    },\n    \"company\": {\n        \"name\": \"Stripe\",\n        \"url\": \"https://stripe.com\"\n    }\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseURL}}/api/v1/companies",
+                            "host": ["{{baseURL}}"],
+                            "path": ["api", "v1", "companies"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Company",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "subsignal.session_token={{sessionToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Updated Company Name\",\n    \"url\": \"https://updated-example.com\"\n  }",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseURL}}/api/v1/companies/{{companyId}}",
+                            "host": ["{{baseURL}}"],
+                            "path": ["api", "v1", "companies", "{{companyId}}"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Company",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Cookie",
+                                "value": "subsignal.session_token={{sessionToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseURL}}/api/v1/companies/{{companyId}}",
+                            "host": ["{{baseURL}}"],
+                            "path": ["api", "v1", "companies", "{{companyId}}"]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Pages",
+            "item": [
+                {
+                    "name": "Get All Pages for User",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "subsignal.session_token={{sessionToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseURL}}/api/v1/pages?page=1&pageSize=10&sortBy=title&sortOrder=asc",
+                            "host": ["{{baseURL}}"],
+                            "path": ["api", "v1", "pages"],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "pageSize",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "sortBy",
+                                    "value": "title"
+                                },
+                                {
+                                    "key": "sortOrder",
+                                    "value": "asc"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Specific Page",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "subsignal.session_token={{sessionToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseURL}}/api/v1/pages/{{pageId}}",
+                            "host": ["{{baseURL}}"],
+                            "path": ["api", "v1", "pages", "{{pageId}}"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Pages by Company",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "subsignal.session_token={{sessionToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseURL}}/api/v1/pages/company/{{companyId}}?page=1&pageSize=20&sortBy=updatedAt&sortOrder=desc",
+                            "host": ["{{baseURL}}"],
+                            "path": ["api", "v1", "pages", "company", "{{companyId}}"],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "pageSize",
+                                    "value": "20"
+                                },
+                                {
+                                    "key": "sortBy",
+                                    "value": "updatedAt"
+                                },
+                                {
+                                    "key": "sortOrder",
+                                    "value": "desc"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Page with Existing Company",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "subsignal.session_token={{sessionToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"page\": {\n        \"title\": \"Startups\",\n        \"url\": \"https://stripe.com/in/startups\"\n    },\n    \"company\": {\n        \"id\": \"{{companyId}}\"\n    }\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseURL}}/api/v1/pages",
+                            "host": ["{{baseURL}}"],
+                            "path": ["api", "v1", "pages"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Page with New Company",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "subsignal.session_token={{sessionToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"page\": {\n        \"title\": \"Startups\",\n        \"url\": \"https://stripe.com/in/startups\"\n    },\n    \"company\": {\n        \"name\": \"Stripe\",\n        \"url\": \"https://stripe.com\"\n    }\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseURL}}/api/v1/pages",
+                            "host": ["{{baseURL}}"],
+                            "path": ["api", "v1", "pages"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Page",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "subsignal.session_token={{sessionToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"title\": \"Stripe for SaaS\",\n    \"url\": \"https://stripe.com/in/use-cases/saas\"\n  }",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseURL}}/api/v1/pages/{{pageId}}",
+                            "host": ["{{baseURL}}"],
+                            "path": ["api", "v1", "pages", "{{pageId}}"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Pages",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Cookie",
+                                "value": "subsignal.session_token={{sessionToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"pageIds\": [\n        \"{{pageId}}\"\n    ]\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseURL}}/api/v1/pages",
+                            "host": ["{{baseURL}}"],
+                            "path": ["api", "v1", "pages"]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Preferences",
+            "item": [
+                {
+                    "name": "Create/Update User Preferences",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "subsignal.session_token={{sessionToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"properties\": [\n        \"pricing\",\n        \"product\",\n        \"customer\"\n    ],\n    \"frequency\": \"7_day\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseURL}}/api/v1/preferences",
+                            "host": ["{{baseURL}}"],
+                            "path": ["api", "v1", "preferences"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get User Preferences",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Cookie",
+                                "value": "subsignal.session_token={{sessionToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseURL}}/api/v1/preferences",
+                            "host": ["{{baseURL}}"],
+                            "path": ["api", "v1", "preferences"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete User Preferences",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Cookie",
+                                "value": "subsignal.session_token={{sessionToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseURL}}/api/v1/preferences",
+                            "host": ["{{baseURL}}"],
+                            "path": ["api", "v1", "preferences"]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Health",
+            "item": [
+                {
+                    "name": "Check Service Health",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseURL}}/api/health",
+                            "host": ["{{baseURL}}"],
+                            "path": ["api", "health"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Check Service Readiness",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseURL}}/api/health/ready",
+                            "host": ["{{baseURL}}"],
+                            "path": ["api", "health", "ready"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Check Service Liveness",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseURL}}/api/health/live",
+                            "host": ["{{baseURL}}"],
+                            "path": ["api", "health", "live"]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ],
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [""]
+            }
+        },
+        {
+            "listen": "test",
+            "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [""]
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "baseURL",
+            "value": "http://localhost:3000",
+            "type": "default"
+        },
+        {
+            "key": "sessionToken",
+            "value": "a8bVDIZ8nCgjhXGrm68LhJTLrjTkyR0j.W7Ex6Ousz4xdDfb0Xc5efNxUBPFFtz6dT770nmhdsn4%3D",
+            "type": "string"
+        },
+        {
+            "key": "companyId",
+            "value": "31910aa1-c6a2-4381-96d6-810f095fceb5",
+            "type": "default"
+        },
+        {
+            "key": "pageId",
+            "value": "06990aeb-28f8-4acf-8b2b-e92de0c7860f",
+            "type": "default"
+        }
+    ]
 }
