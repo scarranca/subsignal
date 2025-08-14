@@ -87,4 +87,12 @@ export const auth = betterAuth({
      * https://better-auth.com/docs/reference/configuration/trusted-origins
      */
     trustedOrigins: [process.env.BETTER_AUTH_URL || 'http://localhost:3000'],
+
+    /**
+     * Telemetry
+     * https://better-auth.com/docs/reference/configuration/telemetry
+     */
+    telemetry: {
+        enabled: false,
+    },
 });

@@ -1,7 +1,6 @@
 'use client';
 
-import { AVATAR_COLORS, AVATAR_VARIANT } from '@/constants/palette';
-import Avatar from 'boring-avatars';
+import { Avatar } from '@/components/avatar';
 
 interface SidebarProps {
     activeView: string;
@@ -44,18 +43,7 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
 
             {/* User Avatar at bottom */}
             <div className="px-6 py-4 flex-shrink-0">
-                <div className="flex items-center space-x-3">
-                    <Avatar
-                        name="Olivia Martin"
-                        variant={AVATAR_VARIANT}
-                        size={32}
-                        colors={AVATAR_COLORS}
-                    />
-                    <div>
-                        <p className="text-sm font-medium text-gray-900">Olivia Martin</p>
-                        <p className="text-xs text-gray-500">olivia.martin@email.com</p>
-                    </div>
-                </div>
+                <Avatar />
             </div>
         </div>
     );
