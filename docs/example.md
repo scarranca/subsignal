@@ -188,9 +188,11 @@ curl -X POST "{{baseURL}}/api/v1/companies" \
   -H "Content-Type: application/json" \
   -H "Cookie: subsignal.session_token={{sessionToken}}" \
   -d '{
-    "name": "Example Company",
-    "url": "https://example.com",
-    "initialPage": {
+    "company": {
+      "name": "Example Company",
+      "url": "https://example.com"
+    },
+    "page": {
       "title": "Homepage",
       "url": "https://example.com"
     }
@@ -199,11 +201,12 @@ curl -X POST "{{baseURL}}/api/v1/companies" \
 
 **Payload Schema:**
 
-- `name`: String (required, min length: 1)
-- `url`: String (required, valid URL)
-- `initialPage`: Object (required)
-    - `title`: String (required, min length: 1)
-    - `url`: String (required, valid URL)
+- `company`: Object (required)
+  - `name`: String (required, min length: 1)
+  - `url`: String (required, valid URL)
+- `page`: Object (required)
+  - `title`: String (required, min length: 1)
+  - `url`: String (required, valid URL)
 
 ### Update Company
 
@@ -275,52 +278,54 @@ curl -X GET "{{baseURL}}/api/v1/pages/company/{company_id}?page=1&pageSize=20&so
   -H "Cookie: subsignal.session_token={{sessionToken}}"
 ```
 
-### Create Page with Existing Company
+### Create Page
+
+Unified endpoint that supports creating a page with either an existing company or a new company:
 
 ```bash
+# Create page with existing company
 curl -X POST "{{baseURL}}/api/v1/pages" \
   -H "Content-Type: application/json" \
   -H "Cookie: subsignal.session_token={{sessionToken}}" \
   -d '{
-    "type": "existing",
-    "title": "About Us",
-    "url": "https://example.com/about",
-    "companyId": "123e4567-e89b-12d3-a456-426614174000"
+    "page": {
+      "title": "About Us",
+      "url": "https://example.com/about"
+    },
+    "company": {
+      "id": "123e4567-e89b-12d3-a456-426614174000"
+    }
   }'
 ```
 
-### Create Page with New Company
-
 ```bash
+# Create page with new company
 curl -X POST "{{baseURL}}/api/v1/pages" \
   -H "Content-Type: application/json" \
   -H "Cookie: subsignal.session_token={{sessionToken}}" \
   -d '{
-    "type": "new",
-    "title": "Homepage",
-    "url": "https://newcompany.com",
-    "newCompany": {
+    "page": {
+      "title": "Homepage",
+      "url": "https://newcompany.com"
+    },
+    "company": {
       "name": "New Company",
       "url": "https://newcompany.com"
     }
   }'
 ```
 
-**Payload Schema for Existing Company:**
+**Payload Schema:**
 
-- `type`: String (required, value: `"existing"`)
-- `title`: String (required, min length: 1)
-- `url`: String (required, valid URL)
-- `companyId`: String (required, UUID format)
+- `page`: Object (required)
+  - `title`: String (required, min length: 1)
+  - `url`: String (required, valid URL)
+- `company`: Object (required)
+  - `id`: String (optional, UUID format) - Use for existing company
+  - `name`: String (optional, min length: 1) - Use for new company
+  - `url`: String (optional, valid URL) - Use for new company
 
-**Payload Schema for New Company:**
-
-- `type`: String (required, value: `"new"`)
-- `title`: String (required, min length: 1)
-- `url`: String (required, valid URL)
-- `newCompany`: Object (required)
-    - `name`: String (required, min length: 1)
-    - `url`: String (required, valid URL)
+*Note: Either provide `company.id` for existing company, or both `company.name` and `company.url` for new company*
 
 ### Update Page
 
@@ -495,10 +500,13 @@ curl -X POST "{{baseURL}}/api/v1/pages" \
   -H "Content-Type: application/json" \
   -H "Cookie: subsignal.session_token={{sessionToken}}" \
   -d '{
-    "type": "existing",
-    "title": "Products",
-    "url": "https://example.com/products",
-    "companyId": "123e4567-e89b-12d3-a456-426614174000"
+    "page": {
+      "title": "Products",
+      "url": "https://example.com/products"
+    },
+    "company": {
+      "id": "123e4567-e89b-12d3-a456-426614174000"
+    }
   }'
 ```
 

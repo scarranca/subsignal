@@ -94,7 +94,7 @@ export async function handleGetPage(c: Context) {
 }
 
 /**
- * Handle POST request to create a new page (with existing company or new company)
+ * Handle POST request to create a new page (with existing or new company)
  */
 export async function handleCreatePage(c: Context) {
     try {
@@ -103,21 +103,24 @@ export async function handleCreatePage(c: Context) {
 
         const validatedData = createPageSchema.parse(body);
 
-        if (validatedData.type === 'existing') {
+        if (validatedData.company.id) {
             // Create page with existing company
             const newPage = await pageQueries.createPageWithExistingCompany(user.id, {
-                title: validatedData.title,
-                url: validatedData.url,
-                companyId: validatedData.companyId,
+                title: validatedData.page.title,
+                url: validatedData.page.url,
+                companyId: validatedData.company.id,
             });
 
             return c.json(newPage, 201);
         } else {
             // Create page with new company
             const result = await pageQueries.createPageWithNewCompany(user.id, {
-                title: validatedData.title,
-                url: validatedData.url,
-                newCompany: validatedData.newCompany,
+                title: validatedData.page.title,
+                url: validatedData.page.url,
+                newCompany: {
+                    name: validatedData.company.name!,
+                    url: validatedData.company.url!,
+                },
             });
 
             return c.json(

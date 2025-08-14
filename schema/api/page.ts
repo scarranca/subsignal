@@ -1,30 +1,26 @@
 import { z } from 'zod';
 
-const createPageWithExistingCompanySchema = z.object({
-    title: z.string().min(1),
-    url: z.string().url(),
-    companyId: z.string().uuid(),
-});
-
-const createPageWithNewCompanySchema = z.object({
-    title: z.string().min(1),
-    url: z.string().url(),
-    newCompany: z.object({
-        name: z.string().min(1),
+export const createPageSchema = z.object({
+    page: z.object({
+        title: z.string().min(1),
         url: z.string().url(),
     }),
+    company: z.object({
+        id: z.string().uuid().optional(),
+        name: z.string().min(1).optional(),
+        url: z.string().url().optional(),
+    }).refine(
+        (data) => {
+            // Either provide id (existing company) OR name+url (new company)
+            const hasId = !!data.id;
+            const hasNameAndUrl = !!data.name && !!data.url;
+            return hasId || hasNameAndUrl;
+        },
+        {
+            message: "Either provide company 'id' for existing company, or both 'name' and 'url' for new company",
+        }
+    ),
 });
-
-export const createPageSchema = z.discriminatedUnion('type', [
-    z.object({
-        type: z.literal('existing'),
-        ...createPageWithExistingCompanySchema.shape,
-    }),
-    z.object({
-        type: z.literal('new'),
-        ...createPageWithNewCompanySchema.shape,
-    }),
-]);
 
 export const updatePageSchema = z.object({
     title: z.string().min(1).optional(),

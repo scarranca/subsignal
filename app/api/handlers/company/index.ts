@@ -68,7 +68,14 @@ export async function handleCreateCompany(c: Context) {
 
         const validatedData = createCompanySchema.parse(body);
 
-        const result = await companyQueries.createCompanyWithInitialPage(user.id, validatedData);
+        const result = await companyQueries.createCompanyWithInitialPage(user.id, {
+            name: validatedData.company.name,
+            url: validatedData.company.url,
+            initialPage: {
+                title: validatedData.page.title,
+                url: validatedData.page.url,
+            },
+        });
 
         return c.json(
             {
