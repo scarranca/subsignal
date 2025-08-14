@@ -18,13 +18,13 @@ export const getUser = (c: Context) => {
 export async function handleGetPreference(c: Context) {
     try {
         const user = getUser(c);
-        
+
         const preference = await preferenceQueries.getUserPreference(user.id);
-        
+
         if (!preference) {
             return c.json({ error: 'Preference not found' }, 404);
         }
-        
+
         return c.json(preference);
     } catch (error) {
         console.error('Error fetching preference:', error);
@@ -39,13 +39,13 @@ export async function handleUpsertPreference(c: Context) {
     try {
         const user = getUser(c);
         const body = await c.req.json();
-        
+
         const validatedData = updatePreferenceSchema.parse(body);
-        
+
         await preferenceQueries.upsertUserPreference(user.id, validatedData);
-        
+
         const updatedPreference = await preferenceQueries.getUserPreference(user.id);
-        
+
         return c.json(updatedPreference);
     } catch (error) {
         if (error instanceof z.ZodError) {
@@ -62,9 +62,9 @@ export async function handleUpsertPreference(c: Context) {
 export async function handleDeletePreference(c: Context) {
     try {
         const user = getUser(c);
-        
+
         await preferenceQueries.softDeletePreference(user.id);
-        
+
         return c.json({ success: true });
     } catch (error) {
         console.error('Error deleting preference:', error);

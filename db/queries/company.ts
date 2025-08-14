@@ -6,14 +6,17 @@ import { page } from '../schema/page';
 import type { PaginationOptions, PaginatedResult } from './types';
 
 export const companyQueries = {
-    async createCompanyWithInitialPage(userId: string, data: {
-        name: string;
-        url: string;
-        initialPage: {
-            title: string;
+    async createCompanyWithInitialPage(
+        userId: string,
+        data: {
+            name: string;
             url: string;
-        };
-    }) {
+            initialPage: {
+                title: string;
+                url: string;
+            };
+        },
+    ) {
         return await db.transaction(async (tx) => {
             // Create the company
             const [newCompany] = await tx
@@ -44,18 +47,24 @@ export const companyQueries = {
         });
     },
 
-    async getUserCompaniesWithPages(userId: string, options: PaginationOptions = {}): Promise<PaginatedResult<any>> {
-        const { 
-            page: currentPage = 1, 
-            pageSize = 10, 
-            sortBy = 'createdAt', 
-            sortOrder = 'desc' 
+    async getUserCompaniesWithPages(
+        userId: string,
+        options: PaginationOptions = {},
+    ): Promise<PaginatedResult<any>> {
+        const {
+            page: currentPage = 1,
+            pageSize = 10,
+            sortBy = 'createdAt',
+            sortOrder = 'desc',
         } = options;
 
         const offset = (currentPage - 1) * pageSize;
-        const orderByColumn = sortBy === 'name' ? company.name : 
-                             sortBy === 'updatedAt' ? company.updatedAt : 
-                             company.createdAt;
+        const orderByColumn =
+            sortBy === 'name'
+                ? company.name
+                : sortBy === 'updatedAt'
+                  ? company.updatedAt
+                  : company.createdAt;
         const orderDirection = sortOrder === 'asc' ? asc : desc;
 
         // Get total count
@@ -96,7 +105,7 @@ export const companyQueries = {
                     ...comp,
                     pages,
                 };
-            })
+            }),
         );
 
         return {
@@ -127,18 +136,18 @@ export const companyQueries = {
             // Soft delete all pages for this company
             await tx
                 .update(page)
-                .set({ 
-                    isActive: false, 
-                    updatedAt: new Date() 
+                .set({
+                    isActive: false,
+                    updatedAt: new Date(),
                 })
                 .where(eq(page.companyId, companyId));
 
             // Soft delete the company
             await tx
                 .update(company)
-                .set({ 
-                    isActive: false, 
-                    updatedAt: new Date() 
+                .set({
+                    isActive: false,
+                    updatedAt: new Date(),
                 })
                 .where(eq(company.id, companyId));
 
@@ -151,9 +160,9 @@ export const companyQueries = {
             where: eq(company.id, companyId),
             with: {
                 user: {
-                    columns: { id: true, name: true }
-                }
-            }
+                    columns: { id: true, name: true },
+                },
+            },
         });
 
         if (!result || result.userId !== userId || !result.isActive) {
@@ -163,10 +172,14 @@ export const companyQueries = {
         return result;
     },
 
-    async updateCompany(companyId: string, userId: string, data: {
-        name?: string;
-        url?: string;
-    }) {
+    async updateCompany(
+        companyId: string,
+        userId: string,
+        data: {
+            name?: string;
+            url?: string;
+        },
+    ) {
         // Check if company exists and belongs to user
         const existingCompany = await db.query.company.findFirst({
             where: eq(company.id, companyId),
@@ -188,21 +201,27 @@ export const companyQueries = {
         return updatedCompany;
     },
 
-    async getCompanyPages(companyId: string, options: PaginationOptions = {}): Promise<{ 
+    async getCompanyPages(
+        companyId: string,
+        options: PaginationOptions = {},
+    ): Promise<{
         company: typeof company.$inferSelect | undefined;
         pages: PaginatedResult<typeof page.$inferSelect>;
     }> {
-        const { 
-            page: currentPage = 1, 
-            pageSize = 10, 
-            sortBy = 'createdAt', 
-            sortOrder = 'desc' 
+        const {
+            page: currentPage = 1,
+            pageSize = 10,
+            sortBy = 'createdAt',
+            sortOrder = 'desc',
         } = options;
 
         const offset = (currentPage - 1) * pageSize;
-        const orderByColumn = sortBy === 'title' ? page.title :
-                             sortBy === 'updatedAt' ? page.updatedAt : 
-                             page.createdAt;
+        const orderByColumn =
+            sortBy === 'title'
+                ? page.title
+                : sortBy === 'updatedAt'
+                  ? page.updatedAt
+                  : page.createdAt;
         const orderDirection = sortOrder === 'asc' ? asc : desc;
 
         // Get company info
@@ -211,7 +230,20 @@ export const companyQueries = {
         });
 
         if (!companyInfo) {
-            return { company: undefined, pages: { data: [], pagination: { page: 1, pageSize, totalItems: 0, totalPages: 0, hasNext: false, hasPrevious: false } } };
+            return {
+                company: undefined,
+                pages: {
+                    data: [],
+                    pagination: {
+                        page: 1,
+                        pageSize,
+                        totalItems: 0,
+                        totalPages: 0,
+                        hasNext: false,
+                        hasPrevious: false,
+                    },
+                },
+            };
         }
 
         // Get total count of pages
@@ -248,18 +280,19 @@ export const companyQueries = {
         };
     },
 
-    async getActiveCompaniesByUser(userId: string, options: PaginationOptions = {}): Promise<PaginatedResult<typeof company.$inferSelect>> {
-        const { 
-            page = 1, 
-            pageSize = 10, 
-            sortBy = 'createdAt', 
-            sortOrder = 'desc' 
-        } = options;
+    async getActiveCompaniesByUser(
+        userId: string,
+        options: PaginationOptions = {},
+    ): Promise<PaginatedResult<typeof company.$inferSelect>> {
+        const { page = 1, pageSize = 10, sortBy = 'createdAt', sortOrder = 'desc' } = options;
 
         const offset = (page - 1) * pageSize;
-        const orderByColumn = sortBy === 'name' ? company.name :
-                             sortBy === 'updatedAt' ? company.updatedAt : 
-                             company.createdAt;
+        const orderByColumn =
+            sortBy === 'name'
+                ? company.name
+                : sortBy === 'updatedAt'
+                  ? company.updatedAt
+                  : company.createdAt;
         const orderDirection = sortOrder === 'asc' ? asc : desc;
 
         // Get total count
@@ -296,9 +329,9 @@ export const companyQueries = {
     async softDeleteCompany(companyId: string) {
         return await db
             .update(company)
-            .set({ 
-                isActive: false, 
-                updatedAt: new Date() 
+            .set({
+                isActive: false,
+                updatedAt: new Date(),
             })
             .where(eq(company.id, companyId));
     },

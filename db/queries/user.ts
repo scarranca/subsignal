@@ -11,25 +11,29 @@ export const userQueries = {
         return await db.query.user.findFirst({
             where: eq(user.id, userId),
             with: {
-                preference: {
-                    where: eq(preference.isActive, true),
-                },
+                preference: true,
             },
         });
     },
 
-    async getUserCompanies(userId: string, options: PaginationOptions = {}): Promise<PaginatedResult<typeof company.$inferSelect>> {
-        const { 
-            page: currentPage = 1, 
-            pageSize = 10, 
-            sortBy = 'createdAt', 
-            sortOrder = 'desc' 
+    async getUserCompanies(
+        userId: string,
+        options: PaginationOptions = {},
+    ): Promise<PaginatedResult<typeof company.$inferSelect>> {
+        const {
+            page: currentPage = 1,
+            pageSize = 10,
+            sortBy = 'createdAt',
+            sortOrder = 'desc',
         } = options;
 
         const offset = (currentPage - 1) * pageSize;
-        const orderByColumn = sortBy === 'name' ? company.name : 
-                             sortBy === 'updatedAt' ? company.updatedAt : 
-                             company.createdAt;
+        const orderByColumn =
+            sortBy === 'name'
+                ? company.name
+                : sortBy === 'updatedAt'
+                  ? company.updatedAt
+                  : company.createdAt;
         const orderDirection = sortOrder === 'asc' ? asc : desc;
 
         // Get total count
@@ -64,17 +68,20 @@ export const userQueries = {
     },
 
     async getUserCompaniesWithPages(userId: string, options: PaginationOptions = {}) {
-        const { 
-            page: currentPage = 1, 
-            pageSize = 10, 
-            sortBy = 'createdAt', 
-            sortOrder = 'desc' 
+        const {
+            page: currentPage = 1,
+            pageSize = 10,
+            sortBy = 'createdAt',
+            sortOrder = 'desc',
         } = options;
 
         const offset = (currentPage - 1) * pageSize;
-        const orderByColumn = sortBy === 'name' ? company.name : 
-                             sortBy === 'updatedAt' ? company.updatedAt : 
-                             company.createdAt;
+        const orderByColumn =
+            sortBy === 'name'
+                ? company.name
+                : sortBy === 'updatedAt'
+                  ? company.updatedAt
+                  : company.createdAt;
         const orderDirection = sortOrder === 'asc' ? asc : desc;
 
         // Get total count of companies
@@ -90,10 +97,7 @@ export const userQueries = {
         const companies = await db.query.company.findMany({
             where: and(eq(company.userId, userId), eq(company.isActive, true)),
             with: {
-                pages: {
-                    where: eq(page.isActive, true),
-                    orderBy: page.createdAt,
-                },
+                pages: true,
             },
             orderBy: orderDirection(orderByColumn),
             limit: pageSize,

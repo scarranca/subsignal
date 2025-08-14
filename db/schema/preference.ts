@@ -6,7 +6,7 @@ export const frequencyEnum = pgEnum('frequency', [
     '15_day',
     '1_month',
     '3_month',
-    '6_month'
+    '6_month',
 ]);
 
 export const propertiesEnum = pgEnum('properties', [
@@ -15,7 +15,7 @@ export const propertiesEnum = pgEnum('properties', [
     'customer',
     'partnership',
     'branding',
-    'messaging'
+    'messaging',
 ]);
 
 export const preference = pgTable('preference', {

@@ -5,14 +5,21 @@ import { page } from '../schema/page';
 import type { PaginationOptions, PaginatedResult } from './types';
 
 export const pageQueries = {
-    async createPageWithExistingCompany(userId: string, data: {
-        title: string;
-        url: string;
-        companyId: string;
-    }) {
+    async createPageWithExistingCompany(
+        userId: string,
+        data: {
+            title: string;
+            url: string;
+            companyId: string;
+        },
+    ) {
         // Verify company belongs to user
         const companyExists = await db.query.company.findFirst({
-            where: and(eq(company.id, data.companyId), eq(company.userId, userId), eq(company.isActive, true)),
+            where: and(
+                eq(company.id, data.companyId),
+                eq(company.userId, userId),
+                eq(company.isActive, true),
+            ),
         });
 
         if (!companyExists) {
@@ -32,14 +39,17 @@ export const pageQueries = {
         return newPage;
     },
 
-    async createPageWithNewCompany(userId: string, data: {
-        title: string;
-        url: string;
-        newCompany: {
-            name: string;
+    async createPageWithNewCompany(
+        userId: string,
+        data: {
+            title: string;
             url: string;
-        };
-    }) {
+            newCompany: {
+                name: string;
+                url: string;
+            };
+        },
+    ) {
         return await db.transaction(async (tx) => {
             // Create the company
             const [newCompany] = await tx
@@ -79,7 +89,7 @@ export const pageQueries = {
                     id: company.id,
                     userId: company.userId,
                     isActive: company.isActive,
-                }
+                },
             })
             .from(page)
             .innerJoin(company, eq(page.companyId, company.id))
@@ -87,8 +97,13 @@ export const pageQueries = {
             .limit(1);
 
         const existingPage = result[0];
-        
-        if (!existingPage || existingPage.company.userId !== userId || !existingPage.page.isActive || !existingPage.company.isActive) {
+
+        if (
+            !existingPage ||
+            existingPage.company.userId !== userId ||
+            !existingPage.page.isActive ||
+            !existingPage.company.isActive
+        ) {
             throw new Error('Page not found');
         }
 
@@ -99,9 +114,9 @@ export const pageQueries = {
             // Soft delete the page
             await tx
                 .update(page)
-                .set({ 
-                    isActive: false, 
-                    updatedAt: new Date() 
+                .set({
+                    isActive: false,
+                    updatedAt: new Date(),
                 })
                 .where(eq(page.id, pageId));
 
@@ -117,18 +132,18 @@ export const pageQueries = {
             if (remainingPages === 0) {
                 await tx
                     .update(company)
-                    .set({ 
-                        isActive: false, 
-                        updatedAt: new Date() 
+                    .set({
+                        isActive: false,
+                        updatedAt: new Date(),
                     })
                     .where(eq(company.id, companyId));
                 deletedCompany = true;
             }
 
-            return { 
-                success: true, 
+            return {
+                success: true,
                 deletedCompany,
-                companyId: deletedCompany ? companyId : null 
+                companyId: deletedCompany ? companyId : null,
             };
         });
     },
@@ -142,15 +157,15 @@ export const pageQueries = {
                     id: company.id,
                     userId: company.userId,
                     isActive: company.isActive,
-                }
+                },
             })
             .from(page)
             .innerJoin(company, eq(page.companyId, company.id))
             .where(and(inArray(page.id, pageIds), eq(page.isActive, true)));
 
         // Verify all pages belong to the user
-        const unauthorizedPages = pagesToDelete.filter(p => 
-            p.company.userId !== userId || !p.company.isActive
+        const unauthorizedPages = pagesToDelete.filter(
+            (p) => p.company.userId !== userId || !p.company.isActive,
         );
 
         if (unauthorizedPages.length > 0) {
@@ -163,7 +178,7 @@ export const pageQueries = {
 
         // Group pages by company for cleanup logic
         const companiesByPages = new Map<string, string[]>();
-        pagesToDelete.forEach(p => {
+        pagesToDelete.forEach((p) => {
             const companyId = p.page.companyId;
             if (!companiesByPages.has(companyId)) {
                 companiesByPages.set(companyId, []);
@@ -176,9 +191,9 @@ export const pageQueries = {
             // Soft delete all pages
             await tx
                 .update(page)
-                .set({ 
-                    isActive: false, 
-                    updatedAt: new Date() 
+                .set({
+                    isActive: false,
+                    updatedAt: new Date(),
                 })
                 .where(inArray(page.id, pageIds));
 
@@ -195,12 +210,12 @@ export const pageQueries = {
                 if (remainingPages === 0) {
                     await tx
                         .update(company)
-                        .set({ 
-                            isActive: false, 
-                            updatedAt: new Date() 
+                        .set({
+                            isActive: false,
+                            updatedAt: new Date(),
                         })
                         .where(eq(company.id, companyId));
-                    
+
                     emptyCompanies.push(companyId);
                 }
             }
@@ -214,18 +229,24 @@ export const pageQueries = {
         });
     },
 
-    async getPaginatedPagesByUser(userId: string, options: PaginationOptions = {}): Promise<PaginatedResult<any>> {
-        const { 
-            page: currentPage = 1, 
-            pageSize = 10, 
-            sortBy = 'createdAt', 
-            sortOrder = 'desc' 
+    async getPaginatedPagesByUser(
+        userId: string,
+        options: PaginationOptions = {},
+    ): Promise<PaginatedResult<any>> {
+        const {
+            page: currentPage = 1,
+            pageSize = 10,
+            sortBy = 'createdAt',
+            sortOrder = 'desc',
         } = options;
 
         const offset = (currentPage - 1) * pageSize;
-        const orderByColumn = sortBy === 'title' ? page.title :
-                             sortBy === 'updatedAt' ? page.updatedAt : 
-                             page.createdAt;
+        const orderByColumn =
+            sortBy === 'title'
+                ? page.title
+                : sortBy === 'updatedAt'
+                  ? page.updatedAt
+                  : page.createdAt;
         const orderDirection = sortOrder === 'asc' ? asc : desc;
 
         // Get total count of pages across all user's companies
@@ -233,11 +254,13 @@ export const pageQueries = {
             .select({ count: count() })
             .from(page)
             .innerJoin(company, eq(page.companyId, company.id))
-            .where(and(
-                eq(company.userId, userId),
-                eq(company.isActive, true),
-                eq(page.isActive, true)
-            ));
+            .where(
+                and(
+                    eq(company.userId, userId),
+                    eq(company.isActive, true),
+                    eq(page.isActive, true),
+                ),
+            );
 
         const totalPages = Math.ceil(totalItems / pageSize);
 
@@ -252,11 +275,13 @@ export const pageQueries = {
             })
             .from(page)
             .innerJoin(company, eq(page.companyId, company.id))
-            .where(and(
-                eq(company.userId, userId),
-                eq(company.isActive, true),
-                eq(page.isActive, true)
-            ))
+            .where(
+                and(
+                    eq(company.userId, userId),
+                    eq(company.isActive, true),
+                    eq(page.isActive, true),
+                ),
+            )
             .orderBy(orderDirection(orderByColumn))
             .limit(pageSize)
             .offset(offset);
@@ -274,27 +299,38 @@ export const pageQueries = {
         };
     },
 
-    async getPaginatedPagesByCompany(companyId: string, userId: string, options: PaginationOptions = {}): Promise<PaginatedResult<typeof page.$inferSelect>> {
+    async getPaginatedPagesByCompany(
+        companyId: string,
+        userId: string,
+        options: PaginationOptions = {},
+    ): Promise<PaginatedResult<typeof page.$inferSelect>> {
         // Verify company belongs to user
         const companyExists = await db.query.company.findFirst({
-            where: and(eq(company.id, companyId), eq(company.userId, userId), eq(company.isActive, true)),
+            where: and(
+                eq(company.id, companyId),
+                eq(company.userId, userId),
+                eq(company.isActive, true),
+            ),
         });
 
         if (!companyExists) {
             throw new Error('Company not found');
         }
 
-        const { 
-            page: currentPage = 1, 
-            pageSize = 10, 
-            sortBy = 'createdAt', 
-            sortOrder = 'desc' 
+        const {
+            page: currentPage = 1,
+            pageSize = 10,
+            sortBy = 'createdAt',
+            sortOrder = 'desc',
         } = options;
 
         const offset = (currentPage - 1) * pageSize;
-        const orderByColumn = sortBy === 'title' ? page.title :
-                             sortBy === 'updatedAt' ? page.updatedAt : 
-                             page.createdAt;
+        const orderByColumn =
+            sortBy === 'title'
+                ? page.title
+                : sortBy === 'updatedAt'
+                  ? page.updatedAt
+                  : page.createdAt;
         const orderDirection = sortOrder === 'asc' ? asc : desc;
 
         // Get total count
@@ -336,7 +372,7 @@ export const pageQueries = {
                     name: company.name,
                     userId: company.userId,
                     isActive: company.isActive,
-                }
+                },
             })
             .from(page)
             .innerJoin(company, eq(page.companyId, company.id))
@@ -345,7 +381,12 @@ export const pageQueries = {
 
         const pageWithCompany = result[0];
 
-        if (!pageWithCompany || pageWithCompany.company.userId !== userId || !pageWithCompany.page.isActive || !pageWithCompany.company.isActive) {
+        if (
+            !pageWithCompany ||
+            pageWithCompany.company.userId !== userId ||
+            !pageWithCompany.page.isActive ||
+            !pageWithCompany.company.isActive
+        ) {
             throw new Error('Page not found');
         }
 
@@ -355,10 +396,14 @@ export const pageQueries = {
         };
     },
 
-    async updatePage(pageId: string, userId: string, data: {
-        title?: string;
-        url?: string;
-    }) {
+    async updatePage(
+        pageId: string,
+        userId: string,
+        data: {
+            title?: string;
+            url?: string;
+        },
+    ) {
         // Check if page exists and belongs to user
         const result = await db
             .select({
@@ -366,7 +411,7 @@ export const pageQueries = {
                 company: {
                     userId: company.userId,
                     isActive: company.isActive,
-                }
+                },
             })
             .from(page)
             .innerJoin(company, eq(page.companyId, company.id))
@@ -375,7 +420,12 @@ export const pageQueries = {
 
         const existingPage = result[0];
 
-        if (!existingPage || existingPage.company.userId !== userId || !existingPage.page.isActive || !existingPage.company.isActive) {
+        if (
+            !existingPage ||
+            existingPage.company.userId !== userId ||
+            !existingPage.page.isActive ||
+            !existingPage.company.isActive
+        ) {
             throw new Error('Page not found');
         }
 
@@ -391,18 +441,24 @@ export const pageQueries = {
         return updatedPage;
     },
 
-    async getActivePagesByCompany(companyId: string, options: PaginationOptions = {}): Promise<PaginatedResult<typeof page.$inferSelect>> {
-        const { 
-            page: currentPage = 1, 
-            pageSize = 10, 
-            sortBy = 'createdAt', 
-            sortOrder = 'desc' 
+    async getActivePagesByCompany(
+        companyId: string,
+        options: PaginationOptions = {},
+    ): Promise<PaginatedResult<typeof page.$inferSelect>> {
+        const {
+            page: currentPage = 1,
+            pageSize = 10,
+            sortBy = 'createdAt',
+            sortOrder = 'desc',
         } = options;
 
         const offset = (currentPage - 1) * pageSize;
-        const orderByColumn = sortBy === 'title' ? page.title :
-                             sortBy === 'updatedAt' ? page.updatedAt : 
-                             page.createdAt;
+        const orderByColumn =
+            sortBy === 'title'
+                ? page.title
+                : sortBy === 'updatedAt'
+                  ? page.updatedAt
+                  : page.createdAt;
         const orderDirection = sortOrder === 'asc' ? asc : desc;
 
         // Get total count
@@ -437,11 +493,11 @@ export const pageQueries = {
     },
 
     async getActivePagesByUser(userId: string, options: PaginationOptions = {}) {
-        const { 
-            page: currentPage = 1, 
-            pageSize = 10, 
-            sortBy = 'createdAt', 
-            sortOrder = 'desc' 
+        const {
+            page: currentPage = 1,
+            pageSize = 10,
+            sortBy = 'createdAt',
+            sortOrder = 'desc',
         } = options;
 
         const offset = (currentPage - 1) * pageSize;
@@ -451,19 +507,24 @@ export const pageQueries = {
             .select({ count: count() })
             .from(page)
             .innerJoin(company, eq(page.companyId, company.id))
-            .where(and(
-                eq(company.userId, userId),
-                eq(company.isActive, true),
-                eq(page.isActive, true)
-            ));
+            .where(
+                and(
+                    eq(company.userId, userId),
+                    eq(company.isActive, true),
+                    eq(page.isActive, true),
+                ),
+            );
 
         const totalItems = totalResult.count;
         const totalPages = Math.ceil(totalItems / pageSize);
 
         // Get paginated pages with company info
-        const orderByColumn = sortBy === 'title' ? page.title :
-                             sortBy === 'updatedAt' ? page.updatedAt : 
-                             page.createdAt;
+        const orderByColumn =
+            sortBy === 'title'
+                ? page.title
+                : sortBy === 'updatedAt'
+                  ? page.updatedAt
+                  : page.createdAt;
         const orderDirection = sortOrder === 'asc' ? asc : desc;
 
         const pagesWithCompany = await db
@@ -476,11 +537,13 @@ export const pageQueries = {
             })
             .from(page)
             .innerJoin(company, eq(page.companyId, company.id))
-            .where(and(
-                eq(company.userId, userId),
-                eq(company.isActive, true),
-                eq(page.isActive, true)
-            ))
+            .where(
+                and(
+                    eq(company.userId, userId),
+                    eq(company.isActive, true),
+                    eq(page.isActive, true),
+                ),
+            )
             .orderBy(orderDirection(orderByColumn))
             .limit(pageSize)
             .offset(offset);
@@ -501,9 +564,9 @@ export const pageQueries = {
     async softDeletePage(pageId: string) {
         return await db
             .update(page)
-            .set({ 
-                isActive: false, 
-                updatedAt: new Date() 
+            .set({
+                isActive: false,
+                updatedAt: new Date(),
             })
             .where(eq(page.id, pageId));
     },

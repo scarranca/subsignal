@@ -1,6 +1,6 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { schema } from './schema';
+import { schema, relations } from './schema';
 
 const connectionString =
     process.env['DATABASE_URL'] || 'postgresql://postgres:password@localhost:5432/subsignal';
@@ -8,5 +8,5 @@ const connectionString =
 // Create the connection
 const sql = postgres(connectionString);
 
-// Create the database instance
-export const db = drizzle(sql, { schema: schema });
+// Create the database instance with both schema and relations
+export const db = drizzle(sql, { schema: { ...schema, ...relations } });
