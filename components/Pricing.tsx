@@ -1,3 +1,8 @@
+'use client';
+
+import { CAL_URL } from '@/constants/contact';
+import { useRouter } from 'next/navigation';
+
 interface PricingFeature {
     text: string;
     included: boolean;
@@ -43,7 +48,8 @@ function PricingPlan({
     features,
     ctaText,
     isPopular,
-}: PricingPlan) {
+    onCtaClick,
+}: PricingPlan & { onCtaClick: () => void }) {
     return (
         <div
             className={`flex flex-col ${isPopular ? 'bg-black text-white shadow-xl' : 'bg-white border border-zinc-200 shadow-sm'} rounded-xl p-8 relative`}
@@ -73,6 +79,7 @@ function PricingPlan({
                 ))}
             </ul>
             <button
+                onClick={onCtaClick}
                 className={`w-full ${
                     isPopular
                         ? 'bg-white text-black hover:bg-gray-100'
@@ -86,6 +93,16 @@ function PricingPlan({
 }
 
 export default function Pricing() {
+    const router = useRouter();
+
+    const handleCtaClick = (ctaText: string) => {
+        if (ctaText === 'Start Tracking') {
+            router.push('/get-started');
+        } else if (ctaText === 'Contact Sales') {
+            window.open(CAL_URL, '_blank');
+        }
+    };
+
     const plans: PricingPlan[] = [
         {
             name: 'Solo',
@@ -151,7 +168,11 @@ export default function Pricing() {
 
             <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
                 {plans.map((plan, index) => (
-                    <PricingPlan key={index} {...plan} />
+                    <PricingPlan
+                        key={index}
+                        {...plan}
+                        onCtaClick={() => handleCtaClick(plan.ctaText)}
+                    />
                 ))}
             </div>
         </section>

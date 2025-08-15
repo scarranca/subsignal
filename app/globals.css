@@ -150,3 +150,17 @@
     border: 2px solid #ffffff;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+/* Infinite scroll animation for logo carousel */
+@keyframes infinite-scroll {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+.animate-infinite-scroll {
+    animation: infinite-scroll 15s linear infinite;
+}
