@@ -1,4 +1,4 @@
-import { CONTACT_EMAIL, COMPANY_NAME, WEBSITE_URL } from '../../../constants/contact';
+import { CONTACT_EMAIL, COMPANY_NAME, WEBSITE_URL } from '@/constants/contact';
 
 export default function TermsAndConditions() {
     return (

@@ -1,8 +1,8 @@
-import Navigation from '../components/navigation';
-import Hero from '../components/hero';
-import Integrations from '../components/integrations';
-import Pricing from '../components/pricing';
-import Footer from '../components/footer';
+import Navigation from '@/components/Navigation';
+import Hero from '@/components/Hero';
+import Integrations from '@/components/Integrations';
+import Pricing from '@/components/Pricing';
+import Footer from '@/components/Footer';
 
 export default function Page() {
     return (

@@ -1,4 +1,4 @@
-import { CONTACT_EMAIL, COMPANY_NAME } from '../../../constants/contact';
+import { CONTACT_EMAIL, COMPANY_NAME } from '@/constants/contact';
 
 export default function PrivacyPolicy() {
     return (
