@@ -1,15 +1,16 @@
 import { z } from 'zod';
+import { tolerantUrlSchema } from './common';
 
 export const createPageSchema = z.object({
     page: z.object({
-        title: z.string().min(1),
-        url: z.string().url(),
+        title: z.string().min(1).optional(), // Optional since we auto-fetch it
+        url: tolerantUrlSchema,
     }),
     company: z
         .object({
             id: z.string().uuid().optional(),
             name: z.string().min(1).optional(),
-            url: z.string().url().optional(),
+            url: tolerantUrlSchema.optional(),
         })
         .refine(
             (data) => {
@@ -27,7 +28,7 @@ export const createPageSchema = z.object({
 
 export const updatePageSchema = z.object({
     title: z.string().min(1).optional(),
-    url: z.string().url().optional(),
+    url: tolerantUrlSchema.optional(),
 });
 
 export const bulkDeletePagesSchema = z.object({

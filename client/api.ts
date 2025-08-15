@@ -68,7 +68,7 @@ export interface CreateCompanyRequest {
         url: string;
     };
     page: {
-        title: string;
+        title?: string; // Optional since we auto-fetch it on the server
         url: string;
     };
 }
@@ -83,7 +83,8 @@ export interface BatchCreateCompaniesResponse {
         url: string;
         success: true;
         company: Company;
-        page: Page;
+        page: Page | null;
+        skipped?: boolean;
     }>;
     errors: Array<{
         url: string;
@@ -94,6 +95,8 @@ export interface BatchCreateCompaniesResponse {
         total: number;
         successful: number;
         failed: number;
+        created?: number;
+        skipped?: number;
     };
 }
 
@@ -104,7 +107,7 @@ export interface UpdateCompanyRequest {
 
 export interface CreatePageRequest {
     page: {
-        title: string;
+        title?: string; // Optional since we auto-fetch it on the server
         url: string;
     };
     company: {
@@ -326,10 +329,13 @@ class ApiClient {
     async batchCreateCompanies(
         data: BatchCreateCompaniesRequest,
     ): Promise<ApiResponse<BatchCreateCompaniesResponse>> {
-        return this.request<BatchCreateCompaniesResponse>('/companies/batch', {
+        console.log('API Client - Sending batch create request:', data);
+        const response = await this.request<BatchCreateCompaniesResponse>('/companies/batch', {
             method: 'POST',
             body: JSON.stringify(data),
         });
+        console.log('API Client - Batch create response:', response);
+        return response;
     }
 
     /**

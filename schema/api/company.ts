@@ -1,23 +1,24 @@
 import { z } from 'zod';
+import { tolerantUrlSchema } from './common';
 
 export const createCompanySchema = z.object({
     company: z.object({
         name: z.string().min(1),
-        url: z.string().url(),
+        url: tolerantUrlSchema,
     }),
     page: z.object({
-        title: z.string().min(1),
-        url: z.string().url(),
+        title: z.string().min(1).optional(), // Optional since we auto-fetch it
+        url: tolerantUrlSchema,
     }),
 });
 
 export const updateCompanySchema = z.object({
     name: z.string().min(1).optional(),
-    url: z.string().url().optional(),
+    url: tolerantUrlSchema.optional(),
 });
 
 export const batchCreateCompaniesSchema = z.object({
-    urls: z.array(z.string().url()).min(1).max(50), // Allow 1-50 URLs
+    urls: z.array(tolerantUrlSchema).min(1).max(50), // Allow 1-50 URLs
 });
 
 export type CreateCompanyInput = z.infer<typeof createCompanySchema>;

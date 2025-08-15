@@ -1,4 +1,4 @@
-import { and, eq, desc, asc, count } from 'drizzle-orm';
+import { and, eq, desc, asc, count, inArray } from 'drizzle-orm';
 import { db } from '../index';
 import { user } from '../schema/auth';
 import { company } from '../schema/company';
@@ -6,6 +6,40 @@ import { page } from '../schema/page';
 import type { PaginationOptions, PaginatedResult } from './types';
 
 export const companyQueries = {
+    async getCompaniesByUrls(userId: string, urls: string[]) {
+        if (urls.length === 0) return [];
+
+        const companies = await db
+            .select()
+            .from(company)
+            .where(
+                and(
+                    eq(company.userId, userId),
+                    inArray(company.url, urls),
+                    eq(company.isActive, true),
+                ),
+            )
+            .orderBy(desc(company.createdAt));
+
+        // Get pages for each company
+        const companiesWithPages = await Promise.all(
+            companies.map(async (comp) => {
+                const pages = await db
+                    .select()
+                    .from(page)
+                    .where(and(eq(page.companyId, comp.id), eq(page.isActive, true)))
+                    .orderBy(page.createdAt);
+
+                return {
+                    ...comp,
+                    pages,
+                };
+            }),
+        );
+
+        return companiesWithPages;
+    },
+
     async createCompanyWithInitialPage(
         userId: string,
         data: {
