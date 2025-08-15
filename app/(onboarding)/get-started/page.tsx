@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { Testimonials } from '@/components/onboarding/Testimonials';
 import { OnboardingStepIndicator } from '@/components/onboarding/OnboardingStepIndicator';
 import { OnboardingNav } from '@/components/onboarding/OnboardingNav';
+import { OnboardingSteps } from '@/components/onboarding/OnboardingSteps';
 import { useState, useEffect, useCallback } from 'react';
 import { LOGIN_TESTIMONIALS } from '@/constants/testimonials';
 
@@ -11,7 +12,6 @@ const testimonials = LOGIN_TESTIMONIALS;
 
 const OnboardingPage = () => {
     const [currentStep, setCurrentStep] = useState(1);
-    const [nextStep, setNextStep] = useState(2);
 
     const handleNextStep = useCallback(() => {
         // If on last step, redirect to dashboard
@@ -21,16 +21,10 @@ const OnboardingPage = () => {
         }
 
         // Advance to the next sequential step
-        if (nextStep <= 4) {
-            setCurrentStep(nextStep);
-            setNextStep(nextStep + 1);
+        if (currentStep < 4) {
+            setCurrentStep(currentStep + 1);
         }
-    }, [currentStep, nextStep]);
-
-    const handleStepClick = (step: number) => {
-        setCurrentStep(step);
-        setNextStep(step + 1);
-    };
+    }, [currentStep]);
 
     // Add keyboard shortcut for Cmd+Enter
     useEffect(() => {
@@ -48,18 +42,15 @@ const OnboardingPage = () => {
     return (
         <div className="flex min-h-screen">
             <div className="flex flex-1 flex-col bg-white relative">
-                <OnboardingNav currentStep={currentStep} onNext={handleNextStep} />
+                <OnboardingNav />
                 <div className="flex flex-1 flex-col items-center justify-center min-h-screen">
-                    {/* Left Side Content */}
+                    {/* Multi-step onboarding content */}
+                    <OnboardingSteps currentStep={currentStep} onNext={handleNextStep} />
                 </div>
 
                 {/* Step Indicator Dots */}
                 <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
-                    <OnboardingStepIndicator
-                        currentStep={currentStep}
-                        totalSteps={4}
-                        onStepClick={handleStepClick}
-                    />
+                    <OnboardingStepIndicator currentStep={currentStep} totalSteps={4} />
                 </div>
             </div>
 

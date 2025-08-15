@@ -1,7 +1,6 @@
 import { Hono } from 'hono';
 import { requireAuth } from '@/app/api/middleware/auth';
 import {
-    handleGetPagesByCompany,
     handleGetPagesByUser,
     handleGetPage,
     handleCreatePage,
@@ -17,32 +16,27 @@ const pages = new Hono();
 pages.use('*', requireAuth);
 
 /**
- * GET /api/pages - Fetch all pages for user with pagination
+ * GET /api/pages - Fetch user pages with pagination
  */
 pages.get('/', handleGetPagesByUser);
 
 /**
- * GET /api/pages/:id - Fetch specific page
+ * GET /api/pages/:id - Fetch a specific page
  */
 pages.get('/:id', handleGetPage);
 
 /**
- * GET /api/pages/company/:companyId - Fetch pages by company with pagination
- */
-pages.get('/company/:companyId', handleGetPagesByCompany);
-
-/**
- * POST /api/pages - Create new page
+ * POST /api/pages - Create a new page
  */
 pages.post('/', handleCreatePage);
 
 /**
- * PATCH /api/pages/:id - Update page
+ * PATCH /api/pages/:id - Update a page
  */
 pages.patch('/:id', handleUpdatePage);
 
 /**
- * DELETE /api/pages - Delete pages (supports single or multiple page IDs)
+ * DELETE /api/pages - Delete pages
  */
 pages.delete('/', handleBulkDeletePages);
 

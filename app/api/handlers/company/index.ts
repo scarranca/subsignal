@@ -7,7 +7,12 @@ import {
     paginationSchema,
     batchCreateCompaniesSchema,
 } from '@/schema/api';
-import { extractCompanyName, extractBaseUrl, fetchPageTitle } from '@/lib/url-utils';
+import {
+    extractCompanyName,
+    extractBaseUrl,
+    fetchPageTitle,
+    generateFallbackTitle,
+} from '@/lib/url';
 import { z } from 'zod';
 
 export const getUser = (c: Context) => {
@@ -74,11 +79,24 @@ export async function handleCreateCompany(c: Context) {
 
         const validatedData = createCompanySchema.parse(body);
 
+        // Auto-fetch page title from URL if not provided
+        let pageTitle = validatedData.page.title;
+        if (!pageTitle || pageTitle.trim() === '') {
+            try {
+                pageTitle = await fetchPageTitle(validatedData.page.url);
+                console.log('Auto-fetched page title:', pageTitle);
+            } catch (error) {
+                console.error('Failed to fetch page title, using fallback:', error);
+                // Use utility function for fallback title
+                pageTitle = await generateFallbackTitle(validatedData.page.url);
+            }
+        }
+
         const result = await companyQueries.createCompanyWithInitialPage(user.id, {
             name: validatedData.company.name,
             url: validatedData.company.url,
             initialPage: {
-                title: validatedData.page.title,
+                title: pageTitle,
                 url: validatedData.page.url,
             },
         });
@@ -165,16 +183,43 @@ export async function handleBatchCreateCompanies(c: Context) {
         const user = getUser(c);
         const body = await c.req.json();
 
+        console.log('API Handler - Received batch create request:', body);
+        console.log('API Handler - User:', { id: user.id, email: user.email });
+
         const validatedData = batchCreateCompaniesSchema.parse(body);
+        console.log('API Handler - Validation passed:', validatedData);
+
+        // Check for existing companies to avoid duplicates
+        const existingCompanies = await companyQueries.getCompaniesByUrls(
+            user.id,
+            validatedData.urls,
+        );
+        const existingUrls = new Set(existingCompanies.map((company) => company.url));
+        console.log('API Handler - Found existing URLs:', Array.from(existingUrls));
+
+        // Filter out URLs that already exist
+        const urlsToCreate = validatedData.urls.filter((url) => !existingUrls.has(url));
+        console.log('API Handler - URLs to create:', urlsToCreate);
 
         const results = [];
         const errors = [];
 
-        // Process each URL
-        for (const url of validatedData.urls) {
+        // Add existing companies to results as successful (silently skip creation)
+        existingCompanies.forEach((company) => {
+            results.push({
+                url: company.url,
+                success: true,
+                company: company,
+                page: company.pages?.[0] || null, // Include first page if available
+                skipped: true, // Flag to indicate this was skipped
+            });
+        });
+
+        // Process each new URL (URLs are already normalized by schema)
+        for (const url of urlsToCreate) {
             try {
                 // Extract company information
-                const companyName = extractCompanyName(url);
+                const companyName = await extractCompanyName(url);
                 const companyUrl = extractBaseUrl(url);
 
                 // Fetch page title
@@ -195,6 +240,7 @@ export async function handleBatchCreateCompanies(c: Context) {
                     success: true,
                     company: result.company,
                     page: result.initialPage,
+                    skipped: false, // Flag to indicate this was newly created
                 });
             } catch (error) {
                 console.error(`Error processing URL ${url}:`, error);
@@ -215,15 +261,18 @@ export async function handleBatchCreateCompanies(c: Context) {
                     total: validatedData.urls.length,
                     successful: results.length,
                     failed: errors.length,
+                    created: results.filter((r) => !r.skipped).length,
+                    skipped: results.filter((r) => r.skipped).length,
                 },
             },
             201,
         );
     } catch (error) {
         if (error instanceof z.ZodError) {
+            console.error('API Handler - Validation error:', error.errors);
             return c.json({ error: 'Invalid data', details: error.errors }, 400);
         }
-        console.error('Error batch creating companies:', error);
+        console.error('API Handler - Batch create error:', error);
         return c.json({ error: 'Failed to batch create companies' }, 500);
     }
 }

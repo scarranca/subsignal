@@ -7,6 +7,7 @@ import {
     paginationSchema,
     bulkDeletePagesSchema,
 } from '@/schema/api';
+import { fetchPageTitle, generateFallbackTitle } from '@/lib/url';
 import { z } from 'zod';
 
 export const getUser = (c: Context) => {
@@ -103,10 +104,23 @@ export async function handleCreatePage(c: Context) {
 
         const validatedData = createPageSchema.parse(body);
 
+        // Auto-fetch page title from URL if not provided
+        let pageTitle = validatedData.page.title;
+        if (!pageTitle || pageTitle.trim() === '') {
+            try {
+                pageTitle = await fetchPageTitle(validatedData.page.url);
+                console.log('Auto-fetched page title:', pageTitle);
+            } catch (error) {
+                console.error('Failed to fetch page title, using fallback:', error);
+                // Use utility function for fallback title
+                pageTitle = await generateFallbackTitle(validatedData.page.url);
+            }
+        }
+
         if (validatedData.company.id) {
             // Create page with existing company
             const newPage = await pageQueries.createPageWithExistingCompany(user.id, {
-                title: validatedData.page.title,
+                title: pageTitle,
                 url: validatedData.page.url,
                 companyId: validatedData.company.id,
             });
@@ -115,7 +129,7 @@ export async function handleCreatePage(c: Context) {
         } else {
             // Create page with new company
             const result = await pageQueries.createPageWithNewCompany(user.id, {
-                title: validatedData.page.title,
+                title: pageTitle,
                 url: validatedData.page.url,
                 newCompany: {
                     name: validatedData.company.name!,
