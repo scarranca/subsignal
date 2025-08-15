@@ -40,6 +40,61 @@ export const companyQueries = {
         return companiesWithPages;
     },
 
+    async getCompaniesByDomains(userId: string, domains: string[]) {
+        if (domains.length === 0) return [];
+
+        // Build a condition to match companies whose URLs contain any of the domains
+        const companies = await db
+            .select()
+            .from(company)
+            .where(and(eq(company.userId, userId), eq(company.isActive, true)))
+            .orderBy(desc(company.createdAt));
+
+        // Filter companies by domains after fetching (since we need domain extraction logic)
+        const matchingCompanies = companies.filter((comp) => {
+            try {
+                const companyDomain = new URL(comp.url).hostname
+                    .toLowerCase()
+                    .replace(/^www\./, '');
+                return domains.some((domain) => domain === companyDomain);
+            } catch {
+                return false;
+            }
+        });
+
+        // Get pages for each matching company
+        const companiesWithPages = await Promise.all(
+            matchingCompanies.map(async (comp) => {
+                const pages = await db
+                    .select()
+                    .from(page)
+                    .where(and(eq(page.companyId, comp.id), eq(page.isActive, true)))
+                    .orderBy(page.createdAt);
+
+                return {
+                    ...comp,
+                    pages,
+                };
+            }),
+        );
+
+        return companiesWithPages;
+    },
+
+    async addPageToCompany(companyId: string, pageData: { title: string; url: string }) {
+        const [newPage] = await db
+            .insert(page)
+            .values({
+                id: crypto.randomUUID(),
+                companyId: companyId,
+                title: pageData.title,
+                url: pageData.url,
+            })
+            .returning();
+
+        return newPage;
+    },
+
     async createCompanyWithInitialPage(
         userId: string,
         data: {

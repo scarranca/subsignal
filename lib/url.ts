@@ -150,6 +150,77 @@ export function extractBaseUrl(url: string): string {
 }
 
 /**
+ * Extract root domain from URL (removes www and gets base domain)
+ * @param url - The URL to extract domain from
+ * @returns Root domain (e.g., "example.com")
+ */
+export function extractRootDomain(url: string): string {
+    try {
+        const urlObj = new URL(url);
+        let hostname = urlObj.hostname.toLowerCase();
+
+        // Remove www. prefix if present
+        if (hostname.startsWith('www.')) {
+            hostname = hostname.substring(4);
+        }
+
+        return hostname;
+    } catch {
+        return '';
+    }
+}
+
+/**
+ * Normalize URLs by removing duplicates, converting to lowercase, and ensuring consistent format
+ * @param urls - Array of URLs to normalize
+ * @returns Array of normalized unique URLs
+ */
+export function normalizeAndDeduplicateUrls(urls: string[]): string[] {
+    const seen = new Set<string>();
+    const normalized: string[] = [];
+
+    for (const url of urls) {
+        if (!url || typeof url !== 'string') continue;
+
+        // Normalize the URL (adds protocol, cleans up)
+        const normalizedUrl = normalizeUrl(url.trim().toLowerCase());
+
+        if (!normalizedUrl || !isValidUrl(normalizedUrl)) continue;
+
+        // Check if we've already seen this URL
+        if (!seen.has(normalizedUrl)) {
+            seen.add(normalizedUrl);
+            normalized.push(normalizedUrl);
+        }
+    }
+
+    return normalized;
+}
+
+/**
+ * Group URLs by their root domain
+ * @param urls - Array of normalized URLs
+ * @returns Map of domain to URLs
+ */
+export function groupUrlsByDomain(urls: string[]): Map<string, string[]> {
+    const domainGroups = new Map<string, string[]>();
+
+    for (const url of urls) {
+        const rootDomain = extractRootDomain(url);
+
+        if (!rootDomain) continue;
+
+        if (!domainGroups.has(rootDomain)) {
+            domainGroups.set(rootDomain, []);
+        }
+
+        domainGroups.get(rootDomain)!.push(url);
+    }
+
+    return domainGroups;
+}
+
+/**
  * Generate a fallback title from URL path (basic fallback)
  * @param url - The URL to generate title from
  * @returns Fallback title based on URL path
