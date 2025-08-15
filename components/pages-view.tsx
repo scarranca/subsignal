@@ -62,7 +62,9 @@ export function PagesView() {
     const [companies, setCompanies] = useState<Company[]>([]);
     const [selectedPages, setSelectedPages] = useState<Set<string>>(new Set());
     const [showAddDialog, setShowAddDialog] = useState(false);
+    const [showFirstPageDialog, setShowFirstPageDialog] = useState(false);
     const [newPageUrl, setNewPageUrl] = useState('');
+    const [firstPageUrl, setFirstPageUrl] = useState('');
     const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
     const [newCompanyName, setNewCompanyName] = useState('');
     const [newCompanyUrl, setNewCompanyUrl] = useState('');
@@ -70,6 +72,7 @@ export function PagesView() {
     const [submitting, setSubmitting] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [urlError, setUrlError] = useState<string>('');
+    const [firstPageUrlError, setFirstPageUrlError] = useState<string>('');
     const [companyUrlError, setCompanyUrlError] = useState<string>('');
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -255,6 +258,60 @@ export function PagesView() {
         }
     };
 
+    const handleAddFirstPage = async () => {
+        if (!firstPageUrl) return;
+
+        try {
+            setSubmitting(true);
+            setFirstPageUrlError('');
+
+            // Validate URL format
+            if (!validateUrl(firstPageUrl)) {
+                setFirstPageUrlError("Looks like we're having trouble with this URL.");
+                setSubmitting(false);
+                return;
+            }
+
+            // Verify URL is reachable
+            const normalizedUrl = normalizeUrl(firstPageUrl);
+            const isReachable = await verifyUrl(normalizedUrl);
+            if (!isReachable) {
+                setFirstPageUrlError("Looks like we're having trouble reaching this URL.");
+                setSubmitting(false);
+                return;
+            }
+
+            // Use Batch Create Company API with single URL
+            const result = await apiClient.batchCreateCompanies({
+                urls: [normalizedUrl],
+            });
+
+            if (result?.success && result.data) {
+                const { results, errors } = result.data;
+
+                if (errors && errors.length > 0) {
+                    toast.error(errors[0].error || 'Failed to create page');
+                } else if (results && results.length > 0) {
+                    toast.success('Page created successfully');
+                    // Reset form
+                    setFirstPageUrl('');
+                    setShowFirstPageDialog(false);
+                    // Reload companies to reflect changes
+                    await loadCompanies();
+                } else {
+                    toast.error('Failed to create page');
+                }
+            } else {
+                toast.error(result?.error || 'Failed to create page');
+            }
+        } catch (error) {
+            console.error('Error creating first page:', error);
+            toast.error('Failed to create page');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex-1 px-4 md:px-8 py-6 bg-white min-h-screen flex items-center justify-center">
@@ -275,27 +332,31 @@ export function PagesView() {
                         <h1 className="text-xl font-semibold text-gray-900">Companies</h1>
                         <p className="text-sm text-gray-600 mt-1">Manage your Companies</p>
                     </div>
-                    {selectedPages.size > 0 ? (
-                        <Button
-                            onClick={handleBulkDelete}
-                            disabled={deleting}
-                            className="bg-gray-900 hover:bg-gray-800 text-white flex items-center justify-center space-x-2 w-full sm:w-auto"
-                        >
-                            {deleting ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
+                    {companies.length > 0 && (
+                        <>
+                            {selectedPages.size > 0 ? (
+                                <Button
+                                    onClick={handleBulkDelete}
+                                    disabled={deleting}
+                                    className="bg-gray-900 hover:bg-gray-800 text-white flex items-center justify-center space-x-2 w-full sm:w-auto"
+                                >
+                                    {deleting ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <Trash2 className="h-4 w-4" />
+                                    )}
+                                    <span>Delete Page{selectedPages.size > 1 ? 's' : ''}</span>
+                                </Button>
                             ) : (
-                                <Trash2 className="h-4 w-4" />
+                                <Button
+                                    onClick={() => setShowAddDialog(true)}
+                                    className="bg-gray-900 hover:bg-gray-800 text-white flex items-center justify-center space-x-2 w-full sm:w-auto"
+                                >
+                                    <Plus className="h-4 w-4" />
+                                    <span>Add Page</span>
+                                </Button>
                             )}
-                            <span>Delete Page{selectedPages.size > 1 ? 's' : ''}</span>
-                        </Button>
-                    ) : (
-                        <Button
-                            onClick={() => setShowAddDialog(true)}
-                            className="bg-gray-900 hover:bg-gray-800 text-white flex items-center justify-center space-x-2 w-full sm:w-auto"
-                        >
-                            <Plus className="h-4 w-4" />
-                            <span>Add Page</span>
-                        </Button>
+                        </>
                     )}
                 </div>
 
@@ -303,7 +364,7 @@ export function PagesView() {
                     <div className="text-center py-12">
                         <div className="text-gray-500 mb-4">No companies found</div>
                         <Button
-                            onClick={() => setShowAddDialog(true)}
+                            onClick={() => setShowFirstPageDialog(true)}
                             className="bg-gray-900 hover:bg-gray-800 text-white"
                         >
                             <Plus className="h-4 w-4 mr-2" />
@@ -607,6 +668,77 @@ export function PagesView() {
                                         (selectedCompanyId === 'create-new' &&
                                             (!newCompanyName || !newCompanyUrl))
                                     }
+                                    className="bg-gray-900 hover:bg-gray-800 text-white w-full sm:w-auto"
+                                >
+                                    {submitting ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                            Creating...
+                                        </>
+                                    ) : (
+                                        'Add Page'
+                                    )}
+                                </Button>
+                            </div>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Add First Page Dialog */}
+                <Dialog
+                    open={showFirstPageDialog}
+                    onOpenChange={(open) => {
+                        setShowFirstPageDialog(open);
+                        if (!open) {
+                            // Reset form fields when dialog closes
+                            setFirstPageUrl('');
+                            setFirstPageUrlError('');
+                        }
+                    }}
+                >
+                    <DialogContent className="bg-white shadow-lg mx-4 max-w-md">
+                        <DialogHeader>
+                            <DialogTitle className="text-lg font-semibold text-gray-900">
+                                Add Your First Page
+                            </DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                            <div>
+                                <Label
+                                    htmlFor="first-page-url"
+                                    className="text-sm font-medium text-gray-700"
+                                >
+                                    Page URL
+                                </Label>
+                                <Input
+                                    id="first-page-url"
+                                    value={firstPageUrl}
+                                    onChange={(e) => {
+                                        setFirstPageUrl(e.target.value);
+                                        setFirstPageUrlError('');
+                                    }}
+                                    placeholder="https://stripe.com/pricing"
+                                    className={`mt-1 ${firstPageUrlError ? 'border-red-500' : ''}`}
+                                />
+                                {firstPageUrlError && (
+                                    <p className="text-sm text-red-600 mt-1">{firstPageUrlError}</p>
+                                )}
+                                <p className="text-sm text-gray-500 mt-2">
+                                    We&apos;ll automatically create the company from this page URL.
+                                </p>
+                            </div>
+                            <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setShowFirstPageDialog(false)}
+                                    disabled={submitting}
+                                    className="hover:bg-gray-50 w-full sm:w-auto"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={handleAddFirstPage}
+                                    disabled={submitting || !firstPageUrl}
                                     className="bg-gray-900 hover:bg-gray-800 text-white w-full sm:w-auto"
                                 >
                                     {submitting ? (
