@@ -8,7 +8,7 @@ export default function Hero() {
                     <span className="block">Never Miss a Market Move</span>
                 </h2>
                 <p className="text-lg md:text-xl lg:text-2xl mb-8 mt-6 max-w-4xl mx-auto text-gray-600 font-lora">
-                    AI agents that monitor your companies - so you don&apos;t have to
+                    We monitor your companies - so you don&apos;t have to
                 </p>
             </div>
 

@@ -97,6 +97,14 @@ export const OnboardingStepTwo = ({
 
     return (
         <div className="w-full max-w-sm mx-auto px-4">
+            <div className="mb-6 text-center">
+                <h1 className="text-2xl font-semibold mb-2 text-center font-lora">
+                    Observe What Matters
+                </h1>
+                <p className="text-base text-muted-foreground mb-6 text-center font-lora">
+                    Choose your signals. Cut through the noise
+                </p>
+            </div>
             <div className="space-y-3">
                 {PROPERTY_OPTIONS.map((option) => {
                     const isSelected = selectedProperties.includes(option.value);

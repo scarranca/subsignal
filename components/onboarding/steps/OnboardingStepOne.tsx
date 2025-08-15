@@ -183,6 +183,14 @@ export const OnboardingStepOne = ({
 
     return (
         <div className="w-full max-w-sm mx-auto px-4">
+            <div className="mb-6 text-center">
+                <h1 className="text-2xl font-semibold mb-2 text-center font-lora">
+                    Follow Breakout Companies
+                </h1>
+                <p className="text-base text-muted-foreground mb-6 text-center font-lora">
+                    Keep your sector thesis current
+                </p>
+            </div>
             <Form {...form}>
                 <form className="space-y-3">
                     {fields.map((field, index) => (

@@ -69,6 +69,14 @@ export const OnboardingStepThree = ({
 
     return (
         <div className="w-full max-w-sm mx-auto px-4">
+            <div className="mb-6 text-center">
+                <h1 className="text-2xl font-semibold mb-2 text-center font-lora">
+                    Set your monitoring frequency
+                </h1>
+                <p className="text-base text-muted-foreground mb-6 text-center font-lora">
+                    See every market move. Time your bets better
+                </p>
+            </div>
             <div className="space-y-3">
                 {FREQUENCY_OPTIONS.map((option) => {
                     const isSelected = selectedFrequency === option.value;

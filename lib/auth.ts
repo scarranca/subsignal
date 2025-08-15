@@ -81,10 +81,13 @@ export const auth = betterAuth({
      */
     advanced: {
         cookiePrefix: authCookiePrefix,
-        crossSubDomainCookies: {
-            enabled: true,
-            domain: '.subsignal.app',
-        },
+        // Only enable cross-domain cookies in production, not on localhost
+        ...(process.env.NODE_ENV === 'production' && {
+            crossSubDomainCookies: {
+                enabled: true,
+                domain: '.subsignal.app',
+            },
+        }),
     },
 
     /**
