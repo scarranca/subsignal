@@ -504,7 +504,7 @@ export function PagesView() {
                                         setNewPageUrl(e.target.value);
                                         setUrlError('');
                                     }}
-                                    placeholder="stripe.com/pricing, https://stripe.com/pricing, or http://example.org"
+                                    placeholder="https://stripe.com/pricing"
                                     className={`mt-1 ${urlError ? 'border-red-500' : ''}`}
                                 />
                                 {urlError && (
@@ -560,7 +560,7 @@ export function PagesView() {
                                                 id="company-name"
                                                 value={newCompanyName}
                                                 onChange={(e) => setNewCompanyName(e.target.value)}
-                                                placeholder="Enter company name"
+                                                placeholder="Stripe"
                                                 className="mt-1"
                                             />
                                         </div>
@@ -578,7 +578,7 @@ export function PagesView() {
                                                     setNewCompanyUrl(e.target.value);
                                                     setCompanyUrlError('');
                                                 }}
-                                                placeholder="stripe.com, https://stripe.com, or http://example.org"
+                                                placeholder="https://stripe.com"
                                                 className={`mt-1 ${companyUrlError ? 'border-red-500' : ''}`}
                                             />
                                             {companyUrlError && (

@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
+import { IntegrationCard } from '@/components/ui/integration-card';
 import { apiClient } from '@/client/api';
 import { toast } from 'sonner';
 
@@ -257,18 +258,23 @@ export function SettingsView() {
                         <h2 className="text-xl font-semibold text-gray-900">Integrations</h2>
                     </div>
 
-                    <div className="bg-gray-50 rounded-lg p-4 max-w-md">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h3 className="text-lg font-semibold text-gray-900">Zapier</h3>
-                                <p className="text-sm text-gray-600 mt-1">
-                                    Connect Subsignal to Zapier
-                                </p>
-                            </div>
-                            <Button className="bg-gray-900 hover:bg-gray-800 text-white">
-                                Connect
-                            </Button>
-                        </div>
+                    <div className="space-y-6">
+                        <IntegrationCard
+                            title="Zapier"
+                            description="Connect Subsignal to Zapier"
+                            buttonText="Request"
+                            onButtonClick={() =>
+                                toast.success('Zapier integration requested, stay tuned!')
+                            }
+                        />
+                        <IntegrationCard
+                            title="Slack"
+                            description="Connect Subsignal to Slack"
+                            buttonText="Request"
+                            onButtonClick={() =>
+                                toast.success('Slack integration requested, stay tuned!')
+                            }
+                        />
                     </div>
                 </div>
             </div>

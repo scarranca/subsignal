@@ -196,7 +196,17 @@ export const OnboardingStepOne = ({
                                         <FormControl>
                                             <Input
                                                 {...formField}
-                                                placeholder={`Company ${index + 1} (e.g., stripe.com)`}
+                                                placeholder={
+                                                    index === 0
+                                                        ? 'stripe.com'
+                                                        : index === 1
+                                                          ? 'shopify.com'
+                                                          : index === 2
+                                                            ? 'github.com'
+                                                            : index === 3
+                                                              ? 'notion.so'
+                                                              : 'airbnb.com'
+                                                }
                                                 onKeyDown={(e) => {
                                                     if (e.key === 'Enter') {
                                                         e.preventDefault();
