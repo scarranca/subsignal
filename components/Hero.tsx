@@ -1,4 +1,4 @@
-import VideoPlayer from './video-player';
+import Image from 'next/image';
 
 export default function Hero() {
     return (
@@ -8,12 +8,24 @@ export default function Hero() {
                     <span className="block">Never Miss a Market Move</span>
                 </h2>
                 <p className="text-lg md:text-xl lg:text-2xl mb-8 mt-6 max-w-4xl mx-auto text-gray-600 font-lora">
-                    Stay connected through pivots and false starts
+                    AI agents that monitor your companies - so you don&apos;t have to
                 </p>
             </div>
 
-            {/* Single Video Player */}
-            <VideoPlayer />
+            {/* TODO: Add cover video */}
+            {/* <VideoPlayer /> */}
+
+            {/* Temporary cover image */}
+            <div className="w-full max-w-4xl mx-auto">
+                <Image
+                    src="/cover.png"
+                    alt="Subsignal Cover"
+                    width={1200}
+                    height={600}
+                    className="rounded-lg shadow-lg w-full h-auto"
+                    priority
+                />
+            </div>
         </main>
     );
 }

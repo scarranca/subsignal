@@ -28,18 +28,32 @@ export const metadata: Metadata = {
     creator: 'Subsignal',
     publisher: 'Subsignal',
     robots: 'index, follow',
+    icons: {
+        icon: '/logo.png',
+        shortcut: '/logo.png',
+        apple: '/logo.png',
+    },
     openGraph: {
         title: 'Subsignal - Never Miss a Market Move',
         description:
             'Be the investor founders turn to. Monitor companies you passed on and keep your sector thesis current.',
         type: 'website',
         locale: 'en_US',
+        images: [
+            {
+                url: '/og-image.png',
+                width: 1200,
+                height: 630,
+                alt: 'Subsignal - Never Miss a Market Move',
+            },
+        ],
     },
     twitter: {
         card: 'summary_large_image',
         title: 'Subsignal - Never Miss a Market Move',
         description:
             'Be the investor founders turn to. Monitor companies you passed on and keep your sector thesis current.',
+        images: ['/og-image.png'],
     },
 };
 

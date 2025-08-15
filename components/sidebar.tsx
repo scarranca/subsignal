@@ -12,7 +12,13 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
         <div className="w-64 bg-white flex-shrink-0 flex flex-col shadow-lg md:shadow-none h-full">
             {/* Header */}
             <div className="px-6 py-6 flex-shrink-0">
-                <h1 className="text-xl font-semibold text-gray-900">Subsignal</h1>
+                <div className="flex items-center gap-3">
+                    <h1 className="text-xl font-semibold text-gray-900">Subsignal</h1>
+                    <div className="flex items-center gap-1.5 bg-green-50 px-2 py-1 rounded-full">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-sm shadow-green-300"></div>
+                        <span className="text-xs font-medium text-green-700">Live</span>
+                    </div>
+                </div>
             </div>
 
             {/* Navigation */}
