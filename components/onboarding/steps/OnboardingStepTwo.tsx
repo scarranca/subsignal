@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { TrendingUp, Package, Users, Handshake, Palette, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { DEFAULT_PREFERENCES } from '@/constants/preferences';
 import type { BatchCreateCompaniesResponse } from '@/client/api';
 
 interface OnboardingStepTwoProps {
@@ -18,7 +19,7 @@ interface OnboardingStepTwoProps {
     ) => void;
     onAdvance: () => void;
     isLoading: boolean;
-    initialProperties: (
+    initialProperties?: (
         | 'pricing'
         | 'product'
         | 'customer'
@@ -65,15 +66,22 @@ const PROPERTY_OPTIONS = [
 export const OnboardingStepTwo = ({
     onComplete,
     onAdvance,
-    initialProperties,
+    initialProperties = DEFAULT_PREFERENCES.properties as (
+        | 'pricing'
+        | 'product'
+        | 'customer'
+        | 'partnership'
+        | 'branding'
+        | 'messaging'
+    )[],
 }: OnboardingStepTwoProps) => {
     const [selectedProperties, setSelectedProperties] =
-        useState<typeof initialProperties>(initialProperties);
+        useState<NonNullable<typeof initialProperties>>(initialProperties);
 
-    const toggleProperty = useCallback((property: (typeof initialProperties)[0]) => {
-        setSelectedProperties((prev) => {
+    const toggleProperty = useCallback((property: NonNullable<typeof initialProperties>[0]) => {
+        setSelectedProperties((prev: NonNullable<typeof initialProperties>) => {
             const newSelection = prev.includes(property)
-                ? prev.filter((p) => p !== property)
+                ? prev.filter((p: NonNullable<typeof initialProperties>[0]) => p !== property)
                 : [...prev, property];
 
             // Only update local state - don't call parent during render
