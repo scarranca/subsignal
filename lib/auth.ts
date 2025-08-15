@@ -2,6 +2,7 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '@/db';
 import { authCookiePrefix } from '@/constants/auth';
+import { userHooks, accountHooks, sessionHooks } from '@/hooks';
 
 // Re-export for backward compatibility
 export { authCookiePrefix };
@@ -80,6 +81,16 @@ export const auth = betterAuth({
      */
     advanced: {
         cookiePrefix: authCookiePrefix,
+    },
+
+    /**
+     * Database hooks
+     * https://better-auth.com/docs/reference/configuration/database-hooks
+     */
+    databaseHooks: {
+        user: userHooks,
+        account: accountHooks,
+        session: sessionHooks,
     },
 
     /**
