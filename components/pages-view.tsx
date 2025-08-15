@@ -3,7 +3,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronRight, Plus, Trash2, ChevronLeft, Loader2 } from 'lucide-react';
+import {
+    ChevronDown,
+    ChevronRight,
+    Plus,
+    Trash2,
+    ChevronLeft,
+    Loader2,
+    FileText,
+} from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,6 +23,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { apiClient, type Company as ApiCompany, type Page as ApiPage } from '@/client/api';
+import { normalizeUrl, isValidUrl } from '@/lib/url';
 import { toast } from 'sonner';
 
 interface Company extends Omit<ApiCompany, 'pages'> {
@@ -23,11 +32,36 @@ interface Company extends Omit<ApiCompany, 'pages'> {
     expanded: boolean;
 }
 
+// Validate URL with flexible input (using centralized utility)
+const validateUrl = (url: string): boolean => {
+    return isValidUrl(url);
+};
+
+// Verify that URL is reachable
+const verifyUrl = async (url: string): Promise<boolean> => {
+    try {
+        const normalizedUrl = normalizeUrl(url);
+
+        // Don't try to verify invalid URLs
+        if (!isValidUrl(normalizedUrl)) {
+            return false;
+        }
+
+        await fetch(normalizedUrl, {
+            method: 'HEAD',
+            mode: 'no-cors',
+            signal: AbortSignal.timeout(5000),
+        });
+        return true;
+    } catch {
+        return false;
+    }
+};
+
 export function PagesView() {
     const [companies, setCompanies] = useState<Company[]>([]);
     const [selectedPages, setSelectedPages] = useState<Set<string>>(new Set());
     const [showAddDialog, setShowAddDialog] = useState(false);
-    const [newPageTitle, setNewPageTitle] = useState('');
     const [newPageUrl, setNewPageUrl] = useState('');
     const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
     const [newCompanyName, setNewCompanyName] = useState('');
@@ -35,6 +69,8 @@ export function PagesView() {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    const [urlError, setUrlError] = useState<string>('');
+    const [companyUrlError, setCompanyUrlError] = useState<string>('');
 
     const [currentPage, setCurrentPage] = useState(1);
     const companiesPerPage = 4;
@@ -135,30 +171,62 @@ export function PagesView() {
     };
 
     const handleAddPage = async () => {
-        if (!newPageTitle || !newPageUrl) return;
+        if (!newPageUrl) return;
 
         try {
             setSubmitting(true);
+            setUrlError('');
+
+            // Validate URL format
+            if (!validateUrl(newPageUrl)) {
+                setUrlError(
+                    'Please enter a valid public website. Examples: stripe.com, https://stripe.com, http://example.org (localhost and internal IPs not allowed)',
+                );
+                setSubmitting(false);
+                return;
+            }
+
+            // Validate company URL if creating a new company
+            if (selectedCompanyId === 'create-new' && !validateUrl(newCompanyUrl)) {
+                setCompanyUrlError(
+                    'Please enter a valid public website. Examples: stripe.com, https://stripe.com, http://example.org (localhost and internal IPs not allowed)',
+                );
+                setSubmitting(false);
+                return;
+            }
+
+            // Verify URL is reachable
+            const normalizedUrl = normalizeUrl(newPageUrl);
+            const isReachable = await verifyUrl(normalizedUrl);
+            if (!isReachable) {
+                setUrlError('Unable to reach this website. Please check the URL and try again.');
+                setSubmitting(false);
+                return;
+            }
+
             let result;
 
             if (selectedCompanyId === 'create-new') {
                 if (!newCompanyName || !newCompanyUrl) return;
 
+                // Normalize company URL as well
+                const normalizedCompanyUrl = normalizeUrl(newCompanyUrl);
+
                 result = await apiClient.createPage({
                     page: {
-                        title: newPageTitle,
-                        url: newPageUrl,
+                        url: normalizedUrl,
+                        // Title will be auto-fetched on the server
                     },
                     company: {
                         name: newCompanyName,
-                        url: newCompanyUrl,
+                        url: normalizedCompanyUrl,
                     },
                 });
             } else if (selectedCompanyId) {
                 result = await apiClient.createPage({
                     page: {
-                        title: newPageTitle,
-                        url: newPageUrl,
+                        url: normalizedUrl,
+                        // Title will be auto-fetched on the server
                     },
                     company: {
                         id: selectedCompanyId,
@@ -169,7 +237,6 @@ export function PagesView() {
             if (result?.success) {
                 toast.success('Page created successfully');
                 // Reset form
-                setNewPageTitle('');
                 setNewPageUrl('');
                 setSelectedCompanyId('');
                 setNewCompanyName('');
@@ -325,6 +392,7 @@ export function PagesView() {
                                                                     : 'opacity-0 group-hover:opacity-100'
                                                             }`}
                                                         />
+                                                        <FileText className="w-4 h-4 text-gray-400 flex-shrink-0" />
                                                         <div className="min-w-0 flex-1">
                                                             <div className="text-sm font-medium text-gray-900 truncate">
                                                                 {page.title}
@@ -406,11 +474,12 @@ export function PagesView() {
                         setShowAddDialog(open);
                         if (!open) {
                             // Reset all form fields when dialog closes
-                            setNewPageTitle('');
                             setNewPageUrl('');
                             setSelectedCompanyId('');
                             setNewCompanyName('');
                             setNewCompanyUrl('');
+                            setUrlError('');
+                            setCompanyUrlError('');
                         }
                     }}
                 >
@@ -423,21 +492,6 @@ export function PagesView() {
                         <div className="space-y-4 py-4">
                             <div>
                                 <Label
-                                    htmlFor="page-title"
-                                    className="text-sm font-medium text-gray-700"
-                                >
-                                    Page Title
-                                </Label>
-                                <Input
-                                    id="page-title"
-                                    value={newPageTitle}
-                                    onChange={(e) => setNewPageTitle(e.target.value)}
-                                    placeholder="Enter page title"
-                                    className="mt-1"
-                                />
-                            </div>
-                            <div>
-                                <Label
                                     htmlFor="page-url"
                                     className="text-sm font-medium text-gray-700"
                                 >
@@ -446,10 +500,16 @@ export function PagesView() {
                                 <Input
                                     id="page-url"
                                     value={newPageUrl}
-                                    onChange={(e) => setNewPageUrl(e.target.value)}
-                                    placeholder="https://example.com/page"
-                                    className="mt-1"
+                                    onChange={(e) => {
+                                        setNewPageUrl(e.target.value);
+                                        setUrlError('');
+                                    }}
+                                    placeholder="stripe.com/pricing, https://stripe.com/pricing, or http://example.org"
+                                    className={`mt-1 ${urlError ? 'border-red-500' : ''}`}
                                 />
+                                {urlError && (
+                                    <p className="text-sm text-red-600 mt-1">{urlError}</p>
+                                )}
                             </div>
                             {selectedCompanyId !== 'create-new' && (
                                 <div>
@@ -514,10 +574,18 @@ export function PagesView() {
                                             <Input
                                                 id="company-url"
                                                 value={newCompanyUrl}
-                                                onChange={(e) => setNewCompanyUrl(e.target.value)}
-                                                placeholder="https://company.com"
-                                                className="mt-1"
+                                                onChange={(e) => {
+                                                    setNewCompanyUrl(e.target.value);
+                                                    setCompanyUrlError('');
+                                                }}
+                                                placeholder="stripe.com, https://stripe.com, or http://example.org"
+                                                className={`mt-1 ${companyUrlError ? 'border-red-500' : ''}`}
                                             />
+                                            {companyUrlError && (
+                                                <p className="text-sm text-red-600 mt-1">
+                                                    {companyUrlError}
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -535,7 +603,6 @@ export function PagesView() {
                                     onClick={handleAddPage}
                                     disabled={
                                         submitting ||
-                                        !newPageTitle ||
                                         !newPageUrl ||
                                         (selectedCompanyId === 'create-new' &&
                                             (!newCompanyName || !newCompanyUrl))
