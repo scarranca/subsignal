@@ -77,10 +77,14 @@ export const auth = betterAuth({
     },
 
     /**
-     * Cookie Prefix
+     * Cookie Prefix and Cross-domain configuration
      */
     advanced: {
         cookiePrefix: authCookiePrefix,
+        crossSubDomainCookies: {
+            enabled: true,
+            domain: '.subsignal.app',
+        },
     },
 
     /**
@@ -97,7 +101,11 @@ export const auth = betterAuth({
      * Trusted origins
      * https://better-auth.com/docs/reference/configuration/trusted-origins
      */
-    trustedOrigins: [process.env.BETTER_AUTH_URL || 'http://localhost:3000'],
+    trustedOrigins: [
+        process.env.BETTER_AUTH_URL || 'http://localhost:3000',
+        'https://subsignal.app',
+        'https://www.subsignal.app',
+    ],
 
     /**
      * Telemetry
