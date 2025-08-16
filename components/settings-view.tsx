@@ -16,13 +16,19 @@ import { Loader2 } from 'lucide-react';
 import { IntegrationCard } from '@/components/ui/integration-card';
 import { apiClient } from '@/client/api';
 import { toast } from 'sonner';
+import { queryKeys } from '@/lib/query-keys';
 
 export function SettingsView() {
     const queryClient = useQueryClient();
 
     // TanStack Query for preferences data
-    const { data: preferences, isLoading: loading } = useQuery({
-        queryKey: ['preferences'],
+    const {
+        data: preferences,
+        isLoading: loading,
+        isError,
+        error,
+    } = useQuery({
+        queryKey: queryKeys.preferences(),
         queryFn: async () => {
             const result = await apiClient.getPreferences();
             if (!result.success) {
@@ -35,6 +41,12 @@ export function SettingsView() {
             return result.data;
         },
         staleTime: 30 * 1000, // 30 seconds
+        retry: (failureCount, error) => {
+            // Don't retry on 4xx errors
+            if (error?.message?.includes('not found')) return false;
+            if (error?.message?.includes('4')) return false;
+            return failureCount < 2;
+        },
     });
 
     // Compute properties state from preferences
@@ -110,7 +122,7 @@ export function SettingsView() {
             return result.data;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['preferences'] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.preferences() });
             toast.success('Preferences saved successfully');
         },
         onError: (error: Error) => {
@@ -162,6 +174,24 @@ export function SettingsView() {
                 <div className="flex items-center space-x-2">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     <span>Loading preferences...</span>
+                </div>
+            </div>
+        );
+    }
+
+    if (isError && !error?.message?.includes('not found')) {
+        return (
+            <div className="flex-1 px-4 md:px-8 py-6 bg-white min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="text-red-600 mb-4">Failed to load preferences</div>
+                    <button
+                        onClick={() =>
+                            queryClient.invalidateQueries({ queryKey: queryKeys.preferences() })
+                        }
+                        className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-md"
+                    >
+                        Try Again
+                    </button>
                 </div>
             </div>
         );
