@@ -20,6 +20,7 @@ const lora = Lora({
 });
 
 export const metadata: Metadata = {
+    metadataBase: new URL('https://subsignal.app'),
     title: 'Subsignal - Never Miss a Market Move',
     description:
         'Be the investor founders turn to. Monitor companies you passed on and keep your sector thesis current',

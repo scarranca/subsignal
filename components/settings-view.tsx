@@ -293,7 +293,7 @@ export function SettingsView() {
                             description="Connect Subsignal to Zapier"
                             buttonText="Request"
                             onButtonClick={() =>
-                                toast.success('Zapier integration requested, stay tuned!')
+                                toast.success('Rolling out Zapier access. Stay tuned!')
                             }
                         />
                         <IntegrationCard
@@ -301,7 +301,7 @@ export function SettingsView() {
                             description="Connect Subsignal to Slack"
                             buttonText="Request"
                             onButtonClick={() =>
-                                toast.success('Slack integration requested, stay tuned!')
+                                toast.success('Rolling out Slack access. Stay tuned!')
                             }
                         />
                     </div>

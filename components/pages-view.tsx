@@ -131,6 +131,8 @@ export function PagesView() {
     const [urlError, setUrlError] = useState<string>('');
     const [firstPageUrlError, setFirstPageUrlError] = useState<string>('');
     const [companyUrlError, setCompanyUrlError] = useState<string>('');
+    const [isSubmittingPage, setIsSubmittingPage] = useState(false);
+    const [isSubmittingFirstPage, setIsSubmittingFirstPage] = useState(false);
 
     const [currentPage, setCurrentPage] = useState(1);
     const companiesPerPage = 4;
@@ -218,9 +220,11 @@ export function PagesView() {
             setNewCompanyName('');
             setNewCompanyUrl('');
             setShowAddDialog(false);
+            setIsSubmittingPage(false);
             toast.success('Page created successfully');
         },
         onError: (error: Error) => {
+            setIsSubmittingPage(false);
             toast.error(error.message);
         },
     });
@@ -237,6 +241,7 @@ export function PagesView() {
             await queryClient.invalidateQueries({ queryKey: queryKeys.companies() });
             setFirstPageUrl('');
             setShowFirstPageDialog(false);
+            setIsSubmittingFirstPage(false);
 
             if (data?.data?.errors && data.data.errors.length > 0) {
                 toast.error(data.data.errors[0].error);
@@ -245,6 +250,7 @@ export function PagesView() {
             }
         },
         onError: (error: Error) => {
+            setIsSubmittingFirstPage(false);
             toast.error(error.message);
         },
     });
@@ -287,23 +293,22 @@ export function PagesView() {
     };
 
     const handleAddPage = async () => {
-        if (!newPageUrl) return;
+        if (!newPageUrl || isSubmittingPage) return;
 
+        setIsSubmittingPage(true);
         setUrlError('');
 
         // Validate URL format
         if (!validateUrl(newPageUrl)) {
-            setUrlError(
-                'Please enter a valid public website. Examples: stripe.com, https://stripe.com, http://example.org (localhost and internal IPs not allowed)',
-            );
+            setUrlError('Looks like we&apos;re having trouble with this URL');
+            setIsSubmittingPage(false);
             return;
         }
 
         // Validate company URL if creating a new company
         if (selectedCompanyId === 'create-new' && !validateUrl(newCompanyUrl)) {
-            setCompanyUrlError(
-                'Please enter a valid public website. Examples: stripe.com, https://stripe.com, http://example.org (localhost and internal IPs not allowed)',
-            );
+            setCompanyUrlError('Looks like we&apos;re having trouble with this URL');
+            setIsSubmittingPage(false);
             return;
         }
 
@@ -311,12 +316,16 @@ export function PagesView() {
         const normalizedUrl = normalizeUrl(newPageUrl);
         const isReachable = await verifyUrl(normalizedUrl);
         if (!isReachable) {
-            setUrlError('Unable to reach this website. Please check the URL and try again.');
+            setUrlError('Looks like we&apos;re having trouble reaching this URL');
+            setIsSubmittingPage(false);
             return;
         }
 
         if (selectedCompanyId === 'create-new') {
-            if (!newCompanyName || !newCompanyUrl) return;
+            if (!newCompanyName || !newCompanyUrl) {
+                setIsSubmittingPage(false);
+                return;
+            }
 
             const normalizedCompanyUrl = normalizeUrl(newCompanyUrl);
             createPageMutation.mutate({
@@ -332,13 +341,15 @@ export function PagesView() {
     };
 
     const handleAddFirstPage = async () => {
-        if (!firstPageUrl) return;
+        if (!firstPageUrl || isSubmittingFirstPage) return;
 
+        setIsSubmittingFirstPage(true);
         setFirstPageUrlError('');
 
         // Validate URL format
         if (!validateUrl(firstPageUrl)) {
             setFirstPageUrlError("Looks like we're having trouble with this URL.");
+            setIsSubmittingFirstPage(false);
             return;
         }
 
@@ -347,6 +358,7 @@ export function PagesView() {
         const isReachable = await verifyUrl(normalizedUrl);
         if (!isReachable) {
             setFirstPageUrlError("Looks like we're having trouble reaching this URL.");
+            setIsSubmittingFirstPage(false);
             return;
         }
 
@@ -358,7 +370,7 @@ export function PagesView() {
             <div className="flex-1 px-4 md:px-8 py-6 bg-white min-h-screen flex items-center justify-center">
                 <div className="flex items-center space-x-2">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Loading companies...</span>
+                    <span>Almost there...</span>
                 </div>
             </div>
         );
@@ -421,13 +433,15 @@ export function PagesView() {
 
                 {companies.length === 0 ? (
                     <div className="text-center py-12">
-                        <div className="text-gray-500 mb-4">No companies found</div>
+                        <div className="text-gray-500 mb-4">
+                            Looks like you don&apos;t have any companies yet
+                        </div>
                         <Button
                             onClick={() => setShowFirstPageDialog(true)}
                             className="bg-gray-900 hover:bg-gray-800 text-white"
                         >
                             <Plus className="h-4 w-4 mr-2" />
-                            Add your first page
+                            Add your first company
                         </Button>
                     </div>
                 ) : (
@@ -590,6 +604,7 @@ export function PagesView() {
                             setNewCompanyUrl('');
                             setUrlError('');
                             setCompanyUrlError('');
+                            setIsSubmittingPage(false);
                         }
                     }}
                 >
@@ -707,7 +722,7 @@ export function PagesView() {
                                 <Button
                                     variant="outline"
                                     onClick={() => setShowAddDialog(false)}
-                                    disabled={createPageMutation.isPending}
+                                    disabled={createPageMutation.isPending || isSubmittingPage}
                                     className="hover:bg-gray-50 w-full sm:w-auto"
                                 >
                                     Cancel
@@ -716,13 +731,14 @@ export function PagesView() {
                                     onClick={handleAddPage}
                                     disabled={
                                         createPageMutation.isPending ||
+                                        isSubmittingPage ||
                                         !newPageUrl ||
                                         (selectedCompanyId === 'create-new' &&
                                             (!newCompanyName || !newCompanyUrl))
                                     }
                                     className="bg-gray-900 hover:bg-gray-800 text-white w-full sm:w-auto"
                                 >
-                                    {createPageMutation.isPending ? (
+                                    {createPageMutation.isPending || isSubmittingPage ? (
                                         <>
                                             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                                             Creating...
@@ -745,6 +761,7 @@ export function PagesView() {
                             // Reset form fields when dialog closes
                             setFirstPageUrl('');
                             setFirstPageUrlError('');
+                            setIsSubmittingFirstPage(false);
                         }
                     }}
                 >
@@ -783,17 +800,23 @@ export function PagesView() {
                                 <Button
                                     variant="outline"
                                     onClick={() => setShowFirstPageDialog(false)}
-                                    disabled={batchCreateMutation.isPending}
+                                    disabled={
+                                        batchCreateMutation.isPending || isSubmittingFirstPage
+                                    }
                                     className="hover:bg-gray-50 w-full sm:w-auto"
                                 >
                                     Cancel
                                 </Button>
                                 <Button
                                     onClick={handleAddFirstPage}
-                                    disabled={batchCreateMutation.isPending || !firstPageUrl}
+                                    disabled={
+                                        batchCreateMutation.isPending ||
+                                        isSubmittingFirstPage ||
+                                        !firstPageUrl
+                                    }
                                     className="bg-gray-900 hover:bg-gray-800 text-white w-full sm:w-auto"
                                 >
-                                    {batchCreateMutation.isPending ? (
+                                    {batchCreateMutation.isPending || isSubmittingFirstPage ? (
                                         <>
                                             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                                             Creating...
