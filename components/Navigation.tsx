@@ -46,7 +46,13 @@ export default function Navigation() {
                     Subsignal
                 </Link>
                 <nav className="hidden md:flex space-x-8"></nav>
-                <div className="w-20 h-9 bg-gray-200 rounded-md animate-pulse"></div>
+                <button
+                    onClick={() => router.push(signupRoute)}
+                    className="bg-black text-white px-4 py-2 rounded-md font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
+                >
+                    <span>Get Started</span>
+                    <span className="text-xs opacity-60">⌘↵</span>
+                </button>
             </header>
         );
     }
