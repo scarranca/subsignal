@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import { ImageWithFallback } from '@/components/ui/image-with-fallback';
 import {
     ChevronDown,
     ChevronRight,
@@ -13,7 +13,13 @@ import {
     Loader2,
     FileText,
 } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -26,6 +32,7 @@ import {
 import { apiClient, type Company as ApiCompany, type Page as ApiPage } from '@/client/api';
 import { normalizeUrl, isValidUrl } from '@/lib/url';
 import { toast } from 'sonner';
+import { queryKeys } from '@/lib/query-keys';
 
 interface Company extends Omit<ApiCompany, 'pages'> {
     domain: string;
@@ -72,8 +79,12 @@ export function PagesView() {
     const queryClient = useQueryClient();
 
     // TanStack Query for companies data
-    const { data: companiesResponse, isLoading: loading } = useQuery({
-        queryKey: ['companies'],
+    const {
+        data: companiesResponse,
+        isLoading: loading,
+        isError,
+    } = useQuery({
+        queryKey: queryKeys.companies({ page: 1, pageSize: 100, sortBy: 'name', sortOrder: 'asc' }),
         queryFn: async () => {
             const result = await apiClient.getCompanies({
                 page: 1,
@@ -89,6 +100,11 @@ export function PagesView() {
             return result.data;
         },
         staleTime: 30 * 1000, // 30 seconds
+        retry: (failureCount, error) => {
+            // Don't retry on 4xx errors
+            if (error?.message?.includes('4')) return false;
+            return failureCount < 2;
+        },
     });
 
     // Local state for expanded companies
@@ -128,12 +144,58 @@ export function PagesView() {
             }
             return result;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['companies'] });
+        onMutate: async (pageIds: string[]) => {
+            // Cancel any outgoing refetches so they don't overwrite our optimistic update
+            await queryClient.cancelQueries({ queryKey: queryKeys.companies() });
+
+            // Snapshot the previous value
+            const previousCompanies = queryClient.getQueryData(
+                queryKeys.companies({ page: 1, pageSize: 100, sortBy: 'name', sortOrder: 'asc' }),
+            );
+
+            // Optimistically update by removing the deleted pages
+            queryClient.setQueryData(
+                queryKeys.companies({ page: 1, pageSize: 100, sortBy: 'name', sortOrder: 'asc' }),
+                (old: unknown) => {
+                    if (!old || typeof old !== 'object' || !('data' in old)) return old;
+
+                    const typedOld = old as {
+                        data: Array<{ id: string; pages?: Array<{ id: string }> }>;
+                    };
+
+                    return {
+                        ...typedOld,
+                        data: typedOld.data.map((company) => ({
+                            ...company,
+                            pages:
+                                company.pages?.filter((page) => !pageIds.includes(page.id)) || [],
+                        })),
+                    };
+                },
+            );
+
+            // Return a context object with the snapshotted value
+            return { previousCompanies };
+        },
+        onSuccess: async () => {
+            // Invalidate and refetch to get the latest data from server
+            await queryClient.invalidateQueries({ queryKey: queryKeys.companies() });
             setSelectedPages(new Set());
             toast.success('Pages deleted successfully');
         },
-        onError: (error: Error) => {
+        onError: (error: Error, variables, context) => {
+            // If the mutation fails, use the context returned from onMutate to roll back
+            if (context?.previousCompanies) {
+                queryClient.setQueryData(
+                    queryKeys.companies({
+                        page: 1,
+                        pageSize: 100,
+                        sortBy: 'name',
+                        sortOrder: 'asc',
+                    }),
+                    context.previousCompanies,
+                );
+            }
             toast.error(error.message);
         },
     });
@@ -149,8 +211,8 @@ export function PagesView() {
             }
             return result;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['companies'] });
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({ queryKey: queryKeys.companies() });
             setNewPageUrl('');
             setSelectedCompanyId('');
             setNewCompanyName('');
@@ -171,8 +233,8 @@ export function PagesView() {
             }
             return result;
         },
-        onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: ['companies'] });
+        onSuccess: async (data) => {
+            await queryClient.invalidateQueries({ queryKey: queryKeys.companies() });
             setFirstPageUrl('');
             setShowFirstPageDialog(false);
 
@@ -302,6 +364,24 @@ export function PagesView() {
         );
     }
 
+    if (isError) {
+        return (
+            <div className="flex-1 px-4 md:px-8 py-6 bg-white min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="text-red-600 mb-4">Failed to load companies</div>
+                    <button
+                        onClick={() =>
+                            queryClient.invalidateQueries({ queryKey: queryKeys.companies() })
+                        }
+                        className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-md"
+                    >
+                        Try Again
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="flex-1 px-4 md:px-8 py-6 bg-white min-h-screen">
             <div className="max-w-4xl">
@@ -359,23 +439,13 @@ export function PagesView() {
                                     {/* Company Header */}
                                     <div className="flex items-center justify-between py-3">
                                         <div className="flex items-center space-x-3 min-w-0 flex-1">
-                                            <Image
+                                            <ImageWithFallback
                                                 src={getFaviconUrl(company.domain)}
                                                 alt={`${company.name} favicon`}
                                                 width={24}
                                                 height={24}
-                                                className="w-6 h-6 rounded flex-shrink-0"
-                                                onError={(e) => {
-                                                    // Fallback to black box if favicon fails to load
-                                                    e.currentTarget.style.display = 'none';
-                                                    e.currentTarget.nextElementSibling?.classList.remove(
-                                                        'hidden',
-                                                    );
-                                                }}
+                                                className="w-6 h-6"
                                             />
-                                            <div className="w-6 h-6 bg-gray-900 rounded items-center justify-center hidden flex-shrink-0">
-                                                <div className="w-3 h-3 bg-white rounded-sm"></div>
-                                            </div>
                                             <div className="min-w-0 flex-1">
                                                 <div className="font-medium text-gray-900 truncate">
                                                     {company.name}
@@ -528,6 +598,9 @@ export function PagesView() {
                             <DialogTitle className="text-lg font-semibold text-gray-900">
                                 Add New Page
                             </DialogTitle>
+                            <DialogDescription>
+                                You can add it to an existing company or create a new one.
+                            </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 py-4">
                             <div>
@@ -680,6 +753,10 @@ export function PagesView() {
                             <DialogTitle className="text-lg font-semibold text-gray-900">
                                 Add Your First Page
                             </DialogTitle>
+                            <DialogDescription>
+                                Start monitoring changes by adding your first page. We&apos;ll
+                                automatically create a company from the page URL.
+                            </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 py-4">
                             <div>
