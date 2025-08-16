@@ -754,8 +754,7 @@ export function PagesView() {
                                 Add Your First Page
                             </DialogTitle>
                             <DialogDescription>
-                                Start monitoring changes by adding your first page. We&apos;ll
-                                automatically create a company from the page URL.
+                                We&apos;ll automatically create a company from the page URL.
                             </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 py-4">
@@ -779,9 +778,6 @@ export function PagesView() {
                                 {firstPageUrlError && (
                                     <p className="text-sm text-red-600 mt-1">{firstPageUrlError}</p>
                                 )}
-                                <p className="text-sm text-gray-500 mt-2">
-                                    We&apos;ll automatically create the company from this page URL.
-                                </p>
                             </div>
                             <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4">
                                 <Button
