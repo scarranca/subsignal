@@ -1,6 +1,10 @@
 import type { Config } from 'drizzle-kit';
 import { config } from 'dotenv';
 
+// FOR PRODUCTION_PREVIEW
+// config({ path: '.env.prod' });
+
+// FOR LOCAL_DEVELOPEMENT
 config({ path: '.env.local' });
 
 export default {
