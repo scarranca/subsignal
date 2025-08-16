@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { FileText } from 'lucide-react';
+import BoringAvatar from 'boring-avatars';
+import { AVATAR_COLORS } from '@/constants/palette';
 import { cn } from '@/lib/utils';
 
 interface ImageWithFallbackProps {
@@ -11,36 +12,44 @@ interface ImageWithFallbackProps {
     width: number;
     height: number;
     className?: string;
-    fallbackIcon?: React.ComponentType<{ className?: string }>;
-    fallbackClassName?: string;
 }
 
-export function ImageWithFallback({
-    src,
-    alt,
-    width,
-    height,
-    className,
-    fallbackIcon: FallbackIcon = FileText,
-    fallbackClassName = 'bg-gray-100 text-gray-600',
-}: ImageWithFallbackProps) {
-    const [hasError, setHasError] = useState(false);
+export function ImageWithFallback({ src, alt, width, height, className }: ImageWithFallbackProps) {
+    const [imageState, setImageState] = useState<'loading' | 'exists' | 'generic' | 'error'>(
+        'loading',
+    );
 
-    if (hasError) {
+    const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+        const img = e.target as HTMLImageElement;
+
+        // Check if the image is the generic globe (always 16x16 when sz=64 is used)
+        if (img.naturalHeight === 16 || img.naturalWidth === 16) {
+            setImageState('generic');
+        } else {
+            setImageState('exists');
+        }
+    };
+
+    const handleImageError = () => {
+        setImageState('error');
+    };
+
+    // Show boring avatar if image is generic or doesn't exist
+    if (imageState === 'generic' || imageState === 'error') {
         return (
-            <div
-                className={cn(
-                    'flex items-center justify-center rounded flex-shrink-0',
-                    fallbackClassName,
-                    className,
-                )}
-                style={{ width, height }}
-            >
-                <FallbackIcon className={cn('w-4 h-4')} />
+            <div className={cn('flex-shrink-0', className)}>
+                <BoringAvatar
+                    size={Math.max(width, height)}
+                    name={alt}
+                    variant="marble"
+                    // square
+                    colors={AVATAR_COLORS}
+                />
             </div>
         );
     }
 
+    // Show image if it exists and is not generic
     return (
         <Image
             src={src}
@@ -49,7 +58,8 @@ export function ImageWithFallback({
             height={height}
             unoptimized
             className={cn('rounded flex-shrink-0', className)}
-            onError={() => setHasError(true)}
+            onLoad={handleImageLoad}
+            onError={handleImageError}
         />
     );
 }

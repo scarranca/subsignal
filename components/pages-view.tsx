@@ -317,7 +317,7 @@ export function PagesView() {
         const normalizedUrl = normalizeUrl(newPageUrl);
         const isReachable = await verifyUrl(normalizedUrl);
         if (!isReachable) {
-            setUrlError('Looks like we&apos;re having trouble reaching this URL');
+            setUrlError("Looks like we're having trouble reaching this URL");
             setIsSubmittingPage(false);
             return;
         }
