@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import {
@@ -58,8 +59,51 @@ const verifyUrl = async (url: string): Promise<boolean> => {
     }
 };
 
+// Helper function - moved to top for hoisting
+const extractDomain = (url: string) => {
+    try {
+        return new URL(url).hostname;
+    } catch {
+        return url;
+    }
+};
+
 export function PagesView() {
-    const [companies, setCompanies] = useState<Company[]>([]);
+    const queryClient = useQueryClient();
+
+    // TanStack Query for companies data
+    const { data: companiesResponse, isLoading: loading } = useQuery({
+        queryKey: ['companies'],
+        queryFn: async () => {
+            const result = await apiClient.getCompanies({
+                page: 1,
+                pageSize: 100,
+                sortBy: 'name',
+                sortOrder: 'asc',
+            });
+
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to load companies');
+            }
+
+            return result.data;
+        },
+        staleTime: 30 * 1000, // 30 seconds
+    });
+
+    // Local state for expanded companies
+    const [expandedCompanies, setExpandedCompanies] = useState<Set<string>>(new Set());
+
+    // Transform companies data
+    const companies: Company[] = companiesResponse
+        ? companiesResponse.data.map((company) => ({
+              ...company,
+              domain: extractDomain(company.url),
+              pages: company.pages || [],
+              expanded: expandedCompanies.has(company.id),
+          }))
+        : [];
+
     const [selectedPages, setSelectedPages] = useState<Set<string>>(new Set());
     const [showAddDialog, setShowAddDialog] = useState(false);
     const [showFirstPageDialog, setShowFirstPageDialog] = useState(false);
@@ -68,9 +112,6 @@ export function PagesView() {
     const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
     const [newCompanyName, setNewCompanyName] = useState('');
     const [newCompanyUrl, setNewCompanyUrl] = useState('');
-    const [loading, setLoading] = useState(true);
-    const [submitting, setSubmitting] = useState(false);
-    const [deleting, setDeleting] = useState(false);
     const [urlError, setUrlError] = useState<string>('');
     const [firstPageUrlError, setFirstPageUrlError] = useState<string>('');
     const [companyUrlError, setCompanyUrlError] = useState<string>('');
@@ -78,47 +119,73 @@ export function PagesView() {
     const [currentPage, setCurrentPage] = useState(1);
     const companiesPerPage = 4;
 
-    const loadCompanies = useCallback(async () => {
-        try {
-            setLoading(true);
-            const result = await apiClient.getCompanies({
-                page: 1,
-                pageSize: 100, // Get all companies for now
-                sortBy: 'name',
-                sortOrder: 'asc',
-            });
-
-            if (result.success && result.data) {
-                const companiesWithDomain: Company[] = result.data.data.map((company) => ({
-                    ...company,
-                    domain: extractDomain(company.url),
-                    pages: company.pages || [],
-                    expanded: false,
-                }));
-                setCompanies(companiesWithDomain);
-            } else {
-                toast.error(result.error || 'Failed to load companies');
+    // Mutations
+    const deletePagesMutation = useMutation({
+        mutationFn: async (pageIds: string[]) => {
+            const result = await apiClient.deletePages({ pageIds });
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to delete pages');
             }
-        } catch (error) {
-            console.error('Error loading companies:', error);
-            toast.error('Failed to load companies');
-        } finally {
-            setLoading(false);
-        }
-    }, []);
+            return result;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['companies'] });
+            setSelectedPages(new Set());
+            toast.success('Pages deleted successfully');
+        },
+        onError: (error: Error) => {
+            toast.error(error.message);
+        },
+    });
 
-    // Load companies and pages on component mount
-    useEffect(() => {
-        loadCompanies();
-    }, [loadCompanies]);
+    const createPageMutation = useMutation({
+        mutationFn: async (data: {
+            page: { url: string };
+            company: { id?: string; name?: string; url?: string };
+        }) => {
+            const result = await apiClient.createPage(data);
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to create page');
+            }
+            return result;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['companies'] });
+            setNewPageUrl('');
+            setSelectedCompanyId('');
+            setNewCompanyName('');
+            setNewCompanyUrl('');
+            setShowAddDialog(false);
+            toast.success('Page created successfully');
+        },
+        onError: (error: Error) => {
+            toast.error(error.message);
+        },
+    });
 
-    const extractDomain = (url: string) => {
-        try {
-            return new URL(url).hostname;
-        } catch {
-            return url;
-        }
-    };
+    const batchCreateMutation = useMutation({
+        mutationFn: async (urls: string[]) => {
+            const result = await apiClient.batchCreateCompanies({ urls });
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to create page');
+            }
+            return result;
+        },
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['companies'] });
+            setFirstPageUrl('');
+            setShowFirstPageDialog(false);
+
+            if (data?.data?.errors && data.data.errors.length > 0) {
+                toast.error(data.data.errors[0].error);
+            } else {
+                toast.success('Page created successfully');
+            }
+        },
+        onError: (error: Error) => {
+            toast.error(error.message);
+        },
+    });
 
     const totalPages = Math.ceil(companies.length / companiesPerPage);
     const startIndex = (currentPage - 1) * companiesPerPage;
@@ -126,11 +193,15 @@ export function PagesView() {
     const currentCompanies = companies.slice(startIndex, endIndex);
 
     const toggleExpanded = (id: string) => {
-        setCompanies((prevCompanies) =>
-            prevCompanies.map((company) =>
-                company.id === id ? { ...company, expanded: !company.expanded } : company,
-            ),
-        );
+        setExpandedCompanies((prev) => {
+            const newSet = new Set(prev);
+            if (newSet.has(id)) {
+                newSet.delete(id);
+            } else {
+                newSet.add(id);
+            }
+            return newSet;
+        });
     };
 
     const getFaviconUrl = (domain: string) => {
@@ -149,167 +220,75 @@ export function PagesView() {
 
     const handleBulkDelete = async () => {
         if (selectedPages.size === 0) return;
-
-        try {
-            setDeleting(true);
-            const pageIds = Array.from(selectedPages);
-            const result = await apiClient.deletePages({ pageIds });
-
-            if (result.success) {
-                toast.success(
-                    `Successfully deleted ${pageIds.length} page${pageIds.length > 1 ? 's' : ''}`,
-                );
-                setSelectedPages(new Set());
-                // Reload companies to reflect changes
-                await loadCompanies();
-            } else {
-                toast.error(result.error || 'Failed to delete pages');
-            }
-        } catch (error) {
-            console.error('Error deleting pages:', error);
-            toast.error('Failed to delete pages');
-        } finally {
-            setDeleting(false);
-        }
+        const pageIds = Array.from(selectedPages);
+        deletePagesMutation.mutate(pageIds);
     };
 
     const handleAddPage = async () => {
         if (!newPageUrl) return;
 
-        try {
-            setSubmitting(true);
-            setUrlError('');
+        setUrlError('');
 
-            // Validate URL format
-            if (!validateUrl(newPageUrl)) {
-                setUrlError(
-                    'Please enter a valid public website. Examples: stripe.com, https://stripe.com, http://example.org (localhost and internal IPs not allowed)',
-                );
-                setSubmitting(false);
-                return;
-            }
+        // Validate URL format
+        if (!validateUrl(newPageUrl)) {
+            setUrlError(
+                'Please enter a valid public website. Examples: stripe.com, https://stripe.com, http://example.org (localhost and internal IPs not allowed)',
+            );
+            return;
+        }
 
-            // Validate company URL if creating a new company
-            if (selectedCompanyId === 'create-new' && !validateUrl(newCompanyUrl)) {
-                setCompanyUrlError(
-                    'Please enter a valid public website. Examples: stripe.com, https://stripe.com, http://example.org (localhost and internal IPs not allowed)',
-                );
-                setSubmitting(false);
-                return;
-            }
+        // Validate company URL if creating a new company
+        if (selectedCompanyId === 'create-new' && !validateUrl(newCompanyUrl)) {
+            setCompanyUrlError(
+                'Please enter a valid public website. Examples: stripe.com, https://stripe.com, http://example.org (localhost and internal IPs not allowed)',
+            );
+            return;
+        }
 
-            // Verify URL is reachable
-            const normalizedUrl = normalizeUrl(newPageUrl);
-            const isReachable = await verifyUrl(normalizedUrl);
-            if (!isReachable) {
-                setUrlError('Unable to reach this website. Please check the URL and try again.');
-                setSubmitting(false);
-                return;
-            }
+        // Verify URL is reachable
+        const normalizedUrl = normalizeUrl(newPageUrl);
+        const isReachable = await verifyUrl(normalizedUrl);
+        if (!isReachable) {
+            setUrlError('Unable to reach this website. Please check the URL and try again.');
+            return;
+        }
 
-            let result;
+        if (selectedCompanyId === 'create-new') {
+            if (!newCompanyName || !newCompanyUrl) return;
 
-            if (selectedCompanyId === 'create-new') {
-                if (!newCompanyName || !newCompanyUrl) return;
-
-                // Normalize company URL as well
-                const normalizedCompanyUrl = normalizeUrl(newCompanyUrl);
-
-                result = await apiClient.createPage({
-                    page: {
-                        url: normalizedUrl,
-                        // Title will be auto-fetched on the server
-                    },
-                    company: {
-                        name: newCompanyName,
-                        url: normalizedCompanyUrl,
-                    },
-                });
-            } else if (selectedCompanyId) {
-                result = await apiClient.createPage({
-                    page: {
-                        url: normalizedUrl,
-                        // Title will be auto-fetched on the server
-                    },
-                    company: {
-                        id: selectedCompanyId,
-                    },
-                });
-            }
-
-            if (result?.success) {
-                toast.success('Page created successfully');
-                // Reset form
-                setNewPageUrl('');
-                setSelectedCompanyId('');
-                setNewCompanyName('');
-                setNewCompanyUrl('');
-                setShowAddDialog(false);
-                // Reload companies to reflect changes
-                await loadCompanies();
-            } else {
-                toast.error(result?.error || 'Failed to create page');
-            }
-        } catch (error) {
-            console.error('Error creating page:', error);
-            toast.error('Failed to create page');
-        } finally {
-            setSubmitting(false);
+            const normalizedCompanyUrl = normalizeUrl(newCompanyUrl);
+            createPageMutation.mutate({
+                page: { url: normalizedUrl },
+                company: { name: newCompanyName, url: normalizedCompanyUrl },
+            });
+        } else if (selectedCompanyId) {
+            createPageMutation.mutate({
+                page: { url: normalizedUrl },
+                company: { id: selectedCompanyId },
+            });
         }
     };
 
     const handleAddFirstPage = async () => {
         if (!firstPageUrl) return;
 
-        try {
-            setSubmitting(true);
-            setFirstPageUrlError('');
+        setFirstPageUrlError('');
 
-            // Validate URL format
-            if (!validateUrl(firstPageUrl)) {
-                setFirstPageUrlError("Looks like we're having trouble with this URL.");
-                setSubmitting(false);
-                return;
-            }
-
-            // Verify URL is reachable
-            const normalizedUrl = normalizeUrl(firstPageUrl);
-            const isReachable = await verifyUrl(normalizedUrl);
-            if (!isReachable) {
-                setFirstPageUrlError("Looks like we're having trouble reaching this URL.");
-                setSubmitting(false);
-                return;
-            }
-
-            // Use Batch Create Company API with single URL
-            const result = await apiClient.batchCreateCompanies({
-                urls: [normalizedUrl],
-            });
-
-            if (result?.success && result.data) {
-                const { results, errors } = result.data;
-
-                if (errors && errors.length > 0) {
-                    toast.error(errors[0].error || 'Failed to create page');
-                } else if (results && results.length > 0) {
-                    toast.success('Page created successfully');
-                    // Reset form
-                    setFirstPageUrl('');
-                    setShowFirstPageDialog(false);
-                    // Reload companies to reflect changes
-                    await loadCompanies();
-                } else {
-                    toast.error('Failed to create page');
-                }
-            } else {
-                toast.error(result?.error || 'Failed to create page');
-            }
-        } catch (error) {
-            console.error('Error creating first page:', error);
-            toast.error('Failed to create page');
-        } finally {
-            setSubmitting(false);
+        // Validate URL format
+        if (!validateUrl(firstPageUrl)) {
+            setFirstPageUrlError("Looks like we're having trouble with this URL.");
+            return;
         }
+
+        // Verify URL is reachable
+        const normalizedUrl = normalizeUrl(firstPageUrl);
+        const isReachable = await verifyUrl(normalizedUrl);
+        if (!isReachable) {
+            setFirstPageUrlError("Looks like we're having trouble reaching this URL.");
+            return;
+        }
+
+        batchCreateMutation.mutate([normalizedUrl]);
     };
 
     if (loading) {
@@ -337,10 +316,10 @@ export function PagesView() {
                             {selectedPages.size > 0 ? (
                                 <Button
                                     onClick={handleBulkDelete}
-                                    disabled={deleting}
+                                    disabled={deletePagesMutation.isPending}
                                     className="bg-gray-900 hover:bg-gray-800 text-white flex items-center justify-center space-x-2 w-full sm:w-auto"
                                 >
-                                    {deleting ? (
+                                    {deletePagesMutation.isPending ? (
                                         <Loader2 className="h-4 w-4 animate-spin" />
                                     ) : (
                                         <Trash2 className="h-4 w-4" />
@@ -655,7 +634,7 @@ export function PagesView() {
                                 <Button
                                     variant="outline"
                                     onClick={() => setShowAddDialog(false)}
-                                    disabled={submitting}
+                                    disabled={createPageMutation.isPending}
                                     className="hover:bg-gray-50 w-full sm:w-auto"
                                 >
                                     Cancel
@@ -663,14 +642,14 @@ export function PagesView() {
                                 <Button
                                     onClick={handleAddPage}
                                     disabled={
-                                        submitting ||
+                                        createPageMutation.isPending ||
                                         !newPageUrl ||
                                         (selectedCompanyId === 'create-new' &&
                                             (!newCompanyName || !newCompanyUrl))
                                     }
                                     className="bg-gray-900 hover:bg-gray-800 text-white w-full sm:w-auto"
                                 >
-                                    {submitting ? (
+                                    {createPageMutation.isPending ? (
                                         <>
                                             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                                             Creating...
@@ -731,17 +710,17 @@ export function PagesView() {
                                 <Button
                                     variant="outline"
                                     onClick={() => setShowFirstPageDialog(false)}
-                                    disabled={submitting}
+                                    disabled={batchCreateMutation.isPending}
                                     className="hover:bg-gray-50 w-full sm:w-auto"
                                 >
                                     Cancel
                                 </Button>
                                 <Button
                                     onClick={handleAddFirstPage}
-                                    disabled={submitting || !firstPageUrl}
+                                    disabled={batchCreateMutation.isPending || !firstPageUrl}
                                     className="bg-gray-900 hover:bg-gray-800 text-white w-full sm:w-auto"
                                 >
-                                    {submitting ? (
+                                    {batchCreateMutation.isPending ? (
                                         <>
                                             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                                             Creating...

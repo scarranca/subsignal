@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -17,33 +18,66 @@ import { apiClient } from '@/client/api';
 import { toast } from 'sonner';
 
 export function SettingsView() {
-    const [properties, setProperties] = useState({
-        pricing: false,
-        product: false,
-        customer: false,
-        partnership: false,
-        branding: false,
-        messaging: false,
+    const queryClient = useQueryClient();
+
+    // TanStack Query for preferences data
+    const { data: preferences, isLoading: loading } = useQuery({
+        queryKey: ['preferences'],
+        queryFn: async () => {
+            const result = await apiClient.getPreferences();
+            if (!result.success) {
+                // If no preferences found (404), return null for new users
+                if (result.error?.includes('not found')) {
+                    return null;
+                }
+                throw new Error(result.error || 'Failed to load preferences');
+            }
+            return result.data;
+        },
+        staleTime: 30 * 1000, // 30 seconds
     });
 
-    const [originalProperties, setOriginalProperties] = useState({
-        pricing: false,
-        product: false,
-        customer: false,
-        partnership: false,
-        branding: false,
-        messaging: false,
-    });
+    // Compute properties state from preferences
+    const properties = preferences
+        ? {
+              pricing: preferences.properties.includes('pricing'),
+              product: preferences.properties.includes('product'),
+              customer: preferences.properties.includes('customer'),
+              partnership: preferences.properties.includes('partnership'),
+              branding: preferences.properties.includes('branding'),
+              messaging: preferences.properties.includes('messaging'),
+          }
+        : {
+              pricing: false,
+              product: false,
+              customer: false,
+              partnership: false,
+              branding: false,
+              messaging: false,
+          };
 
+    const [localProperties, setLocalProperties] = useState(properties);
     const [frequency, setFrequency] = useState<
         '7_day' | '15_day' | '1_month' | '3_month' | '6_month'
-    >('15_day');
-    const [originalFrequency, setOriginalFrequency] = useState<
-        '7_day' | '15_day' | '1_month' | '3_month' | '6_month'
-    >('15_day');
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
-    const [hasPreferences, setHasPreferences] = useState(false);
+    >(preferences?.frequency || '15_day');
+
+    const hasPreferences = !!preferences;
+
+    // Sync local state with server state when preferences load
+    useEffect(() => {
+        if (preferences) {
+            const newProperties = {
+                pricing: preferences.properties.includes('pricing'),
+                product: preferences.properties.includes('product'),
+                customer: preferences.properties.includes('customer'),
+                partnership: preferences.properties.includes('partnership'),
+                branding: preferences.properties.includes('branding'),
+                messaging: preferences.properties.includes('messaging'),
+            };
+            setLocalProperties(newProperties);
+            setFrequency(preferences.frequency);
+        }
+    }, [preferences]);
 
     const frequencyOptions = [
         { value: '7_day', label: '7 days' },
@@ -53,72 +87,10 @@ export function SettingsView() {
         { value: '6_month', label: '6 months' },
     ] as const;
 
-    // Load preferences on component mount
-    useEffect(() => {
-        loadPreferences();
-    }, []);
-
-    const loadPreferences = async () => {
-        try {
-            setLoading(true);
-            const result = await apiClient.getPreferences();
-
-            if (result.success && result.data) {
-                const preference = result.data;
-
-                // Convert array of properties to object with boolean values
-                const propertiesObj = {
-                    pricing: preference.properties.includes('pricing'),
-                    product: preference.properties.includes('product'),
-                    customer: preference.properties.includes('customer'),
-                    partnership: preference.properties.includes('partnership'),
-                    branding: preference.properties.includes('branding'),
-                    messaging: preference.properties.includes('messaging'),
-                };
-
-                setProperties(propertiesObj);
-                setOriginalProperties(propertiesObj);
-                setFrequency(preference.frequency);
-                setOriginalFrequency(preference.frequency);
-                setHasPreferences(true);
-            } else {
-                // If no preferences found (404), that's expected for new users
-                if (result.error?.includes('not found')) {
-                    setHasPreferences(false);
-                } else {
-                    toast.error(result.error || 'Failed to load preferences');
-                }
-            }
-        } catch (error) {
-            console.error('Error loading preferences:', error);
-            toast.error('Failed to load preferences');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Check if there are any changes
-    const hasChanges = () => {
-        const propertiesChanged = JSON.stringify(properties) !== JSON.stringify(originalProperties);
-        const frequencyChanged = frequency !== originalFrequency;
-        return propertiesChanged || frequencyChanged;
-    };
-
-    const toggleProperty = (key: string) => {
-        setProperties((prev) => ({
-            ...prev,
-            [key]: !prev[key as keyof typeof prev],
-        }));
-    };
-
-    const handleSave = async () => {
-        try {
-            setSaving(true);
-
-            // Convert properties object to array of enabled properties
-            const enabledProperties = Object.entries(properties)
-                .filter(([, enabled]) => enabled)
-                .map(([property]) => property) as (
+    // Mutation for saving preferences
+    const savePreferencesMutation = useMutation({
+        mutationFn: async (data: {
+            properties: (
                 | 'pricing'
                 | 'product'
                 | 'customer'
@@ -126,35 +98,62 @@ export function SettingsView() {
                 | 'branding'
                 | 'messaging'
             )[];
-
-            if (enabledProperties.length === 0) {
-                toast.error('Please select at least one property to monitor');
-                return;
-            }
-
-            const requestData = {
-                properties: enabledProperties,
-                frequency: frequency,
-            };
-
+            frequency: '7_day' | '15_day' | '1_month' | '3_month' | '6_month';
+        }) => {
             const result = hasPreferences
-                ? await apiClient.updatePreferences(requestData)
-                : await apiClient.upsertPreferences(requestData);
+                ? await apiClient.updatePreferences(data)
+                : await apiClient.upsertPreferences(data);
 
-            if (result.success) {
-                setHasPreferences(true);
-                setOriginalProperties(properties);
-                setOriginalFrequency(frequency);
-                toast.success('Preferences saved successfully');
-            } else {
-                toast.error(result.error || 'Failed to save preferences');
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to save preferences');
             }
-        } catch (error) {
-            console.error('Error saving preferences:', error);
-            toast.error('Failed to save preferences');
-        } finally {
-            setSaving(false);
+            return result.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['preferences'] });
+            toast.success('Preferences saved successfully');
+        },
+        onError: (error: Error) => {
+            toast.error(error.message);
+        },
+    });
+
+    // Check if there are any changes
+    const hasChanges = () => {
+        const propertiesChanged = JSON.stringify(localProperties) !== JSON.stringify(properties);
+        const frequencyChanged = frequency !== (preferences?.frequency || '15_day');
+        return propertiesChanged || frequencyChanged;
+    };
+
+    const toggleProperty = (key: string) => {
+        setLocalProperties((prev) => ({
+            ...prev,
+            [key]: !prev[key as keyof typeof prev],
+        }));
+    };
+
+    const handleSave = async () => {
+        // Convert properties object to array of enabled properties
+        const enabledProperties = Object.entries(localProperties)
+            .filter(([, enabled]) => enabled)
+            .map(([property]) => property) as (
+            | 'pricing'
+            | 'product'
+            | 'customer'
+            | 'partnership'
+            | 'branding'
+            | 'messaging'
+        )[];
+
+        if (enabledProperties.length === 0) {
+            toast.error('Please select at least one property to monitor');
+            return;
         }
+
+        savePreferencesMutation.mutate({
+            properties: enabledProperties,
+            frequency: frequency,
+        });
     };
 
     if (loading) {
@@ -183,11 +182,11 @@ export function SettingsView() {
                         {hasChanges() && (
                             <Button
                                 onClick={handleSave}
-                                disabled={saving}
+                                disabled={savePreferencesMutation.isPending}
                                 size="sm"
                                 className="bg-gray-900 hover:bg-gray-800 text-white"
                             >
-                                {saving ? (
+                                {savePreferencesMutation.isPending ? (
                                     <>
                                         <Loader2 className="h-3 w-3 mr-2 animate-spin" />
                                         Saving...
@@ -200,7 +199,7 @@ export function SettingsView() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {Object.entries(properties).map(([key, checked]) => (
+                        {Object.entries(localProperties).map(([key, checked]) => (
                             <div key={key} className="flex items-start space-x-3">
                                 <Checkbox
                                     id={key}
