@@ -12,6 +12,7 @@ import {
     ChevronLeft,
     Loader2,
     FileText,
+    ArrowUpRight,
 } from 'lucide-react';
 import {
     Dialog,
@@ -517,14 +518,20 @@ export function PagesView() {
                                                             }`}
                                                         />
                                                         <FileText className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                                                        <div className="min-w-0 flex-1">
+                                                        <a
+                                                            href={page.url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="min-w-0 flex-1 hover:text-blue-600 transition-colors cursor-pointer"
+                                                        >
                                                             <div className="text-sm font-medium text-gray-900 truncate">
                                                                 {page.title}
                                                             </div>
-                                                            <div className="text-xs text-gray-500 truncate">
+                                                            <div className="text-xs text-gray-500 truncate flex items-center gap-1">
                                                                 {page.url}
+                                                                <ArrowUpRight className="w-3 h-3 text-gray-400 flex-shrink-0" />
                                                             </div>
-                                                        </div>
+                                                        </a>
                                                     </div>
                                                 </div>
                                             ))}
