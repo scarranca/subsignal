@@ -15,6 +15,13 @@
             "when": 1755205070750,
             "tag": "0001_past_wind_dancer",
             "breakpoints": true
+        },
+        {
+            "idx": 2,
+            "version": "7",
+            "when": 1755356183851,
+            "tag": "0002_swift_morph",
+            "breakpoints": true
         }
     ]
 }

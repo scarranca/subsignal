@@ -300,14 +300,14 @@ export function PagesView() {
 
         // Validate URL format
         if (!validateUrl(newPageUrl)) {
-            setUrlError('Looks like we&apos;re having trouble with this URL');
+            setUrlError("Looks like we're having trouble with this URL");
             setIsSubmittingPage(false);
             return;
         }
 
         // Validate company URL if creating a new company
         if (selectedCompanyId === 'create-new' && !validateUrl(newCompanyUrl)) {
-            setCompanyUrlError('Looks like we&apos;re having trouble with this URL');
+            setCompanyUrlError("Looks like we're having trouble with this URL");
             setIsSubmittingPage(false);
             return;
         }

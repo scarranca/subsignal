@@ -28,7 +28,6 @@ export const OnboardingSteps = ({ currentStep, onNext }: OnboardingStepsProps) =
         frequency: '7_day',
     });
 
-    console.log('OnboardingSteps - Current data:', data);
     const [isLoading, setIsLoading] = useState(false);
     const [isInitialLoading, setIsInitialLoading] = useState(true);
 

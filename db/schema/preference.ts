@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, pgEnum, index } from 'drizzle-orm/pg-core';
 import { user } from './auth';
 
 export const frequencyEnum = pgEnum('frequency', [
@@ -18,19 +18,25 @@ export const propertiesEnum = pgEnum('properties', [
     'messaging',
 ]);
 
-export const preference = pgTable('preference', {
-    id: text('id').primaryKey(),
-    userId: text('user_id')
-        .notNull()
-        .unique()
-        .references(() => user.id, { onDelete: 'cascade' }),
-    properties: text('properties').array().notNull(),
-    frequency: frequencyEnum('frequency').notNull(),
-    isActive: boolean('is_active').default(true).notNull(),
-    createdAt: timestamp('created_at')
-        .$defaultFn(() => new Date())
-        .notNull(),
-    updatedAt: timestamp('updated_at')
-        .$defaultFn(() => new Date())
-        .notNull(),
-});
+export const preference = pgTable(
+    'preference',
+    {
+        id: text('id').primaryKey(),
+        userId: text('user_id')
+            .notNull()
+            .unique()
+            .references(() => user.id, { onDelete: 'cascade' }),
+        properties: text('properties').array().notNull(),
+        frequency: frequencyEnum('frequency').notNull(),
+        isActive: boolean('is_active').default(true).notNull(),
+        createdAt: timestamp('created_at')
+            .$defaultFn(() => new Date())
+            .notNull(),
+        updatedAt: timestamp('updated_at')
+            .$defaultFn(() => new Date())
+            .notNull(),
+    },
+    (table) => ({
+        userActiveIdx: index('idx_preference_user_active').on(table.userId, table.isActive),
+    }),
+);

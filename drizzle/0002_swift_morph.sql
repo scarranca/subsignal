@@ -1,0 +1,1 @@
+CREATE INDEX "idx_preference_user_active" ON "preference" USING btree ("user_id","is_active");
