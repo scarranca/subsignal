@@ -3,6 +3,7 @@ import { user } from './auth';
 import { preference } from './preference';
 import { company } from './company';
 import { page } from './page';
+import { snapshot } from './snapshot';
 
 export const userRelations = relations(user, ({ one, many }) => ({
     preference: one(preference, {
@@ -27,9 +28,17 @@ export const companyRelations = relations(company, ({ one, many }) => ({
     pages: many(page),
 }));
 
-export const pageRelations = relations(page, ({ one }) => ({
+export const pageRelations = relations(page, ({ one, many }) => ({
     company: one(company, {
         fields: [page.companyId],
         references: [company.id],
+    }),
+    snapshots: many(snapshot),
+}));
+
+export const snapshotRelations = relations(snapshot, ({ one }) => ({
+    page: one(page, {
+        fields: [snapshot.pageId],
+        references: [page.id],
     }),
 }));
