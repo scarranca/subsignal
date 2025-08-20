@@ -8,6 +8,7 @@ import auth from '../routes/auth';
 import preferences from '../routes/preference';
 import companies from '../routes/company';
 import pages from '../routes/page';
+import snapshots from '../routes/snapshot';
 
 /**
  * Force Node.js runtime to support googleapis and other Node.js modules
@@ -59,6 +60,7 @@ const v1 = new Hono();
 v1.route('/preferences', preferences);
 v1.route('/companies', companies);
 v1.route('/pages', pages);
+v1.route('/snapshots', snapshots);
 
 app.route('/v1', v1);
 

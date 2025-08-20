@@ -150,6 +150,37 @@
                         }
                     },
                     "response": []
+                },
+                {
+                    "name": "Batch Create Companies",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "subsignal.session_token={{sessionToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"urls\": [\n        \"https://stripe.com/pricing\",\n        \"https://github.com/features\",\n        \"https://vercel.com/dashboard\"\n    ]\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseURL}}/api/v1/companies/batch",
+                            "host": ["{{baseURL}}"],
+                            "path": ["api", "v1", "companies", "batch"]
+                        }
+                    },
+                    "response": []
                 }
             ]
         },
@@ -491,6 +522,176 @@
                             "raw": "{{baseURL}}/api/health/live",
                             "host": ["{{baseURL}}"],
                             "path": ["api", "health", "live"]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Snapshot",
+            "item": [
+                {
+                    "name": "Create Archive Snapshots",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "subsignal.session_token={{sessionToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"pageId\": \"{{pageId}}\",\n    \"type\": \"archive\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseURL}}/api/v1/snapshots",
+                            "host": ["{{baseURL}}"],
+                            "path": ["api", "v1", "snapshots"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Live Snapshots",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Cookie",
+                                "value": "subsignal.session_token={{sessionToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"pageId\": \"3b19f654-e6a4-47da-b5af-e76e81885a1d\",\n    \"type\": \"live\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseURL}}/api/v1/snapshots",
+                            "host": ["{{baseURL}}"],
+                            "path": ["api", "v1", "snapshots"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Latest Snapshots for Page",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Cookie",
+                                "value": "subsignal.session_token={{sessionToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseURL}}/api/v1/snapshots/page/{{pageId}}?sortBy=updatedAt&sortOrder=asc&content=diff",
+                            "host": ["{{baseURL}}"],
+                            "path": ["api", "v1", "snapshots", "page", "{{pageId}}"],
+                            "query": [
+                                {
+                                    "key": "sortBy",
+                                    "value": "updatedAt"
+                                },
+                                {
+                                    "key": "sortOrder",
+                                    "value": "asc"
+                                },
+                                {
+                                    "key": "content",
+                                    "value": "diff"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "List Snapshots for Page",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Cookie",
+                                "value": "subsignal.session_token={{sessionToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseURL}}/api/v1/snapshots/page/{{pageId}}?page=1&pageSize=20&sortBy=createdAt&sortOrder=desc&content=diff",
+                            "host": ["{{baseURL}}"],
+                            "path": ["api", "v1", "snapshots", "page", "{{pageId}}"],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "pageSize",
+                                    "value": "20"
+                                },
+                                {
+                                    "key": "sortBy",
+                                    "value": "createdAt"
+                                },
+                                {
+                                    "key": "sortOrder",
+                                    "value": "desc"
+                                },
+                                {
+                                    "key": "content",
+                                    "value": "diff"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Latest Snapshots for Company",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Cookie",
+                                "value": "subsignal.session_token={{sessionToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseURL}}/api/v1/snapshots/company/{{companyId}}/latest?content=diff",
+                            "host": ["{{baseURL}}"],
+                            "path": [
+                                "api",
+                                "v1",
+                                "snapshots",
+                                "company",
+                                "{{companyId}}",
+                                "latest"
+                            ],
+                            "query": [
+                                {
+                                    "key": "content",
+                                    "value": "diff"
+                                }
+                            ]
                         }
                     },
                     "response": []
