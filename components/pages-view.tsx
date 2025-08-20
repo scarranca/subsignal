@@ -780,9 +780,7 @@ export function PagesView() {
                             <DialogTitle className="text-lg font-semibold text-gray-900">
                                 Add Your First Page
                             </DialogTitle>
-                            <DialogDescription>
-                                We&apos;ll automatically create a company from the page URL.
-                            </DialogDescription>
+                            <DialogDescription>We&apos;ll keep you in the loop</DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 py-4">
                             <div>
