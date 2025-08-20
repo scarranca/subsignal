@@ -3,7 +3,7 @@
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Input } from '@/components/ui/input';
+import { URLInput } from '@/components/ui/url-input';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Plus, X } from 'lucide-react';
@@ -202,8 +202,9 @@ export const OnboardingStepOne = ({
                                 <FormItem>
                                     <div className="flex gap-2">
                                         <FormControl>
-                                            <Input
-                                                {...formField}
+                                            <URLInput
+                                                value={formField.value}
+                                                onChange={formField.onChange}
                                                 placeholder={
                                                     index === 0
                                                         ? 'stripe.com'
@@ -221,7 +222,7 @@ export const OnboardingStepOne = ({
                                                         handleSubmit();
                                                     }
                                                 }}
-                                                className="h-10 text-sm bg-gray-50 border-gray-200 rounded-lg px-3 flex-1"
+                                                className="flex-1 h-10 text-sm bg-gray-50 border-gray-200 rounded-lg"
                                             />
                                         </FormControl>
                                         {fields.length > 1 && (

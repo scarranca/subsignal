@@ -22,6 +22,7 @@ import {
     DialogDescription,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { URLInput } from '@/components/ui/url-input';
 import { Label } from '@/components/ui/label';
 import {
     Select,
@@ -434,12 +435,12 @@ export function PagesView() {
 
                 {companies.length === 0 ? (
                     <div className="text-center py-12">
-                        <div className="text-gray-500 mb-4">
+                        {/* <div className="text-gray-500 mb-4">
                             Looks like you don&apos;t have any companies yet
-                        </div>
+                        </div> */}
                         <Button
                             onClick={() => setShowFirstPageDialog(true)}
-                            className="bg-gray-900 hover:bg-gray-800 text-white"
+                            className="bg-gray-900 hover:bg-gray-800 text-white h-12"
                         >
                             <Plus className="h-4 w-4 mr-2" />
                             Add your first company
@@ -632,15 +633,16 @@ export function PagesView() {
                                 >
                                     Page URL
                                 </Label>
-                                <Input
+                                <URLInput
                                     id="page-url"
                                     value={newPageUrl}
-                                    onChange={(e) => {
-                                        setNewPageUrl(e.target.value);
+                                    onChange={(value) => {
+                                        setNewPageUrl(value);
                                         setUrlError('');
                                     }}
-                                    placeholder="https://stripe.com/pricing"
-                                    className={`mt-1 ${urlError ? 'border-red-500' : ''}`}
+                                    placeholder="stripe.com/pricing"
+                                    error={!!urlError}
+                                    className="mt-1"
                                 />
                                 {urlError && (
                                     <p className="text-sm text-red-600 mt-1">{urlError}</p>
@@ -706,15 +708,16 @@ export function PagesView() {
                                             >
                                                 Company URL
                                             </Label>
-                                            <Input
+                                            <URLInput
                                                 id="company-url"
                                                 value={newCompanyUrl}
-                                                onChange={(e) => {
-                                                    setNewCompanyUrl(e.target.value);
+                                                onChange={(value) => {
+                                                    setNewCompanyUrl(value);
                                                     setCompanyUrlError('');
                                                 }}
-                                                placeholder="https://stripe.com"
-                                                className={`mt-1 ${companyUrlError ? 'border-red-500' : ''}`}
+                                                placeholder="stripe.com"
+                                                error={!!companyUrlError}
+                                                className="mt-1"
                                             />
                                             {companyUrlError && (
                                                 <p className="text-sm text-red-600 mt-1">
@@ -789,15 +792,16 @@ export function PagesView() {
                                 >
                                     Page URL
                                 </Label>
-                                <Input
+                                <URLInput
                                     id="first-page-url"
                                     value={firstPageUrl}
-                                    onChange={(e) => {
-                                        setFirstPageUrl(e.target.value);
+                                    onChange={(value) => {
+                                        setFirstPageUrl(value);
                                         setFirstPageUrlError('');
                                     }}
-                                    placeholder="https://stripe.com/pricing"
-                                    className={`mt-1 ${firstPageUrlError ? 'border-red-500' : ''}`}
+                                    placeholder="stripe.com/pricing"
+                                    error={!!firstPageUrlError}
+                                    className="mt-1"
                                 />
                                 {firstPageUrlError && (
                                     <p className="text-sm text-red-600 mt-1">{firstPageUrlError}</p>
