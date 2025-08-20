@@ -7,12 +7,23 @@ import { dump } from 'js-yaml';
  * Service for creating diffs between content
  */
 export class DiffService {
+    private static instance: DiffService;
     private contentDiffService: ContentDiffService;
     private markdownDiffService: MarkdownDiffService;
 
-    constructor() {
+    private constructor() {
         this.contentDiffService = ContentDiffService.getInstance();
         this.markdownDiffService = MarkdownDiffService.getInstance();
+    }
+
+    /**
+     * Get singleton instance of DiffService
+     */
+    static getInstance(): DiffService {
+        if (!DiffService.instance) {
+            DiffService.instance = new DiffService();
+        }
+        return DiffService.instance;
     }
 
     /**
@@ -40,3 +51,5 @@ export class DiffService {
         return markdownDiff.diff;
     }
 }
+
+export const diffService = DiffService.getInstance();

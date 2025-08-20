@@ -6,111 +6,41 @@ import { snapshot } from '../schema/snapshot';
 import type { PaginationOptions, PaginatedResult } from './types';
 
 export const snapshotQueries = {
-    async createSnapshot(pageId: string, diff: string, userId: string) {
-        // Verify page exists and belongs to user
-        const pageWithCompany = await db
-            .select({
-                page: page,
-                company: {
-                    userId: company.userId,
-                    isActive: company.isActive,
-                },
-            })
-            .from(page)
-            .innerJoin(company, eq(page.companyId, company.id))
-            .where(eq(page.id, pageId))
-            .limit(1);
-
-        const existingPage = pageWithCompany[0];
-
-        if (
-            !existingPage ||
-            existingPage.company.userId !== userId ||
-            !existingPage.page.isActive ||
-            !existingPage.company.isActive
-        ) {
-            throw new Error('Page not found');
-        }
-
+    async createSnapshot(pageId: string, pageURL: string, snapshotDiff: string) {
         const [newSnapshot] = await db
             .insert(snapshot)
             .values({
                 pageId: pageId,
-                pageURL: existingPage.page.url,
-                diff: diff,
+                pageURL: pageURL,
+                diff: snapshotDiff,
             })
             .returning();
 
         return newSnapshot;
     },
 
-    async getLastSnapshotForPage(pageId: string, userId: string) {
-        // Verify page belongs to user and get the latest snapshot
-        const result = await db
-            .select({
-                snapshot: snapshot,
-                page: page,
-                company: {
-                    userId: company.userId,
-                    isActive: company.isActive,
-                },
-            })
+    /**
+     * Get the last snapshot for a page
+     * @param pageId - The ID of the page to get the last snapshot for
+     * @param pageURL - The URL of the page to get the last snapshot for
+     * @returns The last snapshot for the page
+     */
+    async getLastSnapshotForPage(pageId: string, pageURL: string) {
+        const [lastSnapshot] = await db
+            .select()
             .from(snapshot)
-            .innerJoin(page, eq(snapshot.pageId, page.id))
-            .innerJoin(company, eq(page.companyId, company.id))
-            .where(eq(snapshot.pageId, pageId))
+            .where(and(eq(snapshot.pageId, pageId), eq(snapshot.pageURL, pageURL)))
             .orderBy(desc(snapshot.createdAt))
             .limit(1);
 
-        const snapshotWithPage = result[0];
-
-        if (
-            !snapshotWithPage ||
-            snapshotWithPage.company.userId !== userId ||
-            !snapshotWithPage.page.isActive ||
-            !snapshotWithPage.company.isActive
-        ) {
-            return null;
-        }
-
-        return {
-            ...snapshotWithPage.snapshot,
-            page: snapshotWithPage.page,
-        };
+        return lastSnapshot;
     },
 
     async listSnapshotsForPage(
         pageId: string,
-        userId: string,
+        pageURL: string,
         options: PaginationOptions = {},
     ): Promise<PaginatedResult<typeof snapshot.$inferSelect>> {
-        // Verify page belongs to user
-        const pageCheck = await db
-            .select({
-                company: {
-                    userId: company.userId,
-                    isActive: company.isActive,
-                },
-                page: {
-                    isActive: page.isActive,
-                },
-            })
-            .from(page)
-            .innerJoin(company, eq(page.companyId, company.id))
-            .where(eq(page.id, pageId))
-            .limit(1);
-
-        const pageWithCompany = pageCheck[0];
-
-        if (
-            !pageWithCompany ||
-            pageWithCompany.company.userId !== userId ||
-            !pageWithCompany.page.isActive ||
-            !pageWithCompany.company.isActive
-        ) {
-            throw new Error('Page not found');
-        }
-
         const {
             page: currentPage = 1,
             pageSize = 10,
@@ -122,19 +52,17 @@ export const snapshotQueries = {
         const orderByColumn = sortBy === 'updatedAt' ? snapshot.updatedAt : snapshot.createdAt;
         const orderDirection = sortOrder === 'asc' ? asc : desc;
 
-        // Get total count
         const [{ count: totalItems }] = await db
             .select({ count: count() })
             .from(snapshot)
-            .where(eq(snapshot.pageId, pageId));
+            .where(and(eq(snapshot.pageId, pageId), eq(snapshot.pageURL, pageURL)));
 
         const totalPages = Math.ceil(totalItems / pageSize);
 
-        // Get paginated snapshots
         const snapshots = await db
             .select()
             .from(snapshot)
-            .where(eq(snapshot.pageId, pageId))
+            .where(and(eq(snapshot.pageId, pageId), eq(snapshot.pageURL, pageURL)))
             .orderBy(orderDirection(orderByColumn))
             .limit(pageSize)
             .offset(offset);
@@ -152,7 +80,7 @@ export const snapshotQueries = {
         };
     },
 
-    async getLastSnapshotsForPages(pageIds: string[], userId: string) {
+    async getLastSnapshotsForPages(pageIds: string[]) {
         if (pageIds.length === 0) {
             return [];
         }
@@ -171,19 +99,10 @@ export const snapshotQueries = {
             return [];
         }
 
-        // Get the actual snapshots with their page and company info
+        // Get the actual snapshots
         const result = await db
-            .select({
-                snapshot: snapshot,
-                page: page,
-                company: {
-                    userId: company.userId,
-                    isActive: company.isActive,
-                },
-            })
+            .select()
             .from(snapshot)
-            .innerJoin(page, eq(snapshot.pageId, page.id))
-            .innerJoin(company, eq(page.companyId, company.id))
             .where(
                 and(
                     inArray(snapshot.pageId, pageIds),
@@ -194,25 +113,13 @@ export const snapshotQueries = {
                 ),
             );
 
-        // Filter out unauthorized results
-        const authorizedSnapshots = result.filter(
-            (item) => item.company.userId === userId && item.page.isActive && item.company.isActive,
-        );
-
-        return authorizedSnapshots.map((item) => ({
-            ...item.snapshot,
-            page: item.page,
-        }));
+        return result;
     },
 
-    async getLastSnapshotsForCompany(companyId: string, userId: string) {
+    async getLastSnapshotsForCompany(companyId: string) {
         // Verify company belongs to user
         const companyExists = await db.query.company.findFirst({
-            where: and(
-                eq(company.id, companyId),
-                eq(company.userId, userId),
-                eq(company.isActive, true),
-            ),
+            where: and(eq(company.id, companyId), eq(company.isActive, true)),
         });
 
         if (!companyExists) {
@@ -232,55 +139,20 @@ export const snapshotQueries = {
         }
 
         // Get latest snapshots for all pages in the company
-        return await this.getLastSnapshotsForPages(pageIds, userId);
+        return await this.getLastSnapshotsForPages(pageIds);
     },
 
-    async getSnapshotById(snapshotId: number, userId: string) {
-        const result = await db
-            .select({
-                snapshot: snapshot,
-                page: page,
-                company: {
-                    id: company.id,
-                    name: company.name,
-                    userId: company.userId,
-                    isActive: company.isActive,
-                },
-            })
+    async getSnapshotById(snapshotId: number) {
+        const [result] = await db
+            .select()
             .from(snapshot)
-            .innerJoin(page, eq(snapshot.pageId, page.id))
-            .innerJoin(company, eq(page.companyId, company.id))
             .where(eq(snapshot.id, snapshotId))
             .limit(1);
 
-        const snapshotWithDetails = result[0];
-
-        if (
-            !snapshotWithDetails ||
-            snapshotWithDetails.company.userId !== userId ||
-            !snapshotWithDetails.page.isActive ||
-            !snapshotWithDetails.company.isActive
-        ) {
+        if (!result) {
             throw new Error('Snapshot not found');
         }
 
-        return {
-            ...snapshotWithDetails.snapshot,
-            page: snapshotWithDetails.page,
-            company: snapshotWithDetails.company,
-        };
-    },
-
-    async deleteSnapshotById(snapshotId: number, userId: string) {
-        // First verify the snapshot exists and belongs to user
-        const existingSnapshot = await this.getSnapshotById(snapshotId, userId);
-
-        // Delete the snapshot record
-        const [deletedSnapshot] = await db
-            .delete(snapshot)
-            .where(eq(snapshot.id, snapshotId))
-            .returning();
-
-        return deletedSnapshot;
+        return result;
     },
 };
