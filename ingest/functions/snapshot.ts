@@ -79,7 +79,7 @@ export const refreshSnapshot7Day = inngest.createFunction(
             };
         });
 
-        const result = await snapshotService.queueSnapshotForUsers(step, userData);
+        const result = await snapshotService.refreshSnapshotForUsers(step, userData);
         console.log(
             `Successfully processed ${result.successfulUsers} out of ${users.length} users`,
         );
@@ -99,7 +99,7 @@ export const refreshSnapshot15Day = inngest.createFunction(
             };
         });
 
-        const result = await snapshotService.queueSnapshotForUsers(step, userData);
+        const result = await snapshotService.refreshSnapshotForUsers(step, userData);
         console.log(
             `Successfully processed ${result.successfulUsers} out of ${users.length} users`,
         );
@@ -119,7 +119,7 @@ export const refreshSnapshot1Month = inngest.createFunction(
             };
         });
 
-        const result = await snapshotService.queueSnapshotForUsers(step, userData);
+        const result = await snapshotService.refreshSnapshotForUsers(step, userData);
         console.log(
             `Successfully processed ${result.successfulUsers} out of ${users.length} users`,
         );
@@ -139,7 +139,7 @@ export const refreshSnapshot3Month = inngest.createFunction(
             };
         });
 
-        const result = await snapshotService.queueSnapshotForUsers(step, userData);
+        const result = await snapshotService.refreshSnapshotForUsers(step, userData);
         console.log(
             `Successfully processed ${result.successfulUsers} out of ${users.length} users`,
         );
@@ -159,7 +159,7 @@ export const refreshSnapshot6Month = inngest.createFunction(
             };
         });
 
-        const result = await snapshotService.queueSnapshotForUsers(step, userData);
+        const result = await snapshotService.refreshSnapshotForUsers(step, userData);
         console.log(
             `Successfully processed ${result.successfulUsers} out of ${users.length} users`,
         );

@@ -249,83 +249,86 @@ export class SnapshotService {
     }
 
     /**
-     * Queue a snapshot for a user
-     * @description This function will queue a snapshot for a list of users
+     * Refresh snapshots for a list of users
+     * @description This function will refresh snapshots for a list of users
      * It will first find the pages of each user and then create a snapshot event for each page
      * @param step - The step to send the snapshot events to
-     * @param userIds - The list of users to queue snapshots for
-     * @param type - The type of snapshot to create (live or archive)
+     * @param userData - The list of users to refresh snapshots for
      */
-    async queueSnapshotForUsers(
+    async refreshSnapshotForUsers(
         step: GetStepTools<typeof inngest>,
         userData: { userId: string; properties: Record<string, any> }[],
     ) {
-        // Process all users in parallel
-        const userProcessingPromises = userData.map(async (user) => {
-            const allSnapshotEvents = [];
-            let hasNext = true;
-            let page = 1;
+        let successfulUsers = 0;
+        let totalEvents = 0;
 
-            // Collect all pages for this user
-            while (hasNext) {
-                const result = await pageQueries.getPaginatedPagesByUser(user.userId, {
-                    page,
-                    pageSize: 10,
-                });
+        // Process each user as a separate step for better isolation and retry logic
+        for (let userIndex = 0; userIndex < userData.length; userIndex++) {
+            const user = userData[userIndex];
 
-                // If there are no more pages, break the loop
-                if (result.data.length === 0) {
-                    break;
+            // Step 1: Get all pages for this user
+            const userPages = await step.run(`get-pages-${user.userId}`, async () => {
+                const allPages = [];
+                let hasNext = true;
+                let page = 1;
+
+                while (hasNext) {
+                    const result = await pageQueries.getPaginatedPagesByUser(user.userId, {
+                        page,
+                        pageSize: 10,
+                    });
+
+                    if (result.data.length === 0) {
+                        break;
+                    }
+
+                    allPages.push(...result.data);
+                    hasNext = result.pagination.hasNext;
+                    page = result.pagination.page + 1;
                 }
 
-                // Add snapshot events for each page
-                const snapshotEvents = result.data.map((pageWithCompany) => ({
-                    name: 'snapshot/create.live.snapshot',
-                    data: {
-                        pageId: pageWithCompany.page.id,
-                        userId: user.userId,
-                        pageProperties: user.properties,
-                    },
-                }));
+                return allPages;
+            });
 
-                allSnapshotEvents.push(...snapshotEvents);
-
-                // If there are more pages, continue the loop
-                hasNext = result.pagination.hasNext;
-                page = result.pagination.page + 1;
+            // Skip if user has no pages
+            if (userPages.length === 0) {
+                continue;
             }
 
-            // Send all events for this user at once (if any)
-            if (allSnapshotEvents.length > 0) {
-                // Make batches of 5000 events
-                const batches = [];
-                for (let i = 0; i < allSnapshotEvents.length; i += 5000) {
-                    batches.push(allSnapshotEvents.slice(i, i + 5000));
-                }
+            // Step 2: Create snapshot events for this user's pages
+            const snapshotEvents = userPages.map((pageWithCompany) => ({
+                name: 'snapshot/create.live.snapshot',
+                data: {
+                    pageId: pageWithCompany.page.id,
+                    userId: user.userId,
+                    pageProperties: user.properties,
+                },
+            }));
 
-                // Send each batch to the step
-                for (const batch of batches) {
-                    console.log(`[SnapshotService] Sending batch of ${batch.length} events`);
+            // Step 3: Send events in batches
+            const BATCH_SIZE = 1000;
+            const batches = [];
+            for (let i = 0; i < snapshotEvents.length; i += BATCH_SIZE) {
+                batches.push(snapshotEvents.slice(i, i + BATCH_SIZE));
+            }
+
+            for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+                const batch = batches[batchIndex];
+
+                await step.run(`send-events-${user.userId}-batch-${batchIndex}`, async () => {
+                    console.log(
+                        `[SnapshotService] Sending batch ${batchIndex + 1}/${batches.length} of ${batch.length} events for user ${user.userId}`,
+                    );
                     await step.sendEvent('snapshot/create.live.snapshot', batch);
-                }
+                    return { batchIndex, eventCount: batch.length };
+                });
             }
-        });
 
-        // Wait for all users to be processed, allowing some to fail without stopping others
-        const results = await Promise.allSettled(userProcessingPromises);
-
-        // Log any failures for monitoring
-        const failedUsers = results.filter((result) => result.status === 'rejected');
-        if (failedUsers.length > 0) {
-            console.warn(
-                `Failed to process ${failedUsers.length} users:`,
-                failedUsers.map((r) => r.reason),
-            );
+            successfulUsers++;
+            totalEvents += snapshotEvents.length;
         }
 
-        const successfulUsers = results.filter((result) => result.status === 'fulfilled').length;
-
-        return { successfulUsers, totalUsers: userData.length };
+        return { successfulUsers, totalUsers: userData.length, totalEvents };
     }
 }
 
