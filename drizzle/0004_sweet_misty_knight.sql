@@ -1,0 +1,1 @@
+CREATE INDEX "company_url_idx" ON "company" USING btree ("url");

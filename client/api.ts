@@ -259,6 +259,7 @@ class ApiClient {
      */
     async getCompanies(
         params: PaginationParams = {},
+        excludePages: boolean = false,
     ): Promise<ApiResponse<PaginatedResponse<Company>>> {
         const searchParams = new URLSearchParams();
 
@@ -266,6 +267,7 @@ class ApiClient {
         if (params.pageSize) searchParams.set('pageSize', params.pageSize.toString());
         if (params.sortBy) searchParams.set('sortBy', params.sortBy);
         if (params.sortOrder) searchParams.set('sortOrder', params.sortOrder);
+        if (excludePages) searchParams.set('excludePages', 'true');
 
         const queryString = searchParams.toString();
         const endpoint = queryString ? `/companies?${queryString}` : '/companies';

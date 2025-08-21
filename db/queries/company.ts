@@ -1,6 +1,5 @@
 import { and, eq, desc, asc, count, inArray } from 'drizzle-orm';
 import { db } from '../index';
-import { user } from '../schema/auth';
 import { company } from '../schema/company';
 import { page } from '../schema/page';
 import type { PaginationOptions, PaginatedResult } from './types';
@@ -40,45 +39,22 @@ export const companyQueries = {
         return companiesWithPages;
     },
 
-    async getCompaniesByDomains(userId: string, domains: string[]) {
-        if (domains.length === 0) return [];
+    async getCompaniesByUrlsWithoutPages(userId: string, urls: string[]) {
+        if (urls.length === 0) return [];
 
-        // Build a condition to match companies whose URLs contain any of the domains
         const companies = await db
             .select()
             .from(company)
-            .where(and(eq(company.userId, userId), eq(company.isActive, true)))
+            .where(
+                and(
+                    eq(company.userId, userId),
+                    inArray(company.url, urls),
+                    eq(company.isActive, true),
+                ),
+            )
             .orderBy(desc(company.createdAt));
 
-        // Filter companies by domains after fetching (since we need domain extraction logic)
-        const matchingCompanies = companies.filter((comp) => {
-            try {
-                const companyDomain = new URL(comp.url).hostname
-                    .toLowerCase()
-                    .replace(/^www\./, '');
-                return domains.some((domain) => domain === companyDomain);
-            } catch {
-                return false;
-            }
-        });
-
-        // Get pages for each matching company
-        const companiesWithPages = await Promise.all(
-            matchingCompanies.map(async (comp) => {
-                const pages = await db
-                    .select()
-                    .from(page)
-                    .where(and(eq(page.companyId, comp.id), eq(page.isActive, true)))
-                    .orderBy(page.createdAt);
-
-                return {
-                    ...comp,
-                    pages,
-                };
-            }),
-        );
-
-        return companiesWithPages;
+        return companies;
     },
 
     async addPageToCompany(companyId: string, pageData: { title: string; url: string }) {
@@ -132,6 +108,105 @@ export const companyQueries = {
             return {
                 company: newCompany,
                 initialPage: newPage,
+            };
+        });
+    },
+
+    async getOrCreateCompany(userId: string, url: string, name: string) {
+        // First, try to find an existing company with the same URL for this user
+        const existingCompany = await db.query.company.findFirst({
+            where: and(
+                eq(company.userId, userId),
+                eq(company.url, url),
+                eq(company.isActive, true),
+            ),
+        });
+
+        if (existingCompany) {
+            return existingCompany;
+        }
+
+        // If no existing company found, create a new one
+        const [newCompany] = await db
+            .insert(company)
+            .values({
+                id: crypto.randomUUID(),
+                userId: userId,
+                name: name,
+                url: url,
+            })
+            .returning();
+
+        return newCompany;
+    },
+
+    async getOrAddPagesToCompany(companyId: string, pages: { title: string; url: string }[]) {
+        if (pages.length === 0) {
+            const companyInfo = await db.query.company.findFirst({
+                where: and(eq(company.id, companyId), eq(company.isActive, true)),
+                with: {
+                    pages: {
+                        where: eq(page.isActive, true),
+                        orderBy: [page.createdAt],
+                    },
+                },
+            });
+
+            if (!companyInfo) {
+                throw new Error('Company not found');
+            }
+
+            return {
+                company: companyInfo,
+                newPages: [],
+                existingPages: companyInfo.pages || [],
+            };
+        }
+
+        return await db.transaction(async (tx) => {
+            // Verify company exists
+            const companyInfo = await tx.query.company.findFirst({
+                where: and(eq(company.id, companyId), eq(company.isActive, true)),
+            });
+
+            if (!companyInfo) {
+                throw new Error('Company not found');
+            }
+
+            // Get existing pages for this company to check for duplicates
+            const existingPages = await tx
+                .select()
+                .from(page)
+                .where(and(eq(page.companyId, companyId), eq(page.isActive, true)));
+
+            const existingPageUrls = new Set(existingPages.map((p) => p.url));
+            const newPages: (typeof page.$inferSelect)[] = [];
+
+            // Create pages that don't already exist
+            for (const pageData of pages) {
+                if (!existingPageUrls.has(pageData.url)) {
+                    const [newPage] = await tx
+                        .insert(page)
+                        .values({
+                            id: crypto.randomUUID(),
+                            companyId: companyId,
+                            title: pageData.title,
+                            url: pageData.url,
+                        })
+                        .returning();
+
+                    newPages.push(newPage);
+                    existingPageUrls.add(pageData.url); // Prevent duplicates within this batch
+                }
+            }
+
+            return {
+                company: companyInfo,
+                newPages,
+                existingPages: existingPages.filter(
+                    (p) => !pages.some((newP) => newP.url === p.url),
+                ),
+                allPages: [...existingPages, ...newPages],
             };
         });
     },
@@ -210,6 +285,64 @@ export const companyQueries = {
         };
     },
 
+    async getUserCompaniesWithoutPages(
+        userId: string,
+        options: PaginationOptions = {},
+    ): Promise<PaginatedResult<any>> {
+        const {
+            page: currentPage = 1,
+            pageSize = 10,
+            sortBy = 'createdAt',
+            sortOrder = 'desc',
+        } = options;
+
+        const offset = (currentPage - 1) * pageSize;
+        const orderByColumn =
+            sortBy === 'name'
+                ? company.name
+                : sortBy === 'updatedAt'
+                  ? company.updatedAt
+                  : company.createdAt;
+        const orderDirection = sortOrder === 'asc' ? asc : desc;
+
+        // Get total count
+        const [{ count: totalItems }] = await db
+            .select({ count: count() })
+            .from(company)
+            .where(and(eq(company.userId, userId), eq(company.isActive, true)));
+
+        const totalPages = Math.ceil(totalItems / pageSize);
+
+        // Get companies
+        const companies = await db
+            .select({
+                id: company.id,
+                userId: company.userId,
+                name: company.name,
+                url: company.url,
+                isActive: company.isActive,
+                createdAt: company.createdAt,
+                updatedAt: company.updatedAt,
+            })
+            .from(company)
+            .where(and(eq(company.userId, userId), eq(company.isActive, true)))
+            .orderBy(orderDirection(orderByColumn))
+            .limit(pageSize)
+            .offset(offset);
+
+        return {
+            data: companies,
+            pagination: {
+                page: currentPage,
+                pageSize,
+                totalItems,
+                totalPages,
+                hasNext: currentPage < totalPages,
+                hasPrevious: currentPage > 1,
+            },
+        };
+    },
+
     async deleteCompanyWithPages(companyId: string, userId: string) {
         // Verify ownership first
         const existingCompany = await db.query.company.findFirst({
@@ -246,15 +379,14 @@ export const companyQueries = {
 
     async getCompanyById(companyId: string, userId: string) {
         const result = await db.query.company.findFirst({
-            where: eq(company.id, companyId),
-            with: {
-                user: {
-                    columns: { id: true, name: true },
-                },
-            },
+            where: and(
+                eq(company.id, companyId),
+                eq(company.isActive, true),
+                eq(company.userId, userId),
+            ),
         });
 
-        if (!result || result.userId !== userId || !result.isActive) {
+        if (!result) {
             throw new Error('Company not found');
         }
 
@@ -271,10 +403,14 @@ export const companyQueries = {
     ) {
         // Check if company exists and belongs to user
         const existingCompany = await db.query.company.findFirst({
-            where: eq(company.id, companyId),
+            where: and(
+                eq(company.id, companyId),
+                eq(company.isActive, true),
+                eq(company.userId, userId),
+            ),
         });
 
-        if (!existingCompany || existingCompany.userId !== userId || !existingCompany.isActive) {
+        if (!existingCompany) {
             throw new Error('Company not found');
         }
 

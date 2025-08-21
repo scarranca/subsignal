@@ -105,7 +105,11 @@ export class SnapshotRepository {
         snapshotScreenshot?: Buffer,
         snapshotDiff?: string,
     ) {
-        const snapshot = await snapshotQueries.createSnapshot(pageId, pageURL, snapshotDiff || '');
+        const snapshot = await snapshotQueries.createArchiveSnapshotsForPage(
+            pageId,
+            pageURL,
+            snapshotDiff || '',
+        );
 
         try {
             const paths = this.getSnapshotPaths(snapshot.id);

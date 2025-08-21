@@ -41,10 +41,21 @@ export const OnboardingSteps = ({ currentStep, onNext }: OnboardingStepsProps) =
             try {
                 console.log('Fetching existing user data...');
 
-                // Fetch existing companies
-                const companiesResponse = await apiClient.getCompanies({ pageSize: 50 });
+                // Fetch existing companies and preferences in parallel
                 let existingUrls: string[] = [];
+                let existingProperties: OnboardingData['properties'] = [
+                    'product',
+                    'customer',
+                    'messaging',
+                ];
+                let existingFrequency: OnboardingData['frequency'] = '7_day';
 
+                const [companiesResponse, preferencesResponse] = await Promise.all([
+                    apiClient.getCompanies({ pageSize: 5, page: 1 }, true),
+                    apiClient.getPreferences(),
+                ]);
+
+                // Process companies response
                 if (companiesResponse.success && companiesResponse.data) {
                     existingUrls = companiesResponse.data.data.map((company) => company.url);
                     console.log('Found existing companies:', existingUrls);
@@ -55,15 +66,7 @@ export const OnboardingSteps = ({ currentStep, onNext }: OnboardingStepsProps) =
                     );
                 }
 
-                // Fetch existing preferences
-                const preferencesResponse = await apiClient.getPreferences();
-                let existingProperties: OnboardingData['properties'] = [
-                    'product',
-                    'customer',
-                    'messaging',
-                ];
-                let existingFrequency: OnboardingData['frequency'] = '7_day';
-
+                // Process preferences response
                 if (preferencesResponse.success && preferencesResponse.data) {
                     existingProperties = preferencesResponse.data.properties;
                     existingFrequency = preferencesResponse.data.frequency;

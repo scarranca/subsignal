@@ -22,5 +22,6 @@ export const company = pgTable(
         index('company_user_id_idx').on(table.userId),
         index('company_active_idx').on(table.isActive, table.userId),
         index('company_name_idx').on(table.name),
+        index('company_url_idx').on(table.url),
     ],
 );

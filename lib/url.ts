@@ -12,7 +12,7 @@ import { extractCompanyNameAI, generateTitleAI } from './ai';
 export function normalizeUrl(url: string): string {
     if (!url || typeof url !== 'string') return '';
 
-    const trimmed = url.trim();
+    const trimmed = url.trim().toLowerCase();
     if (!trimmed) return '';
 
     // If URL already has a protocol, return as is
@@ -59,15 +59,6 @@ function isInvalidUrl(url: string): boolean {
         if (urlObj.protocol === 'file:') {
             return true;
         }
-
-        // Reject URLs without proper domains (must have at least one dot or be a known TLD)
-        if (
-            !hostname.includes('.') &&
-            !['com', 'org', 'net', 'edu', 'gov', 'mil'].includes(hostname)
-        ) {
-            return true;
-        }
-
         return false;
     } catch {
         return true; // If we can't parse it, reject it
@@ -140,35 +131,14 @@ export async function extractCompanyName(url: string): Promise<string> {
  * @param url - The full URL
  * @returns Base URL
  */
-export function extractBaseUrl(url: string): string {
-    try {
-        const urlObj = new URL(url);
-        return `${urlObj.protocol}//${urlObj.hostname}`;
-    } catch {
-        return url;
-    }
-}
-
-/**
- * Extract root domain from URL (removes www and gets base domain)
- * @param url - The URL to extract domain from
- * @returns Root domain (e.g., "example.com")
- */
-export function extractRootDomain(url: string): string {
-    try {
-        const urlObj = new URL(url);
-        let hostname = urlObj.hostname.toLowerCase();
-
-        // Remove www. prefix if present
-        if (hostname.startsWith('www.')) {
-            hostname = hostname.substring(4);
-        }
-
-        return hostname;
-    } catch {
-        return '';
-    }
-}
+// export function extractBaseUrl(url: string): string {
+//     try {
+//         const urlObj = new URL(url);
+//         return `${urlObj.protocol}//${urlObj.hostname}`;
+//     } catch {
+//         return url;
+//     }
+// }
 
 /**
  * Normalize URLs by removing duplicates, converting to lowercase, and ensuring consistent format
@@ -176,48 +146,83 @@ export function extractRootDomain(url: string): string {
  * @returns Array of normalized unique URLs
  */
 export function normalizeAndDeduplicateUrls(urls: string[]): string[] {
-    const seen = new Set<string>();
-    const normalized: string[] = [];
+    const urlMap = new Map<string, string>();
 
     for (const url of urls) {
         if (!url || typeof url !== 'string') continue;
 
-        // Normalize the URL (adds protocol, cleans up)
-        const normalizedUrl = normalizeUrl(url.trim().toLowerCase());
+        // Normalize the URL (adds protocol if missing, cleans up the url)
+        const normalizedUrl = normalizeUrl(url);
 
         if (!normalizedUrl || !isValidUrl(normalizedUrl)) continue;
 
-        // Check if we've already seen this URL
-        if (!seen.has(normalizedUrl)) {
-            seen.add(normalizedUrl);
-            normalized.push(normalizedUrl);
+        try {
+            const urlObj = new URL(normalizedUrl);
+            // Create a key without protocol to group http/https versions
+            const urlWithoutProtocol = `${urlObj.hostname}${urlObj.pathname}${urlObj.search}${urlObj.hash}`;
+
+            // Only update the map if:
+            // 1. We haven't seen this URL before, or
+            // 2. The new URL uses https and the existing one uses http
+            if (
+                !urlMap.has(urlWithoutProtocol) ||
+                (urlObj.protocol === 'https:' &&
+                    new URL(urlMap.get(urlWithoutProtocol)!).protocol === 'http:')
+            ) {
+                urlMap.set(urlWithoutProtocol, normalizedUrl);
+            }
+        } catch {
+            continue;
         }
     }
 
-    return normalized;
+    return Array.from(urlMap.values());
 }
 
 /**
- * Group URLs by their root domain
+ * Group URLs by their protocol and hostname, preferring HTTPS when both HTTP and HTTPS exist
  * @param urls - Array of normalized URLs
- * @returns Map of domain to URLs
+ * @returns Map of protocol+hostname to URLs (consolidated under HTTPS when available)
  */
-export function groupUrlsByDomain(urls: string[]): Map<string, string[]> {
-    const domainGroups = new Map<string, string[]>();
+export function groupUrlsByHostnames(urls: string[]): Map<string, string[]> {
+    const hostnameGroups = new Map<string, string[]>();
 
     for (const url of urls) {
-        const rootDomain = extractRootDomain(url);
+        const urlObj = new URL(url);
+        const hostname = urlObj.hostname;
 
-        if (!rootDomain) continue;
+        // Always prefer https:// as the group key
+        const httpsKey = `https://${hostname}`;
+        const httpKey = `http://${hostname}`;
 
-        if (!domainGroups.has(rootDomain)) {
-            domainGroups.set(rootDomain, []);
+        // Check if we already have an https version of this hostname
+        if (hostnameGroups.has(httpsKey)) {
+            hostnameGroups.get(httpsKey)?.push(url);
         }
-
-        domainGroups.get(rootDomain)!.push(url);
+        // Check if we have an http version and current URL is https
+        else if (hostnameGroups.has(httpKey) && urlObj.protocol === 'https:') {
+            // Move all http URLs to https group and add current https URL
+            const httpUrls = hostnameGroups.get(httpKey) || [];
+            hostnameGroups.delete(httpKey);
+            hostnameGroups.set(httpsKey, [...httpUrls, url]);
+        }
+        // If current URL is http and no https group exists yet
+        else if (urlObj.protocol === 'http:' && !hostnameGroups.has(httpsKey)) {
+            if (!hostnameGroups.has(httpKey)) {
+                hostnameGroups.set(httpKey, []);
+            }
+            hostnameGroups.get(httpKey)?.push(url);
+        }
+        // If current URL is https and no existing group
+        else {
+            if (!hostnameGroups.has(httpsKey)) {
+                hostnameGroups.set(httpsKey, []);
+            }
+            hostnameGroups.get(httpsKey)?.push(url);
+        }
     }
 
-    return domainGroups;
+    return hostnameGroups;
 }
 
 /**

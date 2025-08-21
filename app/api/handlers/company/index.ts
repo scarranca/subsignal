@@ -9,12 +9,10 @@ import {
 } from '@/schema/api';
 import {
     extractCompanyName,
-    extractBaseUrl,
     fetchPageTitle,
     generateFallbackTitle,
     normalizeAndDeduplicateUrls,
-    groupUrlsByDomain,
-    extractRootDomain,
+    groupUrlsByHostnames,
 } from '@/lib/url';
 import { z } from 'zod';
 
@@ -34,10 +32,12 @@ export async function handleGetCompanies(c: Context) {
         const user = getUser(c);
         const query = c.req.query();
 
+        const excludePages = c.req.query('excludePages') === 'true';
         const pagination = paginationSchema.parse(query);
 
-        const result = await companyQueries.getUserCompaniesWithPages(user.id, pagination);
-
+        const result = excludePages
+            ? await companyQueries.getUserCompaniesWithoutPages(user.id, pagination)
+            : await companyQueries.getUserCompaniesWithPages(user.id, pagination);
         return c.json(result);
     } catch (error) {
         if (error instanceof z.ZodError) {
@@ -199,180 +199,45 @@ export async function handleBatchCreateCompanies(c: Context) {
             `API Handler - Normalized ${validatedData.urls.length} URLs to ${normalizedUrls.length} (removed ${duplicatesRemoved} duplicates)`,
         );
 
-        // Step 2: Group URLs by root domain
-        const urlsByDomain = groupUrlsByDomain(normalizedUrls);
-        console.log('API Handler - Grouped URLs by domain:', Array.from(urlsByDomain.keys()));
+        // Step 2: Group URLs by hostname
+        const urlsByHostname = groupUrlsByHostnames(normalizedUrls);
+        console.log('API Handler - Grouped URLs by hostname:', urlsByHostname);
 
-        // Step 3: Get existing companies for all domains
-        const allDomains = Array.from(urlsByDomain.keys());
-        const existingCompanies = await companyQueries.getCompaniesByDomains(user.id, allDomains);
-
-        // Create maps for quick lookup
-        const existingCompaniesByDomain = new Map<string, (typeof existingCompanies)[0]>();
-        const existingPageUrls = new Set<string>();
-
-        existingCompanies.forEach((company) => {
-            const domain = extractRootDomain(company.url);
-            if (domain) {
-                existingCompaniesByDomain.set(domain, company);
-                company.pages.forEach((page) => existingPageUrls.add(page.url));
-            }
-        });
-
+        // Step 3: Cycle through the urls and create companies and pages
         const results = [];
-        const errors = [];
-        const logs = [];
 
-        // Step 4: Process each domain group
-        for (const [domain, domainUrls] of urlsByDomain) {
-            const existingCompany = existingCompaniesByDomain.get(domain);
+        for (const [companyUrl, pageUrls] of urlsByHostname) {
+            const companyName = await extractCompanyName(companyUrl);
+            const company = await companyQueries.getOrCreateCompany(
+                user.id,
+                companyUrl,
+                companyName,
+            );
+            // Fetch page titles for all urls
+            const pageData = await Promise.all(
+                pageUrls.map(async (url) => {
+                    const pageTitle = await fetchPageTitle(url);
+                    return { title: pageTitle, url: url };
+                }),
+            );
+            // Add pages to company
+            const pages = await companyQueries.getOrAddPagesToCompany(company.id, pageData);
 
-            if (!existingCompany) {
-                // No existing company for this domain - create new company with first URL
-                const primaryUrl = domainUrls[0];
-
-                try {
-                    const companyName = await extractCompanyName(primaryUrl);
-                    const companyUrl = extractBaseUrl(primaryUrl);
-                    const pageTitle = await fetchPageTitle(primaryUrl);
-
-                    const result = await companyQueries.createCompanyWithInitialPage(user.id, {
-                        name: companyName,
-                        url: companyUrl,
-                        initialPage: {
-                            title: pageTitle,
-                            url: primaryUrl,
-                        },
-                    });
-
-                    results.push({
-                        url: primaryUrl,
-                        success: true,
-                        company: result.company,
-                        page: result.initialPage,
-                        action: 'company_created',
-                    });
-
-                    logs.push(
-                        `Created new company "${companyName}" for domain ${domain} with page ${primaryUrl}`,
-                    );
-
-                    // Add additional pages for this company
-                    for (const url of domainUrls.slice(1)) {
-                        try {
-                            const pageTitle = await fetchPageTitle(url);
-                            const newPage = await companyQueries.addPageToCompany(
-                                result.company.id,
-                                {
-                                    title: pageTitle,
-                                    url: url,
-                                },
-                            );
-
-                            results.push({
-                                url: url,
-                                success: true,
-                                company: result.company,
-                                page: newPage,
-                                action: 'page_added',
-                            });
-
-                            logs.push(`Added page ${url} to company "${companyName}"`);
-                        } catch (error) {
-                            console.error(`Error adding page ${url} to company:`, error);
-                            errors.push({
-                                url: url,
-                                success: false,
-                                error: error instanceof Error ? error.message : 'Unknown error',
-                            });
-                        }
-                    }
-                } catch (error) {
-                    console.error(`Error creating company for domain ${domain}:`, error);
-                    errors.push({
-                        url: primaryUrl,
-                        success: false,
-                        error: error instanceof Error ? error.message : 'Unknown error',
-                    });
-                }
-            } else {
-                // Company exists - add new pages that don't already exist
-                for (const url of domainUrls) {
-                    if (existingPageUrls.has(url)) {
-                        // Page already exists - silently skip with log
-                        results.push({
-                            url: url,
-                            success: true,
-                            company: existingCompany,
-                            page: existingCompany.pages.find((p) => p.url === url) || null,
-                            action: 'page_exists',
-                        });
-                        logs.push(
-                            `Page ${url} already exists for company "${existingCompany.name}"`,
-                        );
-                    } else {
-                        // Add new page to existing company
-                        try {
-                            const pageTitle = await fetchPageTitle(url);
-                            const newPage = await companyQueries.addPageToCompany(
-                                existingCompany.id,
-                                {
-                                    title: pageTitle,
-                                    url: url,
-                                },
-                            );
-
-                            results.push({
-                                url: url,
-                                success: true,
-                                company: existingCompany,
-                                page: newPage,
-                                action: 'page_added',
-                            });
-
-                            logs.push(
-                                `Added new page ${url} to existing company "${existingCompany.name}"`,
-                            );
-                        } catch (error) {
-                            console.error(`Error adding page ${url} to existing company:`, error);
-                            errors.push({
-                                url: url,
-                                success: false,
-                                error: error instanceof Error ? error.message : 'Unknown error',
-                            });
-                        }
-                    }
-                }
-            }
+            results.push({
+                company: company,
+                pages: pages,
+            });
         }
-
-        // Log summary
-        console.log('API Handler - Processing summary:', {
-            totalOriginalUrls: validatedData.urls.length,
-            normalizedUrls: normalizedUrls.length,
-            duplicatesRemoved,
-            domainsProcessed: urlsByDomain.size,
-            results: results.length,
-            errors: errors.length,
-        });
-
-        logs.forEach((log) => console.log(`API Handler - ${log}`));
 
         return c.json(
             {
                 success: true,
                 results: results,
-                errors: errors,
-                logs: logs,
                 summary: {
                     total: validatedData.urls.length,
                     processed: normalizedUrls.length,
                     duplicatesRemoved,
                     successful: results.length,
-                    failed: errors.length,
-                    companiesCreated: results.filter((r) => r.action === 'company_created').length,
-                    pagesAdded: results.filter((r) => r.action === 'page_added').length,
-                    pagesExisted: results.filter((r) => r.action === 'page_exists').length,
                 },
             },
             201,

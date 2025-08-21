@@ -19,6 +19,23 @@ export const snapshotQueries = {
         return newSnapshot;
     },
 
+    async createArchiveSnapshotsForPage(pageId: string, pageURL: string, snapshotDiff: string) {
+        const ninetyDaysAgo = new Date();
+        ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+        const [newSnapshot] = await db
+            .insert(snapshot)
+            .values({
+                pageId: pageId,
+                pageURL: pageURL,
+                diff: snapshotDiff,
+                createdAt: ninetyDaysAgo,
+            })
+            .returning();
+
+        return newSnapshot;
+    },
+
     /**
      * Get the last snapshot for a page
      * @param pageId - The ID of the page to get the last snapshot for
