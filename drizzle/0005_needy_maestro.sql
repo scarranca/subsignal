@@ -1,0 +1,1 @@
+CREATE INDEX "idx_preference_frequency_active" ON "preference" USING btree ("frequency","is_active");
