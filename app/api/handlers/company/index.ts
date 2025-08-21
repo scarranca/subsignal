@@ -7,12 +7,7 @@ import {
     paginationSchema,
     batchCreateCompaniesSchema,
 } from '@/schema/api';
-import {
-    fetchPageTitle,
-    generateFallbackTitle,
-    normalizeAndDeduplicateUrls,
-    groupUrlsByHostnames,
-} from '@/lib/url';
+import { fetchPageTitle, generateFallbackTitle, normalizeAndDeduplicateUrls } from '@/lib/url';
 import { z } from 'zod';
 import { inngest } from '@/ingest/client';
 import { DEFAULT_PREFERENCES } from '@/constants/preferences';

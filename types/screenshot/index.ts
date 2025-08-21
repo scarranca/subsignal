@@ -211,6 +211,14 @@ export type ScreenshotOptions = {
     metadataHttpStatusCode?: boolean;
     // Return HTTP headers in metadata.
     metadataHttpHeaders?: boolean;
+
+    // Caching options
+    // Enable caching for the screenshot.
+    cache?: boolean;
+    // Cache time-to-live in seconds. How long the screenshot should be cached.
+    cacheTtl?: number;
+    // Custom cache key for the screenshot. If not provided, a default key will be generated.
+    cacheKey?: string;
 };
 
 // LiveScreenshotResult is the result of a live screenshot.

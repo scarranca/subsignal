@@ -35,6 +35,8 @@ export class ScreenshotService {
      * @param url - The URL to screenshot
      * @param options - Screenshot options
      * @returns Promise<LiveScreenshotResult>
+     * @description This function will take a live screenshot of a URL
+     * @description The screenshot is cached for 12 hours on first request
      */
     async takeLiveScreenshot(
         url: string,

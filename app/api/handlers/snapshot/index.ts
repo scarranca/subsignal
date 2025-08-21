@@ -7,6 +7,8 @@ import {
     listSnapshotsQuerySchema,
 } from '@/schema/api';
 import { z } from 'zod';
+import { inngest } from '@/ingest/client';
+import { preferenceQueries } from '@/db/queries';
 
 export const getUser = (c: Context) => {
     const user = c.get(USER_MIDDLEWARE_CONTEXT_KEY);
@@ -26,11 +28,32 @@ export async function handleCreateSnapshot(c: Context) {
 
         const validatedData = createSnapshotSchema.parse(body);
 
-        await snapshotService.createSnapshotForPage(
-            validatedData.pageId,
-            user.id,
-            validatedData.type,
-        );
+        const userPreferences = await preferenceQueries.getUserPreference(user.id);
+        if (!userPreferences) {
+            return c.json({ error: 'User preferences not found' }, 404);
+        }
+
+        if (validatedData.type === 'archive') {
+            await inngest.send({
+                name: 'snapshot/create.archive.snapshot',
+                data: {
+                    pageId: validatedData.pageId,
+                    userId: user.id,
+                    pageProperties: userPreferences.properties,
+                },
+            });
+        } else if (validatedData.type === 'live') {
+            await inngest.send({
+                name: 'snapshot/create.live.snapshot',
+                data: {
+                    pageId: validatedData.pageId,
+                    userId: user.id,
+                    pageProperties: userPreferences.properties,
+                },
+            });
+        } else {
+            return c.json({ error: 'Invalid snapshot type' }, 400);
+        }
 
         return c.json({ message: 'Snapshot created successfully' }, 201);
     } catch (error) {

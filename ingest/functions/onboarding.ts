@@ -3,6 +3,7 @@ import { preferenceQueries } from '@/db/queries/preference';
 import { inngest } from '../client';
 import { extractCompanyName, fetchPageTitle, groupUrlsByHostnames } from '@/lib/url';
 import { DEFAULT_PREFERENCES } from '@/constants/preferences';
+import { NonRetriableError } from 'inngest';
 
 /**
  * Batch create companies and pages with resilient error handling
@@ -11,7 +12,22 @@ import { DEFAULT_PREFERENCES } from '@/constants/preferences';
  * @returns Promise with detailed results including successes, failures, and statistics
  */
 export const batchCreateCompany = inngest.createFunction(
-    { id: 'batch-create-company', priority: { run: '180' } },
+    {
+        id: 'batch-create-company',
+        priority: { run: '180' },
+        rateLimit: {
+            limit: 3, // 3 requests per 3 hours for a single user
+            period: '3h', // Per 3 hours
+            key: 'event.data.userId', // Throttle per userId
+        },
+        concurrency: [
+            {
+                key: 'event.data.userId',
+                limit: 1, // Only one job at a time for a single user
+            },
+        ],
+        retries: 3, // 3 retries for a single user
+    },
     { event: 'onboarding/batch.create.company' },
     async ({ event, step }) => {
         const { userId, urls } = event.data;
@@ -20,101 +36,106 @@ export const batchCreateCompany = inngest.createFunction(
         console.log('API Handler - Grouped URLs by hostname:', urlsByHostname);
 
         const newPages: string[] = [];
-        const settledResults = await Promise.allSettled(
-            Array.from(urlsByHostname).map(async ([companyUrl, pageUrls]) => {
-                try {
-                    const companyName = await extractCompanyName(companyUrl);
-                    const company = await companyQueries.getOrCreateCompany(
-                        userId,
-                        companyUrl,
-                        companyName,
-                    );
 
-                    // Fetch page titles with individual error handling
-                    const pageDataResults = await Promise.allSettled(
-                        pageUrls.map(async (url: string) => {
-                            const pageTitle = await fetchPageTitle(url);
-                            return { title: pageTitle, url: url };
-                        }),
-                    );
+        // Process all companies in one step (since it's mostly I/O bound external calls)
+        const processResults = await step.run('process-all-companies', async () => {
+            const settledResults = await Promise.allSettled(
+                Array.from(urlsByHostname).map(async ([companyUrl, pageUrls]) => {
+                    try {
+                        const companyName = await extractCompanyName(companyUrl);
+                        const company = await companyQueries.getOrCreateCompany(
+                            userId,
+                            companyUrl,
+                            companyName,
+                        );
 
-                    // Separate successful and failed page fetches
-                    const pageData = pageDataResults
-                        .filter(
-                            (
+                        // Fetch page titles with individual error handling
+                        const pageDataResults = await Promise.allSettled(
+                            pageUrls.map(async (url: string) => {
+                                const pageTitle = await fetchPageTitle(url);
+                                return { title: pageTitle, url: url };
+                            }),
+                        );
+
+                        // Separate successful and failed page fetches
+                        const pageData = pageDataResults
+                            .filter(
+                                (
+                                    result,
+                                ): result is PromiseFulfilledResult<{
+                                    title: string;
+                                    url: string;
+                                }> => result.status === 'fulfilled',
+                            )
+                            .map((result) => result.value);
+
+                        const failedPages = pageDataResults
+                            .map((result, index) => ({
                                 result,
-                            ): result is PromiseFulfilledResult<{ title: string; url: string }> =>
-                                result.status === 'fulfilled',
-                        )
-                        .map((result) => result.value);
+                                index,
+                                url: pageUrls[index],
+                            }))
+                            .filter((item) => item.result.status === 'rejected')
+                            .map((item) => ({
+                                url: item.url,
+                                error:
+                                    (item.result as PromiseRejectedResult).reason?.message ||
+                                    'Unknown error',
+                            }));
 
-                    const failedPages = pageDataResults
-                        .map((result, index) => ({
-                            result,
-                            index,
-                            url: pageUrls[index],
-                        }))
-                        .filter((item) => item.result.status === 'rejected')
-                        .map((item) => ({
-                            url: item.url,
-                            error:
-                                (item.result as PromiseRejectedResult).reason?.message ||
-                                'Unknown error',
-                        }));
+                        // Add pages to company (only successful ones)
+                        const pages =
+                            pageData.length > 0
+                                ? await companyQueries.getOrAddPagesToCompany(company.id, pageData)
+                                : null;
 
-                    // Add pages to company (only successful ones)
-                    const pages =
-                        pageData.length > 0
-                            ? await companyQueries.getOrAddPagesToCompany(company.id, pageData)
-                            : null;
+                        return {
+                            success: true,
+                            companyUrl,
+                            company: company,
+                            pages: pages,
+                            failedPages,
+                            pageStats: {
+                                total: pageUrls.length,
+                                successful: pageData.length,
+                                failed: failedPages.length,
+                            },
+                        };
+                    } catch (error) {
+                        console.error(`Failed to process company ${companyUrl}:`, error);
+                        return {
+                            success: false,
+                            companyUrl,
+                            error: error instanceof Error ? error.message : 'Unknown error',
+                            pageStats: {
+                                total: pageUrls.length,
+                                successful: 0,
+                                failed: pageUrls.length,
+                            },
+                        };
+                    }
+                }),
+            );
 
-                    newPages.push(...(pages?.newPages.map((page) => page.id) || []));
+            return settledResults;
+        });
 
-                    return {
-                        success: true,
-                        companyUrl,
-                        company: company,
-                        pages: pages,
-                        failedPages,
-                        pageStats: {
-                            total: pageUrls.length,
-                            successful: pageData.length,
-                            failed: failedPages.length,
-                        },
-                    };
-                } catch (error) {
-                    console.error(`Failed to process company ${companyUrl}:`, error);
-                    return {
-                        success: false,
-                        companyUrl,
-                        error: error instanceof Error ? error.message : 'Unknown error',
-                        pageStats: {
-                            total: pageUrls.length,
-                            successful: 0,
-                            failed: pageUrls.length,
-                        },
-                    };
-                }
-            }),
-        );
-
-        // Separate successful and failed results
-        const successfulResults = settledResults
+        // Process results (simple data manipulation - no need for steps)
+        const successfulResults = processResults
             .filter(
                 (result): result is PromiseFulfilledResult<any> => result.status === 'fulfilled',
             )
             .map((result) => result.value)
             .filter((value) => value.success);
 
-        const failedResults = settledResults
+        const failedResults = processResults
             .filter(
                 (result): result is PromiseFulfilledResult<any> => result.status === 'fulfilled',
             )
             .map((result) => result.value)
             .filter((value) => !value.success);
 
-        // Handle any Promise.allSettled rejections (shouldn't happen with try-catch, but just in case)
-        const unexpectedFailures = settledResults
+        const unexpectedFailures = processResults
             .filter((result): result is PromiseRejectedResult => result.status === 'rejected')
             .map((result) => ({
                 success: false,
@@ -128,23 +149,34 @@ export const batchCreateCompany = inngest.createFunction(
             0,
         );
 
-        // Get the user preference
-        const userPreference = await preferenceQueries.getUserPreference(userId);
+        // Collect new page IDs
+        successfulResults.forEach((result) => {
+            if (result.pages?.newPages) {
+                newPages.push(...result.pages.newPages.map((page: any) => page.id));
+            }
+        });
 
-        // Prepare events for snapshot creation
-        const snapshotEvents = newPages.map((pageId: string) => ({
-            name: 'snapshot/create.archive.snapshot',
-            data: {
-                pageId: pageId,
-                userId: userId,
-                pageProperties: userPreference?.properties || DEFAULT_PREFERENCES.properties,
-            },
-        }));
+        // Get user preferences (simple DB query)
+        let userPreference = null;
+        try {
+            userPreference = await preferenceQueries.getUserPreference(userId);
+        } catch (error) {
+            console.error(`Failed to get user preference for user ${userId}:`, error);
+        }
 
-        console.log('API Handler - Snapshot events:', snapshotEvents);
+        // Send snapshot events (this is worth making durable since it's the actual work)
+        if (newPages.length > 0) {
+            const snapshotEvents = newPages.map((pageId: string) => ({
+                name: 'snapshot/create.archive.snapshot',
+                data: {
+                    pageId: pageId,
+                    userId: userId,
+                    pageProperties: userPreference?.properties || DEFAULT_PREFERENCES.properties,
+                },
+            }));
 
-        // Send events to create snapshot
-        if (snapshotEvents.length > 0) {
+            console.log('API Handler - Snapshot events:', snapshotEvents);
+
             await step.sendEvent('snapshot/create.archive.snapshot', snapshotEvents);
         }
 
