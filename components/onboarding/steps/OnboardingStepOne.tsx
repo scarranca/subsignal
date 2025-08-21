@@ -93,7 +93,7 @@ export const OnboardingStepOne = ({
                     await fetch(url, {
                         method: 'HEAD',
                         mode: 'no-cors',
-                        signal: AbortSignal.timeout(5000),
+                        signal: AbortSignal.timeout(3000),
                     });
                     return { url, valid: true };
                 } catch {

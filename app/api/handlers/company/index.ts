@@ -1,5 +1,5 @@
 import { Context } from 'hono';
-import { companyQueries } from '@/db/queries';
+import { companyQueries, preferenceQueries } from '@/db/queries';
 import { USER_MIDDLEWARE_CONTEXT_KEY } from '@/constants/middleware';
 import {
     createCompanySchema,
@@ -8,13 +8,14 @@ import {
     batchCreateCompaniesSchema,
 } from '@/schema/api';
 import {
-    extractCompanyName,
     fetchPageTitle,
     generateFallbackTitle,
     normalizeAndDeduplicateUrls,
     groupUrlsByHostnames,
 } from '@/lib/url';
 import { z } from 'zod';
+import { inngest } from '@/ingest/client';
+import { DEFAULT_PREFERENCES } from '@/constants/preferences';
 
 export const getUser = (c: Context) => {
     const user = c.get(USER_MIDDLEWARE_CONTEXT_KEY);
@@ -95,12 +96,26 @@ export async function handleCreateCompany(c: Context) {
             }
         }
 
+        // Create company with initial page
         const result = await companyQueries.createCompanyWithInitialPage(user.id, {
             name: validatedData.company.name,
             url: validatedData.company.url,
             initialPage: {
                 title: pageTitle,
                 url: validatedData.page.url,
+            },
+        });
+
+        // Fetch the user preference
+        const userPreference = await preferenceQueries.getUserPreference(user.id);
+
+        // Send event to ingest to create archive snapshot
+        await inngest.send({
+            name: 'snapshot/create.archive.snapshot',
+            data: {
+                userId: user.id,
+                pageId: result.initialPage.id,
+                pageProperties: userPreference?.properties || DEFAULT_PREFERENCES.properties,
             },
         });
 
@@ -199,45 +214,23 @@ export async function handleBatchCreateCompanies(c: Context) {
             `API Handler - Normalized ${validatedData.urls.length} URLs to ${normalizedUrls.length} (removed ${duplicatesRemoved} duplicates)`,
         );
 
-        // Step 2: Group URLs by hostname
-        const urlsByHostname = groupUrlsByHostnames(normalizedUrls);
-        console.log('API Handler - Grouped URLs by hostname:', urlsByHostname);
+        // Step 2: Send event to ingest to batch create companies
+        await inngest.send({
+            name: 'onboarding/batch.create.company',
+            data: {
+                userId: user.id,
+                urls: normalizedUrls,
+            },
+        });
 
-        // Step 3: Cycle through the urls and create companies and pages
-        const results = [];
-
-        for (const [companyUrl, pageUrls] of urlsByHostname) {
-            const companyName = await extractCompanyName(companyUrl);
-            const company = await companyQueries.getOrCreateCompany(
-                user.id,
-                companyUrl,
-                companyName,
-            );
-            // Fetch page titles for all urls
-            const pageData = await Promise.all(
-                pageUrls.map(async (url) => {
-                    const pageTitle = await fetchPageTitle(url);
-                    return { title: pageTitle, url: url };
-                }),
-            );
-            // Add pages to company
-            const pages = await companyQueries.getOrAddPagesToCompany(company.id, pageData);
-
-            results.push({
-                company: company,
-                pages: pages,
-            });
-        }
-
+        // Step 3: Return success response
         return c.json(
             {
                 success: true,
-                results: results,
                 summary: {
                     total: validatedData.urls.length,
                     processed: normalizedUrls.length,
                     duplicatesRemoved,
-                    successful: results.length,
                 },
             },
             201,

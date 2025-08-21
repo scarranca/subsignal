@@ -20,8 +20,19 @@ export const snapshotQueries = {
     },
 
     async createArchiveSnapshotsForPage(pageId: string, pageURL: string, snapshotDiff: string) {
-        const ninetyDaysAgo = new Date();
-        ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+        // Check if there is an existing snapshot for the page id
+        const existingSnapshot = await db
+            .select()
+            .from(snapshot)
+            .where(eq(snapshot.pageId, pageId));
+
+        let createdAt = new Date();
+
+        // If there is no existing snapshot, set the createdAt to 90 days ago
+        if (existingSnapshot.length == 0) {
+            createdAt = new Date();
+            createdAt.setDate(createdAt.getDate() - 90);
+        }
 
         const [newSnapshot] = await db
             .insert(snapshot)
@@ -29,7 +40,7 @@ export const snapshotQueries = {
                 pageId: pageId,
                 pageURL: pageURL,
                 diff: snapshotDiff,
-                createdAt: ninetyDaysAgo,
+                createdAt: createdAt,
             })
             .returning();
 

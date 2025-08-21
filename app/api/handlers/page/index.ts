@@ -1,5 +1,5 @@
 import { Context } from 'hono';
-import { pageQueries } from '@/db/queries';
+import { pageQueries, preferenceQueries } from '@/db/queries';
 import { USER_MIDDLEWARE_CONTEXT_KEY } from '@/constants/middleware';
 import {
     createPageSchema,
@@ -9,6 +9,8 @@ import {
 } from '@/schema/api';
 import { fetchPageTitle, generateFallbackTitle } from '@/lib/url';
 import { z } from 'zod';
+import { inngest } from '@/ingest/client';
+import { DEFAULT_PREFERENCES } from '@/constants/preferences';
 
 export const getUser = (c: Context) => {
     const user = c.get(USER_MIDDLEWARE_CONTEXT_KEY);
@@ -117,12 +119,25 @@ export async function handleCreatePage(c: Context) {
             }
         }
 
+        // Fetch the user preference
+        const userPreference = await preferenceQueries.getUserPreference(user.id);
+
         if (validatedData.company.id) {
             // Create page with existing company
             const newPage = await pageQueries.createPageWithExistingCompany(user.id, {
                 title: pageTitle,
                 url: validatedData.page.url,
                 companyId: validatedData.company.id,
+            });
+
+            // Send event to ingest to create archive snapshot
+            await inngest.send({
+                name: 'snapshot/create.archive.snapshot',
+                data: {
+                    pageId: newPage.id,
+                    userId: user.id,
+                    pageProperties: userPreference?.properties || DEFAULT_PREFERENCES.properties,
+                },
             });
 
             return c.json(newPage, 201);
@@ -134,6 +149,16 @@ export async function handleCreatePage(c: Context) {
                 newCompany: {
                     name: validatedData.company.name!,
                     url: validatedData.company.url!,
+                },
+            });
+
+            // Send event to ingest to create archive snapshot
+            await inngest.send({
+                name: 'snapshot/create.archive.snapshot',
+                data: {
+                    pageId: result.page.id,
+                    userId: user.id,
+                    pageProperties: userPreference?.properties || DEFAULT_PREFERENCES.properties,
                 },
             });
 
@@ -173,6 +198,21 @@ export async function handleUpdatePage(c: Context) {
         const validatedData = updatePageSchema.parse(body);
 
         const updatedPage = await pageQueries.updatePage(pageId, user.id, validatedData);
+
+        // Fetch the user preference
+        const userPreference = await preferenceQueries.getUserPreference(user.id);
+
+        // If the page url is updated, we need to create a new archive snapshot
+        if (validatedData.url) {
+            await inngest.send({
+                name: 'snapshot/create.archive.snapshot',
+                data: {
+                    pageId: updatedPage.id,
+                    userId: user.id,
+                    pageProperties: userPreference?.properties || DEFAULT_PREFERENCES.properties,
+                },
+            });
+        }
 
         return c.json(updatedPage);
     } catch (error) {

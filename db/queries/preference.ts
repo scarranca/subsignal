@@ -1,6 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 import { db } from '../index';
 import { preference } from '../schema/preference';
+import { user } from '../schema/auth';
 
 export const preferenceQueries = {
     async getUserPreference(userId: string) {
@@ -47,5 +48,17 @@ export const preferenceQueries = {
                 updatedAt: new Date(),
             })
             .where(eq(preference.userId, userId));
+    },
+
+    async getUsersByFrequency(frequency: '7_day' | '15_day' | '1_month' | '3_month' | '6_month') {
+        return await db
+            .select({
+                userId: user.id,
+                properties: preference.properties,
+                frequency: preference.frequency,
+            })
+            .from(preference)
+            .innerJoin(user, eq(preference.userId, user.id))
+            .where(and(eq(preference.frequency, frequency), eq(preference.isActive, true)));
     },
 };
