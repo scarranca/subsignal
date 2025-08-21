@@ -7,10 +7,16 @@ import {
 import { snapshotQueries } from '@/db/queries/snapshot';
 import { PaginationOptions } from '@/db/queries/types';
 import Sqids from 'sqids';
-import { Snapshot, SnapshotContent, SnapshotWithContent } from '@/types/snapshot';
-
+import {
+    Snapshot,
+    SnapshotContent,
+    SnapshotWithContent,
+    PartialSnapshot,
+    SnapshotError,
+    ResilientBatchResult,
+} from '@/types/snapshot';
 /**
- * SnapshotRepository class for managing snapshots
+ * SnapshotRepository class for managing snapshots with resilient batch operations
  * @description This class is used to manage snapshots for a page
  */
 export class SnapshotRepository {
@@ -87,6 +93,119 @@ export class SnapshotRepository {
         });
 
         await this.s3Client.send(command);
+    }
+
+    /**
+     * Safe content getter that returns null instead of throwing
+     */
+    private async getSnapshotContentSafe<T extends 'html' | 'screenshot'>(
+        snapshotId: number,
+        type: T,
+    ): Promise<{
+        content: (T extends 'html' ? string : Uint8Array) | null;
+        error?: string;
+    }> {
+        try {
+            const content = await this.getSnapshotContent(snapshotId, type);
+            return { content };
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            console.warn(`Failed to load ${type} for snapshot ${snapshotId}:`, errorMessage);
+            return {
+                content: null,
+                error: `Failed to load ${type}: ${errorMessage}`,
+            };
+        }
+    }
+
+    /**
+     * Process a single snapshot and collect any errors
+     */
+    private async processSnapshotWithErrors(
+        snapshot: Snapshot,
+        content: 'html' | 'screenshot' | 'all',
+    ): Promise<{
+        snapshot: PartialSnapshot;
+        errors: SnapshotError[];
+    }> {
+        const errors: SnapshotError[] = [];
+        const processedSnapshot: PartialSnapshot = { ...snapshot };
+
+        if (content === 'html') {
+            const { content: html, error } = await this.getSnapshotContentSafe(snapshot.id, 'html');
+            processedSnapshot.html = html;
+            if (error) {
+                errors.push({
+                    snapshotId: snapshot.id,
+                    field: 'html',
+                    error,
+                });
+            }
+        } else if (content === 'screenshot') {
+            const { content: screenshot, error } = await this.getSnapshotContentSafe(
+                snapshot.id,
+                'screenshot',
+            );
+            processedSnapshot.screenshot = screenshot;
+            if (error) {
+                errors.push({
+                    snapshotId: snapshot.id,
+                    field: 'screenshot',
+                    error,
+                });
+            }
+        } else if (content === 'all') {
+            // Process both HTML and screenshot
+            const [htmlResult, screenshotResult] = await Promise.allSettled([
+                this.getSnapshotContentSafe(snapshot.id, 'html'),
+                this.getSnapshotContentSafe(snapshot.id, 'screenshot'),
+            ]);
+
+            // Handle HTML result
+            if (htmlResult.status === 'fulfilled') {
+                processedSnapshot.html = htmlResult.value.content;
+                if (htmlResult.value.error) {
+                    errors.push({
+                        snapshotId: snapshot.id,
+                        field: 'html',
+                        error: htmlResult.value.error,
+                    });
+                }
+            } else {
+                processedSnapshot.html = null;
+                errors.push({
+                    snapshotId: snapshot.id,
+                    field: 'html',
+                    error: `Failed to process HTML: ${htmlResult.reason?.message || 'Unknown error'}`,
+                });
+            }
+
+            // Handle screenshot result
+            if (screenshotResult.status === 'fulfilled') {
+                processedSnapshot.screenshot = screenshotResult.value.content;
+                if (screenshotResult.value.error) {
+                    errors.push({
+                        snapshotId: snapshot.id,
+                        field: 'screenshot',
+                        error: screenshotResult.value.error,
+                    });
+                }
+            } else {
+                processedSnapshot.screenshot = null;
+                errors.push({
+                    snapshotId: snapshot.id,
+                    field: 'screenshot',
+                    error: `Failed to process screenshot: ${screenshotResult.reason?.message || 'Unknown error'}`,
+                });
+            }
+        }
+
+        // Add content errors summary to the snapshot for easy access
+        if (errors.length > 0) {
+            processedSnapshot._contentErrors = errors.map((e) => e.error);
+        }
+
+        return { snapshot: processedSnapshot, errors };
     }
 
     /**
@@ -188,162 +307,193 @@ export class SnapshotRepository {
     }
 
     /**
-     * List snapshots for a page
+     * List snapshots for a page with resilient error handling
      * @param pageId - The ID of the page to list snapshots for
      * @param pageURL - The URL of the page to list snapshots for
      * @param content - The content to get for the snapshots
      * @param options - The options for the pagination
-     * @returns The snapshots for the page
+     * @returns The snapshots for the page with error information
      */
     async listSnapshotsForPage(
         pageId: string,
         pageURL: string,
         content: 'html' | 'screenshot' | 'diff' | 'all' = 'all',
         options: PaginationOptions = {},
-    ) {
+    ): Promise<
+        ResilientBatchResult<PartialSnapshot> & {
+            total: number;
+            hasMore: boolean;
+        }
+    > {
         const results = await snapshotQueries.listSnapshotsForPage(pageId, pageURL, options);
 
-        const snapshotsWithContent = await Promise.all(
-            results.data.map(async (snapshot) => {
-                if (content === 'html') {
-                    return {
-                        ...snapshot,
-                        html: await this.getSnapshotContent<'html'>(snapshot.id, 'html'),
-                    };
-                } else if (content === 'screenshot') {
-                    return {
-                        ...snapshot,
-                        screenshot: await this.getSnapshotContent<'screenshot'>(
-                            snapshot.id,
-                            'screenshot',
-                        ),
-                    };
-                } else if (content === 'diff') {
-                    return snapshot;
-                } else {
-                    const [html, screenshot] = await Promise.all([
-                        this.getSnapshotContent(snapshot.id, 'html'),
-                        this.getSnapshotContent(snapshot.id, 'screenshot'),
-                    ]);
+        // If only diff is requested, no S3 operations needed
+        if (content === 'diff') {
+            return {
+                data: results.data,
+                errors: [],
+                totalRequested: results.data.length,
+                successfullyProcessed: results.data.length,
+                total: results.pagination.totalItems,
+                hasMore: results.pagination.hasNext,
+            };
+        }
 
-                    return {
-                        ...snapshot,
-                        html,
-                        screenshot,
-                    };
-                }
-            }),
+        // Process all snapshots and collect errors
+        const processResults = await Promise.allSettled(
+            results.data.map((snapshot) => this.processSnapshotWithErrors(snapshot, content)),
         );
 
+        const processedSnapshots: PartialSnapshot[] = [];
+        const allErrors: SnapshotError[] = [];
+
+        processResults.forEach((result, index) => {
+            if (result.status === 'fulfilled') {
+                processedSnapshots.push(result.value.snapshot);
+                allErrors.push(...result.value.errors);
+            } else {
+                // Even if processing completely fails, include the basic snapshot data
+                const originalSnapshot = results.data[index];
+                processedSnapshots.push({
+                    ...originalSnapshot,
+                    _contentErrors: [
+                        `Complete processing failure: ${result.reason?.message || 'Unknown error'}`,
+                    ],
+                });
+                allErrors.push({
+                    snapshotId: originalSnapshot.id,
+                    field: content === 'html' ? 'html' : 'screenshot',
+                    error: `Processing failed: ${result.reason?.message || 'Unknown error'}`,
+                });
+            }
+        });
+
         return {
-            ...results,
-            data: snapshotsWithContent,
+            data: processedSnapshots,
+            errors: allErrors,
+            totalRequested: results.data.length,
+            successfullyProcessed: processedSnapshots.filter((s) => !s._contentErrors).length,
+            total: results.pagination.totalItems,
+            hasMore: results.pagination.hasNext,
         };
     }
 
     /**
-     * Get the last snapshots for a page
+     * Get the last snapshots for multiple pages with resilient error handling
      * @param pageIds - The IDs of the pages to get the last snapshots for
      * @param content - The content to get for the snapshots
-     * @returns The last snapshots for the pages
+     * @returns The last snapshots for the pages with error information
      */
     async getLastSnapshotsForPages(
         pageIds: string[],
         content: 'html' | 'screenshot' | 'diff' | 'all' = 'all',
-    ) {
+    ): Promise<ResilientBatchResult<PartialSnapshot>> {
         const snapshots = await snapshotQueries.getLastSnapshotsForPages(pageIds);
 
         if (content === 'diff') {
-            return snapshots;
+            return {
+                data: snapshots,
+                errors: [],
+                totalRequested: snapshots.length,
+                successfullyProcessed: snapshots.length,
+            };
         }
 
-        const snapshotsWithContent = await Promise.all(
-            snapshots.map(async (snapshot) => {
-                if (content === 'html') {
-                    return {
-                        ...snapshot,
-                        html: await this.getSnapshotContent<'html'>(snapshot.id, 'html'),
-                    };
-                } else if (content === 'screenshot') {
-                    return {
-                        ...snapshot,
-                        screenshot: await this.getSnapshotContent<'screenshot'>(
-                            snapshot.id,
-                            'screenshot',
-                        ),
-                    };
-                } else {
-                    const [html, screenshot] = await Promise.all([
-                        this.getSnapshotContent(snapshot.id, 'html'),
-                        this.getSnapshotContent(snapshot.id, 'screenshot'),
-                    ]);
-
-                    return {
-                        ...snapshot,
-                        html,
-                        screenshot,
-                    };
-                }
-            }),
+        const processResults = await Promise.allSettled(
+            snapshots.map((snapshot) => this.processSnapshotWithErrors(snapshot, content)),
         );
 
-        return snapshotsWithContent;
+        const processedSnapshots: PartialSnapshot[] = [];
+        const allErrors: SnapshotError[] = [];
+
+        processResults.forEach((result, index) => {
+            if (result.status === 'fulfilled') {
+                processedSnapshots.push(result.value.snapshot);
+                allErrors.push(...result.value.errors);
+            } else {
+                const originalSnapshot = snapshots[index];
+                processedSnapshots.push({
+                    ...originalSnapshot,
+                    _contentErrors: [
+                        `Complete processing failure: ${result.reason?.message || 'Unknown error'}`,
+                    ],
+                });
+                allErrors.push({
+                    snapshotId: originalSnapshot.id,
+                    field: content === 'html' ? 'html' : 'screenshot',
+                    error: `Processing failed: ${result.reason?.message || 'Unknown error'}`,
+                });
+            }
+        });
+
+        return {
+            data: processedSnapshots,
+            errors: allErrors,
+            totalRequested: snapshots.length,
+            successfullyProcessed: processedSnapshots.filter((s) => !s._contentErrors).length,
+        };
     }
 
     /**
-     * Get the last snapshots for a company
+     * Get the last snapshots for a company with resilient error handling
      * @param companyId - The ID of the company to get the last snapshots for
      * @param content - The content to get for the snapshots
-     * @returns The last snapshots for the company
+     * @returns The last snapshots for the company with error information
      */
     async getLastSnapshotsForCompany(
         companyId: string,
         content: 'html' | 'screenshot' | 'diff' | 'all' = 'all',
-    ) {
+    ): Promise<ResilientBatchResult<PartialSnapshot>> {
         const snapshots = await snapshotQueries.getLastSnapshotsForCompany(companyId);
 
         if (content === 'diff') {
-            return snapshots;
+            return {
+                data: snapshots,
+                errors: [],
+                totalRequested: snapshots.length,
+                successfullyProcessed: snapshots.length,
+            };
         }
 
-        const snapshotsWithContent = await Promise.all(
-            snapshots.map(async (snapshot) => {
-                if (content === 'html') {
-                    return {
-                        ...snapshot,
-                        html: await this.getSnapshotContent<'html'>(snapshot.id, 'html'),
-                    };
-                } else if (content === 'screenshot') {
-                    return {
-                        ...snapshot,
-                        screenshot: await this.getSnapshotContent<'screenshot'>(
-                            snapshot.id,
-                            'screenshot',
-                        ),
-                    };
-                } else {
-                    const [html, screenshot] = await Promise.all([
-                        this.getSnapshotContent(snapshot.id, 'html'),
-                        this.getSnapshotContent(snapshot.id, 'screenshot'),
-                    ]);
-
-                    return {
-                        ...snapshot,
-                        html,
-                        screenshot,
-                    };
-                }
-            }),
+        const processResults = await Promise.allSettled(
+            snapshots.map((snapshot) => this.processSnapshotWithErrors(snapshot, content)),
         );
 
-        return snapshotsWithContent;
+        const processedSnapshots: PartialSnapshot[] = [];
+        const allErrors: SnapshotError[] = [];
+
+        processResults.forEach((result, index) => {
+            if (result.status === 'fulfilled') {
+                processedSnapshots.push(result.value.snapshot);
+                allErrors.push(...result.value.errors);
+            } else {
+                const originalSnapshot = snapshots[index];
+                processedSnapshots.push({
+                    ...originalSnapshot,
+                    _contentErrors: [
+                        `Complete processing failure: ${result.reason?.message || 'Unknown error'}`,
+                    ],
+                });
+                allErrors.push({
+                    snapshotId: originalSnapshot.id,
+                    field: content === 'html' ? 'html' : 'screenshot',
+                    error: `Processing failed: ${result.reason?.message || 'Unknown error'}`,
+                });
+            }
+        });
+
+        return {
+            data: processedSnapshots,
+            errors: allErrors,
+            totalRequested: snapshots.length,
+            successfullyProcessed: processedSnapshots.filter((s) => !s._contentErrors).length,
+        };
     }
 
     /**
-     * Get the content of a snapshot
+     * Get the content of a snapshot (used for single operations)
      * @param snapshotId - The ID of the snapshot to get the content for
      * @param type - The type of content to get ('html' or 'screenshot')
-     * @param userId - The ID of the user to get the content for
      * @returns The content of the snapshot
      */
     private async getSnapshotContent<T extends 'html' | 'screenshot'>(

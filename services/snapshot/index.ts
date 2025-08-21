@@ -8,6 +8,7 @@ import { companyQueries } from '@/db/queries/company';
 
 /**
  * Service for creating snapshots of company pages
+ * @description This service is used to create snapshots of company pages
  */
 export class SnapshotService {
     private static instance: SnapshotService;
@@ -41,12 +42,24 @@ export class SnapshotService {
             await this.screenshotService.takeLiveScreenshot(pageURL);
 
         // Get the last snapshot if it exists
-        const lastSnapshot = (await this.snapshotRepository.getLastSnapshotForPage(
-            pageId,
-            pageURL,
-            'html',
-        )) as SnapshotWithContent | null;
+        let lastSnapshot: SnapshotWithContent | null = null;
+        try {
+            lastSnapshot = (await this.snapshotRepository.getLastSnapshotForPage(
+                pageId,
+                pageURL,
+                'html',
+            )) as SnapshotWithContent | null;
+        } catch (error) {
+            console.error(`Failed to get last snapshot for page ${pageId}:`, error);
+            return await this.snapshotRepository.createSnapshotForPage(
+                pageId,
+                pageURL,
+                liveHTMLContent,
+                liveScreenshot,
+            );
+        }
 
+        // If the last snapshot does not exist, we create a new snapshot and skip the diffing
         if (!lastSnapshot || !lastSnapshot.html) {
             return await this.snapshotRepository.createSnapshotForPage(
                 pageId,
@@ -57,7 +70,18 @@ export class SnapshotService {
         }
 
         // If the last snapshot exists, we need to calculate the diff with the live snapshot
-        const snapshotDiff = await this.diffService.contentDiff(lastSnapshot.html, liveHTMLContent);
+        let snapshotDiff: string | null = null;
+        try {
+            snapshotDiff = await this.diffService.contentDiff(lastSnapshot.html, liveHTMLContent);
+        } catch (error) {
+            console.error(`Failed to calculate diff for page ${pageId}:`, error);
+            return await this.snapshotRepository.createSnapshotForPage(
+                pageId,
+                pageURL,
+                liveHTMLContent,
+                liveScreenshot,
+            );
+        }
 
         // Create the new snapshot with the diff
         return await this.snapshotRepository.createSnapshotForPage(
@@ -75,15 +99,19 @@ export class SnapshotService {
      */
     private async createArchiveSnapshotForPage(pageId: string, userId: string, pageURL: string) {
         // Fetch the archive HTML content
-        const { htmlContent: archiveHTMLContent } =
-            await this.screenshotService.takeArchiveScreenshot(pageURL);
+        try {
+            const { htmlContent: archiveHTMLContent } =
+                await this.screenshotService.takeArchiveScreenshot(pageURL);
 
-        // Store the archive HTML content
-        await this.snapshotRepository.createArchiveSnapshotForPage(
-            pageId,
-            pageURL,
-            archiveHTMLContent,
-        );
+            // Store the archive HTML content
+            await this.snapshotRepository.createArchiveSnapshotForPage(
+                pageId,
+                pageURL,
+                archiveHTMLContent,
+            );
+        } catch (error) {
+            console.error(`Failed to create archive snapshot for page ${pageId}:`, error);
+        }
 
         // Then attempt to create a live snapshot
         return this.createLiveSnapshotForPage(pageId, userId, pageURL);

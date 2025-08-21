@@ -27,3 +27,40 @@ export type SnapshotWithContent = Snapshot & {
  * @example 'all' - The Diff, HTML and screenshot content of the snapshot
  */
 export type SnapshotContent = 'html' | 'screenshot' | 'diff' | 'all';
+
+/**
+ * The error type for a snapshot
+ * @description The error type for a snapshot
+ * @example 'html' - The HTML content of the snapshot
+ * @example 'screenshot' - The screenshot content of the snapshot
+ */
+export interface SnapshotError {
+    snapshotId: number;
+    field: 'html' | 'screenshot';
+    error: string;
+}
+
+/**
+ * The result type for a batch operation
+ * @description The result type for a batch operation
+ * @example 'html' - The HTML content of the snapshot
+ * @example 'screenshot' - The screenshot content of the snapshot
+ */
+export interface ResilientBatchResult<T> {
+    data: T[];
+    errors: SnapshotError[];
+    totalRequested: number;
+    successfullyProcessed: number;
+}
+
+/**
+ * The partial snapshot type that can include partial data and error info
+ * @description The partial snapshot type that can include partial data and error info
+ * @example 'html' - The HTML content of the snapshot
+ * @example 'screenshot' - The screenshot content of the snapshot
+ */
+export interface PartialSnapshot extends Snapshot {
+    html?: string | null;
+    screenshot?: Uint8Array | null;
+    _contentErrors?: string[];
+}
