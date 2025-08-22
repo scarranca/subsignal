@@ -11,10 +11,14 @@ import {
     refreshSnapshot3Month,
     refreshSnapshot6Month,
 } from './functions/snapshot';
+import { sendOnboardingEmail } from './functions/email';
 
 // Export all functions
 export const functions = [
+    // Onboarding functions
     batchCreateCompany,
+
+    // Snapshot functions
     createArchiveSnapshot,
     createLiveSnapshot,
     refreshSnapshot7Day,
@@ -22,4 +26,7 @@ export const functions = [
     refreshSnapshot1Month,
     refreshSnapshot3Month,
     refreshSnapshot6Month,
+
+    // Email functions
+    sendOnboardingEmail,
 ];

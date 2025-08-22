@@ -35,7 +35,7 @@ export const batchCreateCompany = inngest.createFunction(
         const urlsByHostname = groupUrlsByHostnames(urls);
         console.log('API Handler - Grouped URLs by hostname:', urlsByHostname);
 
-        const newPages: string[] = [];
+        const newPages: { pageId: string; pageURL: string }[] = [];
 
         // Process all companies in one step (since it's mostly I/O bound external calls)
         const processResults = await step.run('process-all-companies', async () => {
@@ -152,7 +152,12 @@ export const batchCreateCompany = inngest.createFunction(
         // Collect new page IDs
         successfulResults.forEach((result) => {
             if (result.pages?.newPages) {
-                newPages.push(...result.pages.newPages.map((page: any) => page.id));
+                newPages.push(
+                    ...result.pages.newPages.map((page: any) => ({
+                        pageId: page.id,
+                        pageURL: page.url,
+                    })),
+                );
             }
         });
 
@@ -166,12 +171,13 @@ export const batchCreateCompany = inngest.createFunction(
 
         // Send snapshot events (this is worth making durable since it's the actual work)
         if (newPages.length > 0) {
-            const snapshotEvents = newPages.map((pageId: string) => ({
+            const snapshotEvents = newPages.map((page: { pageId: string; pageURL: string }) => ({
                 name: 'snapshot/create.archive.snapshot',
                 data: {
-                    pageId: pageId,
+                    pageId: page.pageId,
                     userId: userId,
                     pageProperties: userPreference?.properties || DEFAULT_PREFERENCES.properties,
+                    pageURL: page.pageURL,
                 },
             }));
 
