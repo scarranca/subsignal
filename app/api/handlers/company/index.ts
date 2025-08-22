@@ -111,6 +111,7 @@ export async function handleCreateCompany(c: Context) {
                 userId: user.id,
                 pageId: result.initialPage.id,
                 pageProperties: userPreference?.properties || DEFAULT_PREFERENCES.properties,
+                pageURL: validatedData.page.url,
             },
         });
 

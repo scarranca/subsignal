@@ -8,7 +8,7 @@ import {
 } from '@/schema/api';
 import { z } from 'zod';
 import { inngest } from '@/ingest/client';
-import { preferenceQueries } from '@/db/queries';
+import { pageQueries, preferenceQueries } from '@/db/queries';
 
 export const getUser = (c: Context) => {
     const user = c.get(USER_MIDDLEWARE_CONTEXT_KEY);
@@ -33,13 +33,19 @@ export async function handleCreateSnapshot(c: Context) {
             return c.json({ error: 'User preferences not found' }, 404);
         }
 
+        const page = await pageQueries.getPageById(validatedData.pageId, user.id);
+        if (!page) {
+            return c.json({ error: 'Page not found' }, 404);
+        }
+
         if (validatedData.type === 'archive') {
             await inngest.send({
                 name: 'snapshot/create.archive.snapshot',
                 data: {
-                    pageId: validatedData.pageId,
+                    pageId: page.id,
                     userId: user.id,
                     pageProperties: userPreferences.properties,
+                    pageURL: page.url,
                 },
             });
         } else if (validatedData.type === 'live') {
@@ -49,6 +55,7 @@ export async function handleCreateSnapshot(c: Context) {
                     pageId: validatedData.pageId,
                     userId: user.id,
                     pageProperties: userPreferences.properties,
+                    pageURL: page.url,
                 },
             });
         } else {

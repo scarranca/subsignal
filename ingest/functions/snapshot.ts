@@ -12,13 +12,13 @@ export const createArchiveSnapshot = inngest.createFunction(
     { id: 'create-archive-snapshot' },
     { event: 'snapshot/create.archive.snapshot' },
     async ({ event, step }) => {
-        const { pageId, userId, pageProperties } = event.data;
+        const { pageId, userId, pageProperties, pageURL } = event.data;
         console.log('API Handler - Create archive snapshot for page:', pageId);
         const snapshot = await durableSnapshotService.createArchiveSnapshotForPage(
             step,
             pageId,
-            userId,
             pageProperties,
+            pageURL,
         );
         return {
             message: `Created archive snapshot for page ${pageId}`,
@@ -50,13 +50,13 @@ export const createLiveSnapshot = inngest.createFunction(
     },
     { event: 'snapshot/create.live.snapshot' },
     async ({ event, step }) => {
-        const { pageId, userId, pageProperties } = event.data;
+        const { pageId, userId, pageProperties, pageURL } = event.data;
         console.log('API Handler - Create live snapshot for page:', pageId);
         const snapshot = await durableSnapshotService.createLiveSnapshotForPage(
             step,
             pageId,
-            userId,
             pageProperties,
+            pageURL,
         );
         return {
             message: `Created live snapshot for page ${pageId}`,

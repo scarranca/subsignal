@@ -190,6 +190,7 @@ export class DurableSnapshotService {
                     pageId: pageWithCompany.page.id,
                     userId: user.userId,
                     pageProperties: user.properties,
+                    pageURL: pageWithCompany.page.url,
                 },
             }));
 

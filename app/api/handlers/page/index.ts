@@ -137,6 +137,7 @@ export async function handleCreatePage(c: Context) {
                     pageId: newPage.id,
                     userId: user.id,
                     pageProperties: userPreference?.properties || DEFAULT_PREFERENCES.properties,
+                    pageURL: newPage.url,
                 },
             });
 
@@ -159,6 +160,7 @@ export async function handleCreatePage(c: Context) {
                     pageId: result.page.id,
                     userId: user.id,
                     pageProperties: userPreference?.properties || DEFAULT_PREFERENCES.properties,
+                    pageURL: result.page.url,
                 },
             });
 
@@ -210,6 +212,7 @@ export async function handleUpdatePage(c: Context) {
                     pageId: updatedPage.id,
                     userId: user.id,
                     pageProperties: userPreference?.properties || DEFAULT_PREFERENCES.properties,
+                    pageURL: updatedPage.url,
                 },
             });
         }
