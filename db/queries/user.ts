@@ -116,4 +116,13 @@ export const userQueries = {
             },
         };
     },
+
+    async getUserEmailByUserId(userId: string) {
+        return await db.query.user.findFirst({
+            where: eq(user.id, userId),
+            columns: {
+                email: true,
+            },
+        });
+    },
 };

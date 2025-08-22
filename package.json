@@ -6,6 +6,7 @@
         "dev": "next dev --turbopack",
         "email:dev": "npx react-email dev --port 4040",
         "email:export": "npx react-email export",
+        "ingest:dev": "npx inngest-cli@latest dev",
         "build": "next build",
         "start": "next start",
         "lint": "next lint",

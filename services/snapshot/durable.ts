@@ -195,7 +195,7 @@ export class DurableSnapshotService {
             }));
 
             // Step 3: Send events in batches
-            const BATCH_SIZE = 1000;
+            const BATCH_SIZE = 100;
             const batches = [];
             for (let i = 0; i < snapshotEvents.length; i += BATCH_SIZE) {
                 batches.push(snapshotEvents.slice(i, i + BATCH_SIZE));
@@ -203,14 +203,7 @@ export class DurableSnapshotService {
 
             for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
                 const batch = batches[batchIndex];
-
-                await step.run(`send-events-${user.userId}-batch-${batchIndex}`, async () => {
-                    console.log(
-                        `[SnapshotService] Sending batch ${batchIndex + 1}/${batches.length} of ${batch.length} events for user ${user.userId}`,
-                    );
-                    await step.sendEvent('snapshot/create.live.snapshot', batch);
-                    return { batchIndex, eventCount: batch.length };
-                });
+                await step.sendEvent('snapshot/create.live.snapshot', batch);
             }
 
             successfulUsers++;

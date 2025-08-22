@@ -1,4 +1,4 @@
-import { batchCreateCompany } from './functions/onboarding';
+import { batchCreateCompany, sendOnboardingEmail } from './functions/onboarding';
 import {
     // Create snapshot functions
     createArchiveSnapshot,
@@ -11,12 +11,13 @@ import {
     refreshSnapshot3Month,
     refreshSnapshot6Month,
 } from './functions/snapshot';
-import { sendOnboardingEmail } from './functions/email';
+import { createBriefingForUser, sendBriefingToUser } from './functions/briefing';
 
 // Export all functions
 export const functions = [
     // Onboarding functions
     batchCreateCompany,
+    sendOnboardingEmail,
 
     // Snapshot functions
     createArchiveSnapshot,
@@ -27,6 +28,7 @@ export const functions = [
     refreshSnapshot3Month,
     refreshSnapshot6Month,
 
-    // Email functions
-    sendOnboardingEmail,
+    // Briefing functions
+    createBriefingForUser,
+    sendBriefingToUser,
 ];
