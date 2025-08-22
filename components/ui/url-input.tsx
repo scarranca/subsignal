@@ -1,5 +1,6 @@
+'use client';
+
 import React from 'react';
-import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 interface URLInputProps {
@@ -49,21 +50,25 @@ export const URLInput = React.forwardRef<HTMLInputElement, URLInputProps>(
         const displayValue = processUrl(value).cleanUrl;
 
         return (
-            <div className={cn('relative', className)}>
-                <div className="absolute left-2 top-1/2 transform -translate-y-1/2 flex items-center pointer-events-none">
-                    <span className="bg-gray-100 text-gray-700 text-xs font-medium px-2 py-1 rounded-md">
-                        {protocol}://
-                    </span>
-                    <div className="w-px h-6 bg-gray-300 ml-1"></div>
+            <div
+                className={cn(
+                    'flex items-center w-full rounded-md border border-input bg-background text-sm ring-offset-background',
+                    'focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2',
+                    error && 'border-destructive',
+                    className,
+                )}
+            >
+                <div className="flex items-center px-3 py-2 text-muted-foreground border-r border-border">
+                    <span className="text-sm font-medium whitespace-nowrap">{protocol}://</span>
                 </div>
-                <Input
+                <input
                     ref={ref}
                     id={id}
                     value={displayValue}
                     onChange={handleChange}
                     placeholder={placeholder}
                     onKeyDown={onKeyDown}
-                    className={cn('pl-[74px] pr-3', error && 'border-red-500')}
+                    className="flex-1 px-3 py-2 bg-transparent border-0 outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
                     {...props}
                 />
             </div>

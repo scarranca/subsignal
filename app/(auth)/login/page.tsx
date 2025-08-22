@@ -162,7 +162,7 @@ const LoginPage = () => {
                 <div className="absolute bottom-0 right-0 w-full h-full flex items-end justify-end">
                     <div className="relative w-[75%] h-[60%] transform translate-x-[8%] translate-y-[8%]">
                         <Image
-                            src="/images/auth/preview.svg"
+                            src="/images/auth/preview.png"
                             alt="Subsignal Preview"
                             fill
                             className="object-cover rounded-xl shadow-2xl object-left-top"
