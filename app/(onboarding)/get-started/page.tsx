@@ -5,13 +5,14 @@ import { Testimonials } from '@/components/onboarding/Testimonials';
 import { OnboardingStepIndicator } from '@/components/onboarding/OnboardingStepIndicator';
 import { OnboardingNav } from '@/components/onboarding/OnboardingNav';
 import { OnboardingSteps } from '@/components/onboarding/OnboardingSteps';
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
 import { LOGIN_TESTIMONIALS } from '@/constants/testimonials';
+import { useOnboardingStore } from '@/lib/stores/onboarding';
 
 const testimonials = LOGIN_TESTIMONIALS;
 
 const OnboardingPage = () => {
-    const [currentStep, setCurrentStep] = useState(1);
+    const { currentStep, setCurrentStep } = useOnboardingStore();
 
     const handleNextStep = useCallback(() => {
         // If on last step, redirect to dashboard
@@ -24,7 +25,7 @@ const OnboardingPage = () => {
         if (currentStep < 4) {
             setCurrentStep(currentStep + 1);
         }
-    }, [currentStep]);
+    }, [currentStep, setCurrentStep]);
 
     // Add keyboard shortcut for Cmd+Enter
     useEffect(() => {

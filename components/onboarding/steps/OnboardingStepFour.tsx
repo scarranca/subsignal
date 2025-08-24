@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { authClient } from '@/client/auth';
 import { AVATAR_COLORS, AVATAR_VARIANT } from '@/constants/palette';
 import { Button } from '@/components/ui/button';
 import { ArrowUpRight } from 'lucide-react';
 import BoringAvatar from 'boring-avatars';
 import confetti from 'canvas-confetti';
+import { useOnboardingStore } from '@/lib/stores/onboarding';
 
 interface OnboardingStepFourProps {
     onComplete: () => void;
@@ -15,8 +16,10 @@ interface OnboardingStepFourProps {
 
 export const OnboardingStepFour = ({ onComplete }: OnboardingStepFourProps) => {
     const { data: session, isPending } = authClient.useSession();
+    const { resetStep } = useOnboardingStore();
     const userName = session?.user?.name || 'Anonymous User';
     const userEmail = session?.user?.email || 'user@example.com';
+    const [showStartOver, setShowStartOver] = useState(false);
 
     // Trigger confetti when component mounts
     useEffect(() => {
@@ -33,9 +36,22 @@ export const OnboardingStepFour = ({ onComplete }: OnboardingStepFourProps) => {
         return () => clearTimeout(timer);
     }, []);
 
+    // Show "Start over" button after 3 seconds
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setShowStartOver(true);
+        }, 3000);
+
+        return () => clearTimeout(timer);
+    }, []);
+
     const handleGoToDashboard = () => {
         onComplete();
         window.location.href = '/dashboard';
+    };
+
+    const handleStartOver = () => {
+        resetStep();
     };
 
     // Loading state
@@ -82,6 +98,16 @@ export const OnboardingStepFour = ({ onComplete }: OnboardingStepFourProps) => {
                     Dashboard
                     <ArrowUpRight className="ml-2 h-4 w-4" />
                 </Button>
+
+                {/* Start over button - fades in after 3 seconds */}
+                <button
+                    onClick={handleStartOver}
+                    className={`w-full mt-3 text-xs text-gray-500 hover:text-gray-700 transition-all duration-500 ${
+                        showStartOver ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                    }`}
+                >
+                    Start over
+                </button>
             </div>
         </div>
     );
