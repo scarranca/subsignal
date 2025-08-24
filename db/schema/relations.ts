@@ -5,6 +5,7 @@ import { company } from './company';
 import { page } from './page';
 import { snapshot } from './snapshot';
 import { briefing } from './briefing';
+import { billing } from './billing';
 
 export const userRelations = relations(user, ({ one, many }) => ({
     preference: one(preference, {
@@ -12,6 +13,10 @@ export const userRelations = relations(user, ({ one, many }) => ({
         references: [preference.userId],
     }),
     companies: many(company),
+    billing: one(billing, {
+        fields: [user.id],
+        references: [billing.userId],
+    }),
 }));
 
 export const preferenceRelations = relations(preference, ({ one }) => ({
@@ -49,5 +54,12 @@ export const briefingRelations = relations(briefing, ({ one }) => ({
     company: one(company, {
         fields: [briefing.companyId],
         references: [company.id],
+    }),
+}));
+
+export const billingRelations = relations(billing, ({ one }) => ({
+    user: one(user, {
+        fields: [billing.userId],
+        references: [user.id],
     }),
 }));

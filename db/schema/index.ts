@@ -4,6 +4,7 @@ import { company } from './company';
 import { page } from './page';
 import { snapshot } from './snapshot';
 import { briefing } from './briefing';
+import { billing } from './billing';
 import {
     userRelations,
     preferenceRelations,
@@ -11,6 +12,7 @@ import {
     pageRelations,
     snapshotRelations,
     briefingRelations,
+    billingRelations,
 } from './relations';
 
 export const schema = {
@@ -23,6 +25,7 @@ export const schema = {
     page: page,
     snapshot: snapshot,
     briefing: briefing,
+    billing: billing,
 };
 
 export const relations = {
@@ -32,4 +35,5 @@ export const relations = {
     pageRelations: pageRelations,
     snapshotRelations: snapshotRelations,
     briefingRelations: briefingRelations,
+    billingRelations: billingRelations,
 };
