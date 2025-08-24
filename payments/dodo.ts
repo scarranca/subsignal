@@ -1,23 +1,9 @@
-// Mock DodoPayments implementation for development
-class MockDodoPayments {
-    async create(params: {
-        plan: string;
-        success_url: string;
-        cancel_url: string;
-        discount_code?: string;
-    }) {
-        // Mock delay to simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 500));
+import DodoPayments from 'dodopayments';
 
-        // Return mock checkout session
-        const baseUrl = 'https://checkout.dodo.dev/session';
-        const mockSessionId = `cs_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-
-        return {
-            id: mockSessionId,
-            url: `${baseUrl}/${mockSessionId}?plan=${params.plan}${params.discount_code ? `&discount=${params.discount_code}` : ''}&success_url=${encodeURIComponent(params.success_url)}&cancel_url=${encodeURIComponent(params.cancel_url)}`,
-        };
-    }
-}
-
-export const dodopayments = new MockDodoPayments();
+export const dodopayments = new DodoPayments({
+    bearerToken:
+        process.env.NODE_ENV === 'development'
+            ? process.env.DODO_API_KEY_TEST
+            : process.env.DODO_API_KEY_LIVE,
+    environment: process.env.NODE_ENV === 'development' ? 'test_mode' : 'live_mode',
+});

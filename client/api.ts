@@ -131,6 +131,15 @@ export interface DeletePagesRequest {
     pageIds: string[];
 }
 
+export interface PaymentStatus {
+    isPaying: boolean;
+    currentPlan?: 'solo' | 'team';
+    subscriptionId?: string;
+    status?: string;
+    userName?: string;
+    userEmail?: string;
+}
+
 class ApiClient {
     private baseURL: string;
 
@@ -200,6 +209,18 @@ class ApiClient {
      */
     async getHealthLiveness() {
         return this.request('/health/live');
+    }
+
+    /**
+     * Payments API methods
+     */
+
+    /**
+     * Get user payment status
+     * @returns Promise with payment status data including user info
+     */
+    async getPaymentStatus(): Promise<ApiResponse<PaymentStatus>> {
+        return this.request<PaymentStatus>('/payments/status');
     }
 
     /**

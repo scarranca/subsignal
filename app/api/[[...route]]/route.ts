@@ -9,6 +9,7 @@ import preferences from '../routes/preference';
 import companies from '../routes/company';
 import pages from '../routes/page';
 import snapshots from '../routes/snapshot';
+import payments from '../routes/payments';
 
 /**
  * Force Node.js runtime to support googleapis and other Node.js modules
@@ -61,6 +62,7 @@ v1.route('/preferences', preferences);
 v1.route('/companies', companies);
 v1.route('/pages', pages);
 v1.route('/snapshots', snapshots);
+v1.route('/payments', payments);
 
 app.route('/v1', v1);
 
