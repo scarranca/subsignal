@@ -159,6 +159,7 @@ async function refreshSnapshotsForFrequency(
     const userData = users.map((user) => ({
         userId: user.userId,
         properties: user.properties,
+        frequency: frequency,
     }));
 
     // Step 2: Queue snapshots for all users

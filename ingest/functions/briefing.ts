@@ -13,15 +13,15 @@ export const createBriefingForUser = inngest.createFunction(
     { id: 'create-briefing' },
     { event: 'briefing/create.briefing' },
     async ({ event, step }) => {
-        const { userId, properties } = event.data;
+        const { userId, properties, frequency } = event.data;
         if (!userId) {
             throw new NonRetriableError('User ID is required');
         }
 
-        // Step 1: Get all company IDs for the user using pagination
+        // Step 1: Get all companies for the user using pagination
         let page = 1;
         let hasMore = true;
-        const companyIds = [];
+        const companies = [];
 
         while (hasMore) {
             const result = await companyQueries.getActiveCompaniesByUser(userId, {
@@ -33,33 +33,40 @@ export const createBriefingForUser = inngest.createFunction(
                 break;
             }
 
-            // Extract company IDs
-            companyIds.push(...result.data.map((company) => company.id));
+            // Store complete company objects
+            companies.push(...result.data);
 
             hasMore = result.pagination.hasNext;
             page = result.pagination.page + 1;
         }
 
-        if (companyIds.length === 0) {
+        if (companies.length === 0) {
             console.error(`No companies found for user ${userId}`);
             return { message: 'No companies to create briefings for' };
         }
 
         // Step 2: Create briefings for each company
-        for (let i = 0; i < companyIds.length; i++) {
-            const companyId = companyIds[i];
+        for (let i = 0; i < companies.length; i++) {
+            const company = companies[i];
 
-            await step.run(`create-briefing-for-company-${companyId}`, async () => {
-                await briefingService.createBriefingForCompany(companyId, properties);
+            await step.run(`create-briefing-for-company-${company.id}`, async () => {
+                const briefing = await briefingService.createBriefingForCompany(
+                    company.id,
+                    company.url,
+                    company.name,
+                    properties,
+                    frequency,
+                );
+                console.log(`Briefing created for company ${company.id}`, briefing);
             });
         }
 
         // Step 3: Send briefing events in batches
-        const briefingEvents = companyIds.map((companyId) => ({
+        const briefingEvents = companies.map((company) => ({
             name: 'briefing/send.briefing',
             data: {
                 userId,
-                companyId,
+                companyId: company.id,
             },
         }));
 
@@ -78,7 +85,7 @@ export const createBriefingForUser = inngest.createFunction(
         return {
             message: `Briefing creation completed for user ${userId}`,
             stats: {
-                companiesProcessed: companyIds.length,
+                companiesProcessed: companies.length,
                 briefingEventsQueued: briefingEvents.length,
             },
         };
@@ -117,15 +124,30 @@ export const sendBriefingToUser = inngest.createFunction(
             throw new NonRetriableError(`User email not found for user ${userId}`);
         }
 
-        // Step 2: Get briefing data
-        const briefing = await briefingService.getLatestBriefingForCompany(companyId);
-        if (!briefing) {
+        // Step 2: Get company name
+        const company = await companyQueries.getCompanyById(companyId, userId);
+        if (!company) {
+            throw new NonRetriableError(`Company not found for company ${companyId}`);
+        }
+
+        // Step 3: Get briefing data
+        const briefing = await briefingService.getLatestBriefingForCompany(companyId, 'html');
+        if (
+            !briefing ||
+            !('content' in briefing) ||
+            !briefing.content ||
+            briefing.content.trim() === ''
+        ) {
             throw new NonRetriableError(`No briefing found for company ${companyId}`);
         }
 
         // Step 3: Send the email
         await step.run(`send-briefing-email-${userId}-${companyId}`, async () => {
-            await emailService.sendBriefingEmail(userEmailData.email, briefing);
+            await emailService.sendBriefingEmail(
+                userEmailData.email,
+                company.name,
+                briefing.content!,
+            );
         });
 
         return {
