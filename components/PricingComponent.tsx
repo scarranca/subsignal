@@ -74,22 +74,17 @@ export const PricingComponent = ({
 
     // Handle checkout events
     const handleCheckoutEvents = useCallback((event: CheckoutEvent) => {
-        console.log('Checkout event:', event);
-
         switch (event.event_type) {
             case 'checkout.opened':
                 setCheckoutState({ status: 'open' });
-                showToast.success('Checkout opened successfully');
                 break;
 
             case 'checkout.closed':
                 setCheckoutState({ status: 'idle' });
-                showToast.info('Checkout session closed');
                 break;
 
             case 'checkout.redirect':
                 setCheckoutState({ status: 'loading' });
-                showToast.success('Checkout successful! Redirecting to payment page...');
                 if (event.data?.url) {
                     window.location.href = event.data.url as string;
                 }
@@ -123,12 +118,8 @@ export const PricingComponent = ({
         const checkPaymentStatus = async () => {
             try {
                 const response = await apiClient.getPaymentStatus();
-                console.log('🔍 [PRICING COMPONENT] API Response:', response);
-                console.log('🔍 [PRICING COMPONENT] Response success:', response.success);
-                console.log('🔍 [PRICING COMPONENT] Response data:', response.data);
 
                 if (response.success && response.data) {
-                    console.log('🔍 [PRICING COMPONENT] Setting payment status:', response.data);
                     setPaymentStatus(response.data);
 
                     // If user is already paying, select their current plan
@@ -141,11 +132,6 @@ export const PricingComponent = ({
                         }
                     }
                 } else {
-                    console.error('Failed to check payment status:', response.error);
-                    showToast.error('Failed to load payment status. Please refresh and try again.');
-                    console.log(
-                        '🔍 [PRICING COMPONENT] Setting default payment status (no user data)',
-                    );
                     // Default to non-paying user on error, but preserve user data if available
                     setPaymentStatus({
                         isPaying: false,
@@ -156,11 +142,8 @@ export const PricingComponent = ({
                     });
                 }
             } catch (error) {
-                console.error('Failed to check payment status:', error);
-                showToast.error(
-                    'Unable to load your account information. Please refresh and try again.',
-                );
                 // Default to non-paying user on error
+                console.log('error', error);
                 setPaymentStatus({ isPaying: false });
             } finally {
                 setIsLoadingStatus(false);
@@ -174,18 +157,8 @@ export const PricingComponent = ({
         try {
             setCheckoutState({ status: 'loading' });
 
-            // Check if user data is not available
-            console.log('🔍 [PRICING COMPONENT] Checkout clicked, paymentStatus:', paymentStatus);
-            console.log(
-                '🔍 [PRICING COMPONENT] paymentStatus.userEmail:',
-                paymentStatus?.userEmail,
-            );
-            console.log('🔍 [PRICING COMPONENT] paymentStatus.userName:', paymentStatus?.userName);
-
             // Don't allow checkout if still loading payment status
             if (isLoadingStatus) {
-                console.log('⏳ [PRICING COMPONENT] Still loading payment status, waiting...');
-                showToast.warning('Loading your account information. Please wait and try again.');
                 setCheckoutState({
                     status: 'error',
                     error: 'Loading your account information. Please wait and try again.',
@@ -194,7 +167,6 @@ export const PricingComponent = ({
             }
 
             if (!paymentStatus?.userEmail) {
-                console.log('❌ [PRICING COMPONENT] User data not available', paymentStatus);
                 showToast.error('Unable to load your account information. Please try again.');
                 setCheckoutState({
                     status: 'error',
@@ -202,11 +174,6 @@ export const PricingComponent = ({
                 });
                 return;
             }
-
-            console.log('user name', paymentStatus.userName);
-            console.log('user email', paymentStatus.userEmail);
-
-            showToast.loading('Opening checkout...');
 
             DodoPayments.Checkout.open({
                 redirectUrl: successUrl || `${window.location.origin}/get-started?step=5`,
@@ -238,7 +205,6 @@ export const PricingComponent = ({
     const handleSecondaryAction = useCallback(() => {
         if (paymentStatus?.isPaying) {
             // For existing customers, just call the completion callback
-            showToast.success('Plan switch completed successfully');
             onCheckoutComplete?.();
         } else {
             // For new users, could open a discount code modal or handle differently

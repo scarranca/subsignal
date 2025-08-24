@@ -2,7 +2,9 @@ import { pgTable, text, timestamp, boolean } from 'drizzle-orm/pg-core';
 import { user } from './auth';
 
 export const billing = pgTable('billing', {
-    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    id: text('id')
+        .primaryKey()
+        .$defaultFn(() => crypto.randomUUID()),
     userId: text('user_id')
         .notNull()
         .references(() => user.id, { onDelete: 'cascade' }),
