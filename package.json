@@ -49,6 +49,7 @@
         "clsx": "^2.1.1",
         "date-fns": "^4.1.0",
         "diff": "^8.0.2",
+        "dodopayments": "^1.51.1",
         "dotenv": "^17.2.1",
         "drizzle-orm": "^0.44.4",
         "gray-matter": "^4.0.3",

@@ -36,11 +36,8 @@ export const preference = pgTable(
             .$defaultFn(() => new Date())
             .notNull(),
     },
-    (table) => ({
-        userActiveIdx: index('idx_preference_user_active').on(table.userId, table.isActive),
-        frequencyActiveIdx: index('idx_preference_frequency_active').on(
-            table.frequency,
-            table.isActive,
-        ),
-    }),
+    (table) => [
+        index('idx_preference_user_active').on(table.userId, table.isActive),
+        index('idx_preference_frequency_active').on(table.frequency, table.isActive),
+    ],
 );

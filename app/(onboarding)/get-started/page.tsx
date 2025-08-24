@@ -6,6 +6,7 @@ import { OnboardingStepIndicator } from '@/components/onboarding/OnboardingStepI
 import { OnboardingNav } from '@/components/onboarding/OnboardingNav';
 import { OnboardingSteps } from '@/components/onboarding/OnboardingSteps';
 import { useEffect, useCallback } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { LOGIN_TESTIMONIALS } from '@/constants/testimonials';
 import { useOnboardingStore } from '@/lib/stores/onboarding';
 
@@ -13,16 +14,37 @@ const testimonials = LOGIN_TESTIMONIALS;
 
 const OnboardingPage = () => {
     const { currentStep, setCurrentStep } = useOnboardingStore();
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
+    // Handle URL step parameter (for payment redirects)
+    useEffect(() => {
+        const stepFromUrl = searchParams.get('step');
+        if (stepFromUrl) {
+            const stepNumber = parseInt(stepFromUrl, 10);
+            if (stepNumber >= 1 && stepNumber <= 5) {
+                setCurrentStep(stepNumber);
+            }
+        }
+    }, [searchParams, setCurrentStep]);
+
+    // Update URL when step changes
+    useEffect(() => {
+        const currentParams = new URLSearchParams(searchParams.toString());
+        currentParams.set('step', currentStep.toString());
+        router.replace(`${pathname}?${currentParams.toString()}`, { scroll: false });
+    }, [currentStep, router, pathname, searchParams]);
 
     const handleNextStep = useCallback(() => {
         // If on last step, redirect to dashboard
-        if (currentStep === 4) {
+        if (currentStep === 5) {
             window.location.href = '/dashboard';
             return;
         }
 
         // Advance to the next sequential step
-        if (currentStep < 4) {
+        if (currentStep < 5) {
             setCurrentStep(currentStep + 1);
         }
     }, [currentStep, setCurrentStep]);
@@ -51,7 +73,7 @@ const OnboardingPage = () => {
 
                 {/* Step Indicator Dots */}
                 <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
-                    <OnboardingStepIndicator currentStep={currentStep} totalSteps={4} />
+                    <OnboardingStepIndicator currentStep={currentStep} totalSteps={5} />
                 </div>
             </div>
 
