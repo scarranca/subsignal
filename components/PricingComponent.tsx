@@ -1,14 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { PRICING_PLANS, PLAN_ID_MAPPING, type PlanType } from '@/constants/pricing';
+import { useState, useEffect, useCallback } from 'react';
+import {
+    PRICING_PLANS,
+    PLAN_ID_MAPPING,
+    DODO_PRODUCT_ID_MAPPING,
+    type PlanType,
+} from '@/constants/pricing';
 import { SelectablePricingCard } from './onboarding/shared';
+import { CheckoutEvent, DodoPayments } from 'dodopayments-checkout';
+import { apiClient, type PaymentStatus } from '@/client/api';
+import { showToast } from '@/lib/toast';
 
-interface PaymentStatus {
-    isPaying: boolean;
-    currentPlan?: 'solo' | 'team';
-    subscriptionId?: string;
-    status?: string;
+interface CheckoutState {
+    status: 'idle' | 'loading' | 'open' | 'error';
+    error?: string;
 }
 
 interface PricingComponentProps {
@@ -59,30 +65,101 @@ export const PricingComponent = ({
     successUrl,
     cancelUrl,
 }: PricingComponentProps) => {
-    const [isProcessing, setIsProcessing] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState<PlanType>('solo_plan');
     const [paymentStatus, setPaymentStatus] = useState<PaymentStatus | null>(null);
     const [isLoadingStatus, setIsLoadingStatus] = useState(true);
+    const [checkoutState, setCheckoutState] = useState<CheckoutState>({
+        status: 'idle',
+    });
+
+    // Handle checkout events
+    const handleCheckoutEvents = useCallback((event: CheckoutEvent) => {
+        console.log('Checkout event:', event);
+
+        switch (event.event_type) {
+            case 'checkout.opened':
+                setCheckoutState({ status: 'open' });
+                showToast.success('Checkout opened successfully');
+                break;
+
+            case 'checkout.closed':
+                setCheckoutState({ status: 'idle' });
+                showToast.info('Checkout session closed');
+                break;
+
+            case 'checkout.redirect':
+                setCheckoutState({ status: 'loading' });
+                showToast.success('Checkout successful! Redirecting to payment page...');
+                if (event.data?.url) {
+                    window.location.href = event.data.url as string;
+                }
+                break;
+
+            case 'checkout.error':
+                const errorMessage =
+                    (event.data?.message as string) || 'An error occurred during checkout';
+                setCheckoutState({
+                    status: 'error',
+                    error: errorMessage,
+                });
+                showToast.error(errorMessage);
+                break;
+        }
+    }, []);
+
+    // Initialize Dodo Payments overlay
+    useEffect(() => {
+        DodoPayments.Initialize({
+            displayType: 'overlay',
+            linkType: 'static',
+            mode: process.env.NODE_ENV === 'development' ? 'test' : 'live',
+            theme: 'light',
+            onEvent: handleCheckoutEvents,
+        });
+    }, [handleCheckoutEvents]);
 
     // Check payment status on component mount
     useEffect(() => {
         const checkPaymentStatus = async () => {
             try {
-                const response = await fetch('/api/payments/status');
-                const status = await response.json();
-                setPaymentStatus(status);
+                const response = await apiClient.getPaymentStatus();
+                console.log('🔍 [PRICING COMPONENT] API Response:', response);
+                console.log('🔍 [PRICING COMPONENT] Response success:', response.success);
+                console.log('🔍 [PRICING COMPONENT] Response data:', response.data);
 
-                // If user is already paying, select their current plan
-                if (status.isPaying && status.currentPlan) {
-                    const planType = Object.entries(PLAN_ID_MAPPING).find(
-                        ([, value]) => value === status.currentPlan,
-                    )?.[0] as PlanType | undefined;
-                    if (planType) {
-                        setSelectedPlan(planType);
+                if (response.success && response.data) {
+                    console.log('🔍 [PRICING COMPONENT] Setting payment status:', response.data);
+                    setPaymentStatus(response.data);
+
+                    // If user is already paying, select their current plan
+                    if (response.data.isPaying && response.data.currentPlan) {
+                        const planType = Object.entries(PLAN_ID_MAPPING).find(
+                            ([, value]) => value === response.data!.currentPlan,
+                        )?.[0] as PlanType | undefined;
+                        if (planType) {
+                            setSelectedPlan(planType);
+                        }
                     }
+                } else {
+                    console.error('Failed to check payment status:', response.error);
+                    showToast.error('Failed to load payment status. Please refresh and try again.');
+                    console.log(
+                        '🔍 [PRICING COMPONENT] Setting default payment status (no user data)',
+                    );
+                    // Default to non-paying user on error, but preserve user data if available
+                    setPaymentStatus({
+                        isPaying: false,
+                        ...(response.data && {
+                            userName: response.data.userName,
+                            userEmail: response.data.userEmail,
+                        }),
+                    });
                 }
             } catch (error) {
                 console.error('Failed to check payment status:', error);
+                showToast.error(
+                    'Unable to load your account information. Please refresh and try again.',
+                );
                 // Default to non-paying user on error
                 setPaymentStatus({ isPaying: false });
             } finally {
@@ -93,46 +170,81 @@ export const PricingComponent = ({
         checkPaymentStatus();
     }, []);
 
-    const handleCheckout = async () => {
-        setIsProcessing(true);
+    const handleCheckout = useCallback(() => {
         try {
-            // Create checkout session with Dodo Payments
-            const response = await fetch('/api/payments/create-checkout', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    priceId: PLAN_ID_MAPPING[selectedPlan],
-                    successUrl: successUrl || `${window.location.origin}/get-started?step=5`,
-                    cancelUrl: cancelUrl || `${window.location.origin}/get-started?step=4`,
-                }),
-            });
+            setCheckoutState({ status: 'loading' });
 
-            const { checkoutUrl } = await response.json();
+            // Check if user data is not available
+            console.log('🔍 [PRICING COMPONENT] Checkout clicked, paymentStatus:', paymentStatus);
+            console.log(
+                '🔍 [PRICING COMPONENT] paymentStatus.userEmail:',
+                paymentStatus?.userEmail,
+            );
+            console.log('🔍 [PRICING COMPONENT] paymentStatus.userName:', paymentStatus?.userName);
 
-            if (checkoutUrl) {
-                // Open checkout in new tab
-                window.open(checkoutUrl, '_blank');
-                // Call completion callback
-                onCheckoutComplete?.();
+            // Don't allow checkout if still loading payment status
+            if (isLoadingStatus) {
+                console.log('⏳ [PRICING COMPONENT] Still loading payment status, waiting...');
+                showToast.warning('Loading your account information. Please wait and try again.');
+                setCheckoutState({
+                    status: 'error',
+                    error: 'Loading your account information. Please wait and try again.',
+                });
+                return;
             }
+
+            if (!paymentStatus?.userEmail) {
+                console.log('❌ [PRICING COMPONENT] User data not available', paymentStatus);
+                showToast.error('Unable to load your account information. Please try again.');
+                setCheckoutState({
+                    status: 'error',
+                    error: 'Unable to load your account information. Please try again.',
+                });
+                return;
+            }
+
+            console.log('user name', paymentStatus.userName);
+            console.log('user email', paymentStatus.userEmail);
+
+            showToast.loading('Opening checkout...');
+
+            DodoPayments.Checkout.open({
+                redirectUrl: successUrl || `${window.location.origin}/get-started?step=5`,
+                products: [
+                    {
+                        productId: DODO_PRODUCT_ID_MAPPING[selectedPlan],
+                        quantity: 1,
+                    },
+                ],
+                queryParams: {
+                    cancelUrl: cancelUrl || `${window.location.origin}/get-started?step=4`,
+                    email: paymentStatus.userEmail || '',
+                    disableEmail: 'true',
+                    fullName: paymentStatus.userName || '',
+                    disableName: 'true',
+                },
+            });
         } catch (error) {
             console.error('Checkout error:', error);
-        } finally {
-            setIsProcessing(false);
+            const errorMessage = error instanceof Error ? error.message : 'Failed to open checkout';
+            showToast.error(errorMessage);
+            setCheckoutState({
+                status: 'error',
+                error: errorMessage,
+            });
         }
-    };
+    }, [selectedPlan, successUrl, cancelUrl, paymentStatus, isLoadingStatus]);
 
-    const handleSecondaryAction = () => {
+    const handleSecondaryAction = useCallback(() => {
         if (paymentStatus?.isPaying) {
             // For existing customers, just call the completion callback
+            showToast.success('Plan switch completed successfully');
             onCheckoutComplete?.();
         } else {
             // For new users, could open a discount code modal or handle differently
             handleCheckout();
         }
-    };
+    }, [paymentStatus, onCheckoutComplete, handleCheckout]);
 
     // Show loading state while checking payment status
     if (isLoadingStatus) {
@@ -168,6 +280,9 @@ export const PricingComponent = ({
         return currentPlanType !== selectedPlan;
     };
 
+    // Check if checkout is processing
+    const isProcessing = checkoutState.status === 'loading' || checkoutState.status === 'open';
+
     return (
         <div className="w-full">
             {/* Header */}
@@ -196,14 +311,20 @@ export const PricingComponent = ({
                     {(!paymentStatus?.isPaying || hasPlanChanged()) && (
                         <button
                             onClick={handleCheckout}
-                            disabled={isProcessing}
+                            disabled={isProcessing || isLoadingStatus}
                             className="bg-gray-900 hover:bg-gray-800 text-white disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 rounded-md text-sm font-medium transition-colors"
                         >
-                            {isProcessing
-                                ? primaryButtonText.processing
-                                : !paymentStatus?.isPaying
-                                  ? 'Checkout'
-                                  : primaryButtonText.existing}
+                            {isLoadingStatus
+                                ? 'Loading account...'
+                                : checkoutState.status === 'loading'
+                                  ? 'Opening checkout...'
+                                  : checkoutState.status === 'open'
+                                    ? 'Checkout Open'
+                                    : isProcessing
+                                      ? primaryButtonText.processing
+                                      : !paymentStatus?.isPaying
+                                        ? 'Checkout'
+                                        : primaryButtonText.existing}
                         </button>
                     )}
                 </div>
@@ -234,14 +355,20 @@ export const PricingComponent = ({
                 <div className={compact ? 'max-w-md' : 'max-w-sm mx-auto'}>
                     <button
                         onClick={handleCheckout}
-                        disabled={isProcessing}
+                        disabled={isProcessing || isLoadingStatus}
                         className="w-full bg-black text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-2.5 rounded-md font-medium transition-colors mb-4"
                     >
-                        {isProcessing
-                            ? primaryButtonText.processing
-                            : paymentStatus?.isPaying
-                              ? primaryButtonText.existing
-                              : primaryButtonText.default}
+                        {isLoadingStatus
+                            ? 'Loading account...'
+                            : checkoutState.status === 'loading'
+                              ? 'Opening checkout...'
+                              : checkoutState.status === 'open'
+                                ? 'Checkout Open'
+                                : isProcessing
+                                  ? primaryButtonText.processing
+                                  : paymentStatus?.isPaying
+                                    ? primaryButtonText.existing
+                                    : primaryButtonText.default}
                     </button>
 
                     {showSecondaryAction && (
@@ -249,7 +376,7 @@ export const PricingComponent = ({
                             <button
                                 className="text-sm text-gray-600 hover:text-gray-800 transition-colors"
                                 onClick={handleSecondaryAction}
-                                disabled={isProcessing}
+                                disabled={isProcessing || isLoadingStatus}
                             >
                                 {paymentStatus?.isPaying
                                     ? secondaryButtonText.existing

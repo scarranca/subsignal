@@ -52,3 +52,10 @@ export const PLAN_ID_MAPPING = {
     solo_plan: 'solo',
     team_plan: 'team',
 } as const;
+
+// Dodo Payments product ID mapping for overlay checkout
+// Replace these with your actual product IDs from Dodo Payments dashboard
+export const DODO_PRODUCT_ID_MAPPING = {
+    solo_plan: process.env.NEXT_PUBLIC_DODO_SOLO_PRODUCT_ID || 'pdt_your_solo_product_id',
+    team_plan: process.env.NEXT_PUBLIC_DODO_TEAM_PRODUCT_ID || 'pdt_your_team_product_id',
+} as const;

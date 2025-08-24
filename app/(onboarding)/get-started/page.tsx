@@ -5,14 +5,14 @@ import { Testimonials } from '@/components/onboarding/Testimonials';
 import { OnboardingStepIndicator } from '@/components/onboarding/OnboardingStepIndicator';
 import { OnboardingNav } from '@/components/onboarding/OnboardingNav';
 import { OnboardingSteps } from '@/components/onboarding/OnboardingSteps';
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { LOGIN_TESTIMONIALS } from '@/constants/testimonials';
 import { useOnboardingStore } from '@/lib/stores/onboarding';
 
 const testimonials = LOGIN_TESTIMONIALS;
 
-const OnboardingPage = () => {
+const OnboardingContent = () => {
     const { currentStep, setCurrentStep } = useOnboardingStore();
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -63,18 +63,45 @@ const OnboardingPage = () => {
     }, [handleNextStep]);
 
     return (
+        <>
+            <OnboardingNav />
+            <div className="flex flex-1 flex-col items-center justify-center min-h-screen">
+                {/* Multi-step onboarding content */}
+                <OnboardingSteps currentStep={currentStep} onNext={handleNextStep} />
+            </div>
+
+            {/* Step Indicator Dots */}
+            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
+                <OnboardingStepIndicator currentStep={currentStep} totalSteps={5} />
+            </div>
+        </>
+    );
+};
+
+const OnboardingPage = () => {
+    return (
         <div className="flex min-h-screen">
             <div className="flex flex-1 flex-col bg-white relative">
-                <OnboardingNav />
-                <div className="flex flex-1 flex-col items-center justify-center min-h-screen">
-                    {/* Multi-step onboarding content */}
-                    <OnboardingSteps currentStep={currentStep} onNext={handleNextStep} />
-                </div>
-
-                {/* Step Indicator Dots */}
-                <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
-                    <OnboardingStepIndicator currentStep={currentStep} totalSteps={5} />
-                </div>
+                <Suspense
+                    fallback={
+                        <div className="flex flex-1 flex-col items-center justify-center">
+                            <div className="animate-pulse space-y-4">
+                                <div className="h-8 bg-gray-200 rounded w-48 mx-auto"></div>
+                                <div className="h-64 bg-gray-200 rounded max-w-md mx-auto"></div>
+                                <div className="flex justify-center space-x-2">
+                                    {[...Array(5)].map((_, i) => (
+                                        <div
+                                            key={i}
+                                            className="w-2 h-2 rounded-full bg-gray-200"
+                                        ></div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    }
+                >
+                    <OnboardingContent />
+                </Suspense>
             </div>
 
             <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-50 to-indigo-100 relative overflow-hidden flex-col justify-start rounded-l-2xl">
