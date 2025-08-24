@@ -3,12 +3,14 @@ import { preference } from './preference';
 import { company } from './company';
 import { page } from './page';
 import { snapshot } from './snapshot';
+import { briefing } from './briefing';
 import {
     userRelations,
     preferenceRelations,
     companyRelations,
     pageRelations,
     snapshotRelations,
+    briefingRelations,
 } from './relations';
 
 export const schema = {
@@ -20,6 +22,7 @@ export const schema = {
     company: company,
     page: page,
     snapshot: snapshot,
+    briefing: briefing,
 };
 
 export const relations = {
@@ -28,4 +31,5 @@ export const relations = {
     companyRelations: companyRelations,
     pageRelations: pageRelations,
     snapshotRelations: snapshotRelations,
+    briefingRelations: briefingRelations,
 };

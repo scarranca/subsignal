@@ -4,6 +4,7 @@ import { preference } from './preference';
 import { company } from './company';
 import { page } from './page';
 import { snapshot } from './snapshot';
+import { briefing } from './briefing';
 
 export const userRelations = relations(user, ({ one, many }) => ({
     preference: one(preference, {
@@ -26,6 +27,7 @@ export const companyRelations = relations(company, ({ one, many }) => ({
         references: [user.id],
     }),
     pages: many(page),
+    briefings: many(briefing),
 }));
 
 export const pageRelations = relations(page, ({ one, many }) => ({
@@ -40,5 +42,12 @@ export const snapshotRelations = relations(snapshot, ({ one }) => ({
     page: one(page, {
         fields: [snapshot.pageId],
         references: [page.id],
+    }),
+}));
+
+export const briefingRelations = relations(briefing, ({ one }) => ({
+    company: one(company, {
+        fields: [briefing.companyId],
+        references: [company.id],
     }),
 }));

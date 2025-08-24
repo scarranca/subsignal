@@ -6,7 +6,10 @@
             "Bash(mkdir:*)",
             "Bash(pnpm remove:*)",
             "Bash(pnpm run:*)",
-            "Bash(rm:*)"
+            "Bash(rm:*)",
+            "Bash(pnpm typecheck:*)",
+            "Bash(pnpm build:*)",
+            "Bash(pnpm lint:*)"
         ],
         "deny": []
     }

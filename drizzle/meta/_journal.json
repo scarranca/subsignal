@@ -43,6 +43,13 @@
             "when": 1755783491583,
             "tag": "0005_needy_maestro",
             "breakpoints": true
+        },
+        {
+            "idx": 6,
+            "version": "7",
+            "when": 1755987408572,
+            "tag": "0006_nifty_owl",
+            "breakpoints": true
         }
     ]
 }
