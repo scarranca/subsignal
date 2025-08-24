@@ -5,6 +5,7 @@
 import { generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
+import { DEFAULT_SUMMARY_MODEL } from '@/constants/models';
 
 // Simplified Zod schemas for AI structured output
 const CompanyExtractionSchema = z.object({
@@ -25,7 +26,7 @@ const TitleGenerationSchema = z.object({
 export async function extractCompanyNameAI(url: string): Promise<string> {
     try {
         const { object } = await generateObject({
-            model: openai('gpt-4o-mini'),
+            model: openai(DEFAULT_SUMMARY_MODEL),
             schema: CompanyExtractionSchema,
             prompt: `Extract the proper company or business name from this URL: ${url}
 
@@ -53,7 +54,7 @@ export async function extractCompanyNameAI(url: string): Promise<string> {
 export async function generateTitleAI(url: string): Promise<string> {
     try {
         const { object } = await generateObject({
-            model: openai('gpt-4o-mini'),
+            model: openai(DEFAULT_SUMMARY_MODEL),
             schema: TitleGenerationSchema,
             prompt: `Generate an appropriate page title for this URL: ${url}
 

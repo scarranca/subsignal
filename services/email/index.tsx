@@ -1,6 +1,5 @@
 import { OutboundEmailService } from './outbound';
 import { OnboardingEmail } from '@/emails/onboarding';
-import { Briefing } from '@/types/briefing';
 
 /**
  * Email service
@@ -43,8 +42,34 @@ export class EmailService {
      * @param recipients - The email address of the recipient
      * @param briefing - The briefing to send
      */
-    async sendBriefingEmail(recipients: string[] | string, briefing: Briefing) {
-        console.log('Sending briefing email to', recipients);
+    async sendBriefingEmail(
+        recipients: string[] | string,
+        companyName: string,
+        briefingHtml: string,
+    ) {
+        // Random one-word subject line variations - all ending with date
+        const subjectVariations = [
+            `Briefing for ${companyName}`,
+            `Intel for ${companyName}`,
+            `Update for ${companyName}`,
+            `Brief for ${companyName}`,
+            `Report for ${companyName}`,
+            `Analysis for ${companyName}`,
+            `Insights for ${companyName}`,
+            `Overview for ${companyName}`,
+            `Summary for ${companyName}`,
+            `Digest for ${companyName}`,
+        ];
+
+        const randomSubject =
+            subjectVariations[Math.floor(Math.random() * subjectVariations.length)];
+        const dateString = new Date().toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+        });
+        const subject = `${randomSubject} - ${dateString}`;
+
+        await this.outboundEmailService.sendHtmlEmail(recipients, subject, briefingHtml);
     }
 }
 

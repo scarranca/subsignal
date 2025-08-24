@@ -89,8 +89,25 @@ ${selectedPrompts.join('\n')}
 2.2.5 Example format: "Added new pricing tier for enterprise customers at $500/month"
 2.3 In case no relevant changes, DO NOT hallucinate or invent changes. Simply return an empty array.
 
+# CRITICAL OUTPUT REQUIREMENTS
+- Every array item MUST be a simple string, never an object
+- NEVER use key-value pairs like {"before": "after"} or {"action": "description"}
+- NEVER create nested objects or structures
+- Each item should be a single descriptive sentence
+- If you need to describe a change with before/after context, combine it into one sentence like: "Updated customer count from 30,000 to 40,000 finance teams"
+
+# Valid Examples:
+✅ "Updated customer count from 30,000 to 40,000 finance teams"
+✅ "Changed product rating from 4.8 stars to 5 stars"
+✅ "Added new partnership with Stripe for UK and EEA card issuance"
+
+# Invalid Examples (DO NOT DO):
+❌ {"Updated the customer count": "from 30,000 to 40,000"}
+❌ {"before": "4.8 stars", "after": "5 stars"}
+❌ {"action": "partnership", "details": "new Stripe integration"}
+
 # Output Format
-Return each change as a simple string in the appropriate array, NOT as objects with action/detail properties.
+Return a JSON object where each property (${properties.join(', ')}) contains an array of simple strings only.
 
 Focus only on the requested categories: ${properties.join(', ')}.`;
 };
@@ -104,5 +121,15 @@ Carefully analyze the markdown diff and surface the changes:
 [CONTENT START]
 ${markdownDiff}
 [CONTENT END]
-Focus on business-relevant changes that would be important for company monitoring and competitive analysis. Ignore minor formatting, whitespace, or technical changes that don't affect the business content.`;
+
+Focus on business-relevant changes that would be important for company monitoring and competitive analysis. Ignore minor formatting, whitespace, or technical changes that don't affect the business content.
+
+IMPORTANT: Return only an array of simple strings for each category. For example:
+{
+  "partnership": ["Added new partnership with Stripe for UK and EEA card issuance"],
+  "product": ["Updated customer count from 30,000 to 40,000 finance teams", "Changed product rating from 4.8 stars to 5 stars"],
+  "pricing": []
+}
+
+Each string should be a complete, self-contained description of the change.`;
 };

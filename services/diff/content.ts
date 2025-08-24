@@ -47,13 +47,85 @@ export class ContentDiffService {
                 schema,
                 system: systemPrompt,
                 prompt: userPrompt,
-                temperature: 1,
+                temperature: 0.1, // Lower temperature for more deterministic results
+                maxRetries: 2, // Use built-in retry logic
             });
 
             return result.object;
-        } catch (error) {
-            console.error('Content diff analysis error:', error);
-            throw error;
+        } catch (error: any) {
+            console.error('Content diff analysis error after retries:', error);
+
+            // Check if it's a schema validation error and attempt recovery
+            if (this.isSchemaValidationError(error)) {
+                const recoveredResult = this.attemptSchemaRecovery(error, properties);
+                if (recoveredResult) {
+                    console.log('Successfully recovered from schema validation error');
+                    return recoveredResult;
+                }
+            }
+
+            // If recovery fails, return a safe fallback
+            console.error('Recovery failed, returning empty result');
+            return this.createEmptyResult(properties);
         }
+    }
+
+    /**
+     * Check if error is a schema validation error
+     */
+    private isSchemaValidationError(error: any): boolean {
+        return (
+            error?.name === 'AI_NoObjectGeneratedError' ||
+            error?.name === 'AI_TypeValidationError' ||
+            error?.cause?.name === 'ZodError'
+        );
+    }
+
+    /**
+     * Attempt to recover from schema validation errors by transforming the response
+     */
+    private attemptSchemaRecovery(error: any, properties: string[]): PartialDiffAnalysis | null {
+        try {
+            // Try to extract the raw response from the error
+            const rawValue = error?.value || error?.cause?.issues?.[0]?.value;
+            if (!rawValue) return null;
+
+            // Transform objects in arrays to strings
+            const recovered: any = {};
+
+            for (const prop of properties) {
+                if (rawValue[prop] && Array.isArray(rawValue[prop])) {
+                    recovered[prop] = rawValue[prop].map((item: any) => {
+                        if (typeof item === 'string') {
+                            return item;
+                        } else if (typeof item === 'object' && item !== null) {
+                            // Transform object to string
+                            return Object.entries(item)
+                                .map(([key, value]) => `${key}: ${value}`)
+                                .join('; ');
+                        }
+                        return String(item);
+                    });
+                } else {
+                    recovered[prop] = [];
+                }
+            }
+
+            return recovered as PartialDiffAnalysis;
+        } catch (recoveryError) {
+            console.error('Recovery attempt failed:', recoveryError);
+            return null;
+        }
+    }
+
+    /**
+     * Create an empty result as a safe fallback
+     */
+    private createEmptyResult(properties: string[]): PartialDiffAnalysis {
+        const result: any = {};
+        properties.forEach((prop) => {
+            result[prop] = [];
+        });
+        return result as PartialDiffAnalysis;
     }
 }

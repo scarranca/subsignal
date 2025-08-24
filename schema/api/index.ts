@@ -6,3 +6,4 @@ export * from './preference';
 export * from './company';
 export * from './page';
 export * from './snapshot';
+export * from './briefing';

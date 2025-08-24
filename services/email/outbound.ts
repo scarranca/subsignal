@@ -31,6 +31,20 @@ export class OutboundEmailService {
         return data;
     }
 
+    async sendHtmlEmail(recipients: string[] | string, subject: string, html: string) {
+        const { data, error } = await this.resendClient.emails.send({
+            from: this.sender,
+            to: recipients,
+            subject,
+            html,
+        });
+
+        if (error) {
+            console.error(`Error sending email to ${recipients}: ${error.message}`);
+            this.handleResendError(error);
+        }
+    }
+
     private handleResendError(error: ErrorResponse): never {
         const errorMessage = error.message || 'Unknown error';
         const errorName = error.name || '';
