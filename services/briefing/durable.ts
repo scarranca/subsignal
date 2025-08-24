@@ -20,7 +20,7 @@ export class DurableBriefingService {
      */
     async createBriefingForUsers(
         step: GetStepTools<typeof inngest>,
-        userData: { userId: string; properties: string[] }[],
+        userData: { userId: string; properties: string[]; frequency: string }[],
     ) {
         if (userData.length === 0) {
             return { briefingsSent: 0 };
@@ -32,6 +32,7 @@ export class DurableBriefingService {
             data: {
                 userId: user.userId,
                 properties: user.properties,
+                frequency: user.frequency,
             },
         }));
 
