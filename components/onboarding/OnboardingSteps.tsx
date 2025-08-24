@@ -5,6 +5,7 @@ import { OnboardingStepOne } from './steps/OnboardingStepOne';
 import { OnboardingStepTwo } from './steps/OnboardingStepTwo';
 import { OnboardingStepThree } from './steps/OnboardingStepThree';
 import { OnboardingStepFour } from './steps/OnboardingStepFour';
+import { OnboardingStepFive } from './steps/OnboardingStepFive';
 import { apiClient } from '@/client/api';
 import type { BatchCreateCompaniesResponse } from '@/client/api';
 import { toast } from 'sonner';
@@ -208,6 +209,8 @@ export const OnboardingSteps = ({ currentStep, onNext }: OnboardingStepsProps) =
                 />
             );
         case 4:
+            return <OnboardingStepFive onComplete={onNext} />;
+        case 5:
             return (
                 <OnboardingStepFour
                     onComplete={onNext}

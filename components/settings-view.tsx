@@ -17,6 +17,7 @@ import { IntegrationCard } from '@/components/ui/integration-card';
 import { apiClient } from '@/client/api';
 import { toast } from 'sonner';
 import { queryKeys } from '@/lib/query-keys';
+import { PricingComponent } from '@/components/PricingComponent';
 
 export function SettingsView() {
     const queryClient = useQueryClient();
@@ -279,6 +280,23 @@ export function SettingsView() {
                             </Select>
                         </div>
                     </div>
+                </div>
+
+                {/* Billing & Subscription */}
+                <div>
+                    <PricingComponent
+                        title="Billing & Subscription"
+                        description="Manage your subscription and billing preferences"
+                        compact={true}
+                        headerButtonMode={true}
+                        primaryButtonText={{
+                            default: 'Upgrade Plan',
+                            processing: 'Processing...',
+                            existing: 'Change Plan',
+                        }}
+                        successUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/dashboard`}
+                        cancelUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/dashboard`}
+                    />
                 </div>
 
                 {/* Integrations */}
