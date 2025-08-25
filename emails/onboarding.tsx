@@ -77,13 +77,14 @@ export const OnboardingEmail = ({
                         <Link href={dashboardLink} style={ctaButton}>
                             Add your first company
                         </Link>
-                        <Text style={expiryText}>
+                        {/* To be added back once cloudflare email routing is live */}
+                        {/* <Text style={expiryText}>
                             Or, simply forward your deck to{' '}
                             <Link href="mailto:deals@subsignal.app" style={supportLink}>
                                 deals@subsignal.app
                             </Link>{' '}
                             and we'll take it from there
-                        </Text>
+                        </Text> */}
                     </Section>
 
                     <Hr style={divider} />
