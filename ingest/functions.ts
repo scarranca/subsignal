@@ -12,6 +12,7 @@ import {
     refreshSnapshot6Month,
 } from './functions/snapshot';
 import { createBriefingForUser, sendBriefingToUser } from './functions/briefing';
+import { sendPaymentAcknowledgement } from './functions/payments';
 
 // Export all functions
 export const functions = [
@@ -31,4 +32,7 @@ export const functions = [
     // Briefing functions
     createBriefingForUser,
     sendBriefingToUser,
+
+    // Payment functions
+    sendPaymentAcknowledgement,
 ];
