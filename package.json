@@ -6,6 +6,7 @@
         "dev": "next dev --turbopack",
         "email": "npx react-email dev --port 4040",
         "inngest": "npx inngest-cli@latest dev",
+        "hookdeck": "hookdeck listen 3000 dodopayments-dev",
         "build": "next build",
         "start": "next start",
         "lint": "next lint",
