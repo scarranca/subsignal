@@ -1,5 +1,11 @@
 import { OutboundEmailService } from './outbound';
 import { OnboardingEmail } from '@/emails/onboarding';
+import AcknowledgementEmail from '@/emails/payments';
+import {
+    getSubscriptionSubject,
+    getBriefingSubject,
+    getOnboardingSubject,
+} from '@/constants/email-subjects';
 
 /**
  * Email service
@@ -32,7 +38,7 @@ export class EmailService {
     async sendOnboardingEmail(recipients: string[] | string) {
         await this.outboundEmailService.sendEmail(
             recipients,
-            "Subsignal - Welcome Aboard! Let's Get You Started",
+            getOnboardingSubject(),
             <OnboardingEmail />,
         );
     }
@@ -47,29 +53,34 @@ export class EmailService {
         companyName: string,
         briefingHtml: string,
     ) {
-        // Random one-word subject line variations - all ending with date
-        const subjectVariations = [
-            `Briefing for ${companyName}`,
-            `Intel for ${companyName}`,
-            `Update for ${companyName}`,
-            `Brief for ${companyName}`,
-            `Report for ${companyName}`,
-            `Analysis for ${companyName}`,
-            `Insights for ${companyName}`,
-            `Overview for ${companyName}`,
-            `Summary for ${companyName}`,
-            `Digest for ${companyName}`,
-        ];
-
-        const randomSubject =
-            subjectVariations[Math.floor(Math.random() * subjectVariations.length)];
-        const dateString = new Date().toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-        });
-        const subject = `${randomSubject} - ${dateString}`;
-
+        const subject = getBriefingSubject(companyName);
         await this.outboundEmailService.sendHtmlEmail(recipients, subject, briefingHtml);
+    }
+
+    /**
+     * Send a subscription email to a user
+     * @param recipients - The email address of the recipient
+     * @param subscription - The subscription to send
+     */
+    async sendAcknowledgementEmail(
+        recipients: string[],
+        status: 'active' | 'grace' | 'cancelled' | 'expired',
+        currentPlan: 'solo' | 'team' | 'enterprise',
+        subscriptionId: string,
+        subscriptionStartedAt: Date,
+        currentPeriodEnd: Date,
+    ) {
+        await this.outboundEmailService.sendEmail(
+            recipients,
+            getSubscriptionSubject(status),
+            <AcknowledgementEmail
+                status={status}
+                currentPlan={currentPlan}
+                subscriptionId={subscriptionId}
+                subscriptionStartedAt={subscriptionStartedAt}
+                currentPeriodEnd={currentPeriodEnd}
+            />,
+        );
     }
 }
 
