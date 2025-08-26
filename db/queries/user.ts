@@ -125,4 +125,10 @@ export const userQueries = {
             },
         });
     },
+
+    async getUserRecordByEmail(email: string) {
+        return await db.query.user.findFirst({
+            where: eq(user.email, email),
+        });
+    },
 };
