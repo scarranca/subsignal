@@ -85,41 +85,6 @@ export const OnboardingStepOne = ({
         }
     };
 
-    // Verify that URLs are reachable
-    const verifyUrls = async (urls: string[]): Promise<{ valid: string[]; invalid: string[] }> => {
-        const results = await Promise.allSettled(
-            urls.map(async (url) => {
-                try {
-                    await fetch(url, {
-                        method: 'HEAD',
-                        mode: 'no-cors',
-                        signal: AbortSignal.timeout(3000),
-                    });
-                    return { url, valid: true };
-                } catch {
-                    return { url, valid: false };
-                }
-            }),
-        );
-
-        const valid: string[] = [];
-        const invalid: string[] = [];
-
-        results.forEach((result, index) => {
-            if (result.status === 'fulfilled') {
-                if (result.value.valid) {
-                    valid.push(urls[index]);
-                } else {
-                    invalid.push(urls[index]);
-                }
-            } else {
-                invalid.push(urls[index]);
-            }
-        });
-
-        return { valid, invalid };
-    };
-
     const onSubmit = async (data: UrlFormData) => {
         const validUrls = data.urls.map((item) => item.url);
         console.log('Form - Raw form data:', data);
@@ -141,27 +106,13 @@ export const OnboardingStepOne = ({
             return;
         }
 
-        // Show verification loading state
-        toast.loading('Verifying URLs...', { id: 'url-verification' });
-
         try {
-            // Verify URLs are reachable
-            const { valid, invalid } = await verifyUrls(filteredUrls);
-            console.log('Verification - Valid URLs:', valid);
-            console.log('Verification - Invalid URLs:', invalid);
-
-            if (invalid.length > 0) {
-                toast.error(`Unable to reach: ${invalid.join(', ')}`, { id: 'url-verification' });
-                return;
-            }
-
-            toast.success('URLs verified successfully', { id: 'url-verification' });
-            console.log('Sending to parent component:', valid);
-            onComplete(valid);
-            await onAdvance(valid);
+            console.log('Sending to parent component:', filteredUrls);
+            onComplete(filteredUrls);
+            await onAdvance(filteredUrls);
         } catch (error) {
-            console.error('Verification error:', error);
-            toast.error('Error verifying URLs. Please try again.', { id: 'url-verification' });
+            console.error('Submission error:', error);
+            toast.error('Error submitting URLs. Please try again.');
         }
     };
 

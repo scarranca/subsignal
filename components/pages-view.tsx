@@ -47,27 +47,6 @@ const validateUrl = (url: string): boolean => {
     return isValidUrl(url);
 };
 
-// Verify that URL is reachable
-const verifyUrl = async (url: string): Promise<boolean> => {
-    try {
-        const normalizedUrl = normalizeUrl(url);
-
-        // Don't try to verify invalid URLs
-        if (!isValidUrl(normalizedUrl)) {
-            return false;
-        }
-
-        await fetch(normalizedUrl, {
-            method: 'HEAD',
-            mode: 'no-cors',
-            signal: AbortSignal.timeout(5000),
-        });
-        return true;
-    } catch {
-        return false;
-    }
-};
-
 // Helper function - moved to top for hoisting
 const extractDomain = (url: string) => {
     try {
@@ -314,14 +293,7 @@ export function PagesView() {
             return;
         }
 
-        // Verify URL is reachable
         const normalizedUrl = normalizeUrl(newPageUrl);
-        const isReachable = await verifyUrl(normalizedUrl);
-        if (!isReachable) {
-            setUrlError("Looks like we're having trouble reaching this URL");
-            setIsSubmittingPage(false);
-            return;
-        }
 
         if (selectedCompanyId === 'create-new') {
             if (!newCompanyName || !newCompanyUrl) {
@@ -355,14 +327,7 @@ export function PagesView() {
             return;
         }
 
-        // Verify URL is reachable
         const normalizedUrl = normalizeUrl(firstPageUrl);
-        const isReachable = await verifyUrl(normalizedUrl);
-        if (!isReachable) {
-            setFirstPageUrlError("Looks like we're having trouble reaching this URL.");
-            setIsSubmittingFirstPage(false);
-            return;
-        }
 
         batchCreateMutation.mutate([normalizedUrl]);
     };
