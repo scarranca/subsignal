@@ -5,7 +5,7 @@ import {
     getSubscriptionSubject,
     getBriefingSubject,
     getOnboardingSubject,
-} from '@/constants/email-subjects';
+} from '@/constants/email';
 
 /**
  * Email service
@@ -64,11 +64,15 @@ export class EmailService {
      */
     async sendAcknowledgementEmail(
         recipients: string[],
-        status: 'active' | 'grace' | 'cancelled' | 'expired',
-        currentPlan: 'solo' | 'team' | 'enterprise',
+        status:
+            | 'active' // Subscription is active - successful activation
+            | 'failed' // Subscription is failed - failed activation
+            | 'renewed' // Subscription is renewed - successful renewal
+            | 'on_hold' // Subscription is on hold - failed renewal
+            | 'cancelled' // Subscription is cancelled - successful cancellation
+            | 'expired', // Subscription is expired - successful expiry
+        currentPlan: 'solo_plan' | 'team_plan' | 'enterprise_plan' | null,
         subscriptionId: string,
-        subscriptionStartedAt: Date,
-        currentPeriodEnd: Date,
     ) {
         await this.outboundEmailService.sendEmail(
             recipients,
@@ -77,8 +81,6 @@ export class EmailService {
                 status={status}
                 currentPlan={currentPlan}
                 subscriptionId={subscriptionId}
-                subscriptionStartedAt={subscriptionStartedAt}
-                currentPeriodEnd={currentPeriodEnd}
             />,
         );
     }

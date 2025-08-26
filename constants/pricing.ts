@@ -1,3 +1,5 @@
+// import { DodoWebhookPayload } from '@/types/dodo';
+
 export type PlanType = 'solo_plan' | 'team_plan';
 
 export interface PlanFeature {
@@ -49,8 +51,8 @@ export const PRICING_PLANS: PricingPlan[] = [
 
 // Plan ID mapping for API calls
 export const PLAN_ID_MAPPING = {
-    solo_plan: 'solo',
-    team_plan: 'team',
+    solo_plan: 'solo_plan',
+    team_plan: 'team_plan',
 } as const;
 
 // Dodo Payments product ID mapping for overlay checkout
@@ -59,3 +61,16 @@ export const DODO_PRODUCT_ID_MAPPING = {
     solo_plan: process.env.NEXT_PUBLIC_DODO_SOLO_PRODUCT_ID || 'pdt_your_solo_product_id',
     team_plan: process.env.NEXT_PUBLIC_DODO_TEAM_PRODUCT_ID || 'pdt_your_team_product_id',
 } as const;
+
+export function getPlanFromProductId(
+    productId: string,
+): 'solo_plan' | 'team_plan' | 'enterprise_plan' {
+    const reverseMapping: Record<string, keyof typeof PLAN_ID_MAPPING> = {};
+    for (const [planType, id] of Object.entries(DODO_PRODUCT_ID_MAPPING)) {
+        reverseMapping[id] = planType as keyof typeof PLAN_ID_MAPPING;
+    }
+
+    // If the product id is not in the mapping, return enterprise plan
+    // These are custom plans that are not available in the pricing page
+    return reverseMapping[productId] || 'enterprise_plan';
+}

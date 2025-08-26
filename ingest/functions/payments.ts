@@ -14,14 +14,7 @@ export const sendPaymentAcknowledgement = inngest.createFunction(
     { id: 'send-payment-acknowledgement' },
     { event: 'app/send.acknowledgement.email' },
     async ({ event, step }) => {
-        const {
-            userEmail,
-            status,
-            currentPlan,
-            subscriptionId,
-            subscriptionStartedAt,
-            currentPeriodEnd,
-        } = event.data;
+        const { userEmail, status, currentPlan, subscriptionId } = event.data;
 
         await step.run(`send-acknowledgement-email-${subscriptionId}-${status}`, async () => {
             await emailService.sendAcknowledgementEmail(
@@ -29,8 +22,6 @@ export const sendPaymentAcknowledgement = inngest.createFunction(
                 status,
                 currentPlan,
                 subscriptionId,
-                subscriptionStartedAt,
-                currentPeriodEnd,
             );
         });
 
@@ -40,8 +31,6 @@ export const sendPaymentAcknowledgement = inngest.createFunction(
             status,
             currentPlan,
             subscriptionId,
-            subscriptionStartedAt,
-            currentPeriodEnd,
         };
     },
 );

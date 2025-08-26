@@ -1,4 +1,12 @@
 import {
+    getAcknowledgementMessageLines,
+    getAcknowledgementPreviewText,
+    getAcknowledgementSubtitle,
+    getAcknowledgementTitle,
+    getCurrentPeriodEnd,
+    getSubscriptionStartDate,
+} from '@/constants/email';
+import {
     Html,
     Head,
     Preview,
@@ -11,8 +19,8 @@ import {
 } from '@react-email/components';
 
 interface AcknowledgementEmailProps {
-    status: 'active' | 'grace' | 'cancelled' | 'expired';
-    currentPlan?: 'solo' | 'team' | 'enterprise' | null;
+    status: 'active' | 'failed' | 'renewed' | 'on_hold' | 'cancelled' | 'expired';
+    currentPlan?: 'solo_plan' | 'team_plan' | 'enterprise_plan' | null;
     subscriptionId?: string | null;
     subscriptionStartedAt?: Date | null;
     currentPeriodEnd?: Date | null;
@@ -22,97 +30,25 @@ export const AcknowledgementEmail = ({
     status,
     currentPlan,
     subscriptionId,
-    subscriptionStartedAt,
-    currentPeriodEnd,
 }: AcknowledgementEmailProps) => {
-    const formatDate = (date?: Date | null) =>
-        date ? new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(date) : '—';
-
-    const getPreviewText = () => {
-        switch (status) {
-            case 'active':
-                return 'You made our nights and weekends worth it';
-            case 'grace':
-                return "Your Spot's Still Warm. Let's Figure This Out Together.";
-            case 'cancelled':
-                return "Your Spot's Still Warm. Let's Figure This Out Together.";
-            case 'expired':
-                return "We're keeping your spot warm till you're ready";
-            default:
-                return 'Subscription Update';
-        }
-    };
-
-    const getTitle = () => {
-        switch (status) {
-            case 'active':
-                return 'Access Confirmed';
-            case 'grace':
-                return "Your Spot's Still Warm";
-            case 'cancelled':
-                return "Your Spot's Still Warm";
-            case 'expired':
-                return "We're Here When You're Ready";
-            default:
-                return 'Subscription Update';
-        }
-    };
-
-    const getSubtitle = () => {
-        switch (status) {
-            case 'active':
-                return 'No, this is not a boring activation email';
-            case 'grace':
-                return "Alright, let's get you back in";
-            case 'cancelled':
-                return "Let's Figure This Out Together";
-            case 'expired':
-                return "We're keeping your spot warm till you're ready";
-            default:
-                return '';
-        }
-    };
-
-    const getMessageLines = () => {
-        switch (status) {
-            case 'active':
-                return [
-                    `We know activation emails are supposed to be boring, but we can't resist saying a heartfelt thanks.`,
-                    `Your ${currentPlan || 'subscription'} plan has been activated, and we're grateful to have you with us.`,
-                ];
-            case 'grace':
-                return [
-                    `Looks like there was an issue with your payment, no worries, happens to the best of us.`,
-                    `You still have access until ${formatDate(currentPeriodEnd)}. You could try updating your payment method, we'll make sure everything continues smoothly.`,
-                ];
-            case 'cancelled':
-                return [
-                    `Not going to lie — it's sad to see you go. Your subscription is cancelled, but you still have access until ${formatDate(currentPeriodEnd)}.`,
-                    `Mind if we ask what held you back from staying? Hit reply with any feedback, and we'll try doing right by you — no strings attached.`,
-                ];
-            case 'expired':
-                return [
-                    `Your subscription expired on ${formatDate(currentPeriodEnd)}. We hope you had a good time!`,
-                    `If you'd like to return, reactivating is quick, and we'd love to have you back. We're keeping your spot warm till you're ready.`,
-                ];
-            default:
-                return [''];
-        }
-    };
+    const emailPreviewText = getAcknowledgementPreviewText(status);
+    const emailTitle = getAcknowledgementTitle(status);
+    const emailSubtitle = getAcknowledgementSubtitle(status);
+    const emailMessageLines = getAcknowledgementMessageLines(status, currentPlan);
 
     return (
         <Html>
             <Head />
-            <Preview>{getPreviewText()}</Preview>
+            <Preview>{emailPreviewText}</Preview>
             <Body style={main}>
                 <Container style={container}>
                     <Text style={logoText}>Subsignal</Text>
 
-                    <Text style={title}>{getTitle()}</Text>
-                    {getSubtitle() && <Text style={subtitle}>{getSubtitle()}</Text>}
+                    <Text style={title}>{emailTitle}</Text>
+                    {emailSubtitle && <Text style={subtitle}>{emailSubtitle}</Text>}
 
                     <Section style={messageSection}>
-                        {getMessageLines().map((line, index) => (
+                        {emailMessageLines.map((line, index) => (
                             <Text key={index} style={messageText}>
                                 {line}
                             </Text>
@@ -135,14 +71,6 @@ export const AcknowledgementEmail = ({
                                     <td style={cellLabel}>Subscription ID</td>
                                     <td style={cellValue}>{subscriptionId || '—'}</td>
                                 </tr>
-                                <tr>
-                                    <td style={cellLabel}>Started</td>
-                                    <td style={cellValue}>{formatDate(subscriptionStartedAt)}</td>
-                                </tr>
-                                <tr>
-                                    <td style={cellLabel}>Period End</td>
-                                    <td style={cellValue}>{formatDate(currentPeriodEnd)}</td>
-                                </tr>
                             </tbody>
                         </table>
                     </Section>
@@ -163,7 +91,7 @@ export const AcknowledgementEmail = ({
     );
 };
 
-// Styles
+// Styles (unchanged)
 const main = {
     backgroundColor: '#ffffff',
     fontFamily:
@@ -278,66 +206,73 @@ const footer = {
 
 export default AcknowledgementEmail;
 
-// Preview Component with Test Data
+// Preview Component with Test Data for All Statuses
 // const PreviewAcknowledgementEmail = () => {
 //     // Active subscription example
 //     return (
 //         <AcknowledgementEmail
 //             status="active"
-//             currentPlan="solo"
+//             currentPlan="solo_plan"
 //             subscriptionId="sub_1QK8xY2eZvKYlo2C3m8Zr9X4"
 //             subscriptionStartedAt={new Date('2024-01-15')}
 //             currentPeriodEnd={new Date('2024-02-15')}
 //         />
 //     );
 
-// Grace period example (payment failed but still active)
-// return (
-//     <AcknowledgementEmail
-//         status="grace"
-//         currentPlan="solo"
-//         subscriptionId="sub_1QK8xY2eZvKYlo2C3m8Zr9X4"
-//         subscriptionStartedAt={new Date('2023-12-01')}
-//         currentPeriodEnd={new Date('2024-01-28')}
-//         cancelAtPeriodEnd={false}
-//     />
-// );
+//     // Failed subscription example (failed activation)
+//     return (
+//         <AcknowledgementEmail
+//             status="failed"
+//             currentPlan="team_plan"
+//             subscriptionId="sub_1QK8xY2eZvKYlo2C3m8Zr9X4"
+//             subscriptionStartedAt={new Date('2024-01-15')}
+//             currentPeriodEnd={new Date('2024-02-15')}
+//         />
+//     );
 
-// Cancelled subscription (will not renew)
-// return (
-//     <AcknowledgementEmail
-//         status="cancelled"
-//         currentPlan="enterprise"
-//         subscriptionId="sub_1QK8xY2eZvKYlo2C3m8Zr9X4"
-//         subscriptionStartedAt={new Date('2023-06-15')}
-//         currentPeriodEnd={new Date('2024-02-10')}
-//         cancelAtPeriodEnd={true}
-//     />
-// );
+//     // Renewed subscription example
+//     return (
+//         <AcknowledgementEmail
+//             status="renewed"
+//             currentPlan="enterprise_plan"
+//             subscriptionId="sub_1QK8xY2eZvKYlo2C3m8Zr9X4"
+//             subscriptionStartedAt={new Date('2023-12-01')}
+//             currentPeriodEnd={new Date('2024-02-28')}
+//         />
+//     );
 
-// Expired subscription
-// return (
-//     <AcknowledgementEmail
-//         status="expired"
-//         currentPlan="team"
-//         subscriptionId="sub_1QK8xY2eZvKYlo2C3m8Zr9X4"
-//         subscriptionStartedAt={new Date('2023-08-20')}
-//         currentPeriodEnd={new Date('2024-01-20')}
-//         cancelAtPeriodEnd={false}
-//     />
-// );
+//     // On hold example (failed renewal)
+//     return (
+//         <AcknowledgementEmail
+//             status="on_hold"
+//             currentPlan="solo_plan"
+//             subscriptionId="sub_1QK8xY2eZvKYlo2C3m8Zr9X4"
+//             subscriptionStartedAt={new Date('2023-12-01')}
+//             currentPeriodEnd={new Date('2024-01-28')}
+//         />
+//     );
 
-// Minimal data example (no subscription details)
-// return (
-//     <AcknowledgementEmail
-//         status="active"
-//         currentPlan={null}
-//         subscriptionId={null}
-//         subscriptionStartedAt={null}
-//         currentPeriodEnd={null}
-//         cancelAtPeriodEnd={false}
-//     />
-// );
+//     // Cancelled subscription (will not renew)
+//     return (
+//         <AcknowledgementEmail
+//             status="cancelled"
+//             currentPlan="enterprise_plan"
+//             subscriptionId="sub_1QK8xY2eZvKYlo2C3m8Zr9X4"
+//             subscriptionStartedAt={new Date('2023-06-15')}
+//             currentPeriodEnd={new Date('2024-02-10')}
+//         />
+//     );
+
+//     // Expired subscription
+//     return (
+//         <AcknowledgementEmail
+//             status="expired"
+//             currentPlan="team_plan"
+//             subscriptionId="sub_1QK8xY2eZvKYlo2C3m8Zr9X4"
+//             subscriptionStartedAt={new Date('2023-08-20')}
+//             currentPeriodEnd={new Date('2024-01-20')}
+//         />
+//     );
 // };
 
 // export default PreviewAcknowledgementEmail;
