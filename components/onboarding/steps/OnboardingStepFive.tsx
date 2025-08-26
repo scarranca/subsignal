@@ -3,6 +3,7 @@
 import { useOnboardingStore } from '@/lib/stores/onboarding';
 import { OnboardingContainer } from '../shared';
 import { PricingComponent } from '../../PricingComponent';
+import { CAL_URL } from '@/constants/contact';
 
 interface OnboardingStepFiveProps {
     onComplete: () => void;
@@ -30,13 +31,14 @@ export const OnboardingStepFive = ({ onComplete }: OnboardingStepFiveProps) => {
                         existing: 'Switch Plan',
                     }}
                     secondaryButtonText={{
-                        existing: "I'm good",
-                        new: 'I have a discount code',
+                        existing: 'Request Support',
+                        new: 'Request Discount Code',
                     }}
                     onCheckoutComplete={handleCheckoutComplete}
                     showSecondaryAction={true}
                     successUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/get-started?step=5`}
                     cancelUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/get-started?step=4`}
+                    secondaryActionUrl={CAL_URL}
                 />
             </OnboardingContainer>
         </div>

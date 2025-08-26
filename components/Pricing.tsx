@@ -97,7 +97,7 @@ export default function Pricing() {
 
     const handleCtaClick = (ctaText: string) => {
         if (ctaText === 'Start Tracking') {
-            router.push('/get-started');
+            router.push('/get-started?step=1');
         } else if (ctaText === 'Contact Sales') {
             window.open(CAL_URL, '_blank');
         }

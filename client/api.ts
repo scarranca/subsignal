@@ -133,7 +133,7 @@ export interface DeletePagesRequest {
 
 export interface PaymentStatus {
     isPaying: boolean;
-    currentPlan?: 'solo' | 'team';
+    currentPlan?: 'solo_plan' | 'team_plan';
     subscriptionId?: string;
     status?: string;
     userName?: string;

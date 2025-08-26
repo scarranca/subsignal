@@ -11,6 +11,7 @@ import { SelectablePricingCard } from './onboarding/shared';
 import { CheckoutEvent, DodoPayments } from 'dodopayments-checkout';
 import { apiClient, type PaymentStatus } from '@/client/api';
 import { showToast } from '@/lib/toast';
+import { CAL_URL } from '@/constants/contact';
 
 interface CheckoutState {
     status: 'idle' | 'loading' | 'open' | 'error';
@@ -37,6 +38,8 @@ interface PricingComponentProps {
         existing: string;
         new: string;
     };
+    /** Custom secondary action URL */
+    secondaryActionUrl?: string;
     /** Callback when checkout is completed */
     onCheckoutComplete?: () => void;
     /** Show secondary action button */
@@ -57,13 +60,13 @@ export const PricingComponent = ({
         existing: 'Switch Plan',
     },
     secondaryButtonText = {
-        existing: 'Skip',
-        new: 'I have a discount code',
+        existing: 'Request Support',
+        new: 'Request Discount Code',
     },
-    onCheckoutComplete,
     showSecondaryAction = true,
     successUrl,
     cancelUrl,
+    secondaryActionUrl = CAL_URL,
 }: PricingComponentProps) => {
     const [selectedPlan, setSelectedPlan] = useState<PlanType>('solo_plan');
     const [paymentStatus, setPaymentStatus] = useState<PaymentStatus | null>(null);
@@ -153,8 +156,23 @@ export const PricingComponent = ({
         checkPaymentStatus();
     }, []);
 
+    // Check if user has changed their plan selection (for header button mode)
+    const hasPlanChanged = useCallback(() => {
+        if (!paymentStatus?.isPaying || !paymentStatus.currentPlan) return false;
+        const currentPlanType = Object.entries(PLAN_ID_MAPPING).find(
+            ([, value]) => value === paymentStatus.currentPlan,
+        )?.[0] as PlanType | undefined;
+        return currentPlanType !== selectedPlan;
+    }, [paymentStatus?.isPaying, paymentStatus?.currentPlan, selectedPlan]);
+
     const handleCheckout = useCallback(() => {
         try {
+            // If user is paying and hasn't changed their plan, just continue to step 5
+            if (paymentStatus?.isPaying && !hasPlanChanged()) {
+                window.location.href = successUrl || `${window.location.origin}/get-started?step=5`;
+                return;
+            }
+
             setCheckoutState({ status: 'loading' });
 
             // Don't allow checkout if still loading payment status
@@ -200,17 +218,11 @@ export const PricingComponent = ({
                 error: errorMessage,
             });
         }
-    }, [selectedPlan, successUrl, cancelUrl, paymentStatus, isLoadingStatus]);
+    }, [selectedPlan, successUrl, cancelUrl, paymentStatus, isLoadingStatus, hasPlanChanged]);
 
     const handleSecondaryAction = useCallback(() => {
-        if (paymentStatus?.isPaying) {
-            // For existing customers, just call the completion callback
-            onCheckoutComplete?.();
-        } else {
-            // For new users, could open a discount code modal or handle differently
-            handleCheckout();
-        }
-    }, [paymentStatus, onCheckoutComplete, handleCheckout]);
+        window.open(secondaryActionUrl, '_blank');
+    }, [secondaryActionUrl]);
 
     // Show loading state while checking payment status
     if (isLoadingStatus) {
@@ -236,15 +248,6 @@ export const PricingComponent = ({
             paymentStatus?.isPaying && paymentStatus?.currentPlan === PLAN_ID_MAPPING[plan.id],
         isPopular: plan.id === 'team_plan' && !paymentStatus?.isPaying, // Only show "Most Popular" for team plan if not paying
     }));
-
-    // Check if user has changed their plan selection (for header button mode)
-    const hasPlanChanged = () => {
-        if (!paymentStatus?.isPaying || !paymentStatus.currentPlan) return false;
-        const currentPlanType = Object.entries(PLAN_ID_MAPPING).find(
-            ([, value]) => value === paymentStatus.currentPlan,
-        )?.[0] as PlanType | undefined;
-        return currentPlanType !== selectedPlan;
-    };
 
     // Check if checkout is processing
     const isProcessing = checkoutState.status === 'loading' || checkoutState.status === 'open';
@@ -290,7 +293,9 @@ export const PricingComponent = ({
                                       ? primaryButtonText.processing
                                       : !paymentStatus?.isPaying
                                         ? 'Checkout'
-                                        : primaryButtonText.existing}
+                                        : hasPlanChanged()
+                                          ? primaryButtonText.existing
+                                          : 'Continue'}
                         </button>
                     )}
                 </div>
@@ -333,7 +338,9 @@ export const PricingComponent = ({
                                 : isProcessing
                                   ? primaryButtonText.processing
                                   : paymentStatus?.isPaying
-                                    ? primaryButtonText.existing
+                                    ? hasPlanChanged()
+                                        ? primaryButtonText.existing
+                                        : 'Continue'
                                     : primaryButtonText.default}
                     </button>
 
