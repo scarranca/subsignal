@@ -61,15 +61,15 @@ export const getOnboardingSubject = (): string => {
 };
 
 export const getAcknowledgementPreviewText = (
-    status: 'active' | 'failed' | 'renewed' | 'on_hold' | 'cancelled' | 'expired',
+    status: 'active' | 'failed' | 'on_hold' | 'cancelled' | 'expired',
 ) => {
     switch (status) {
         case 'active':
             return 'You made our nights and weekends worth it';
         case 'failed':
             return "Oops! Let's get your subscription sorted";
-        case 'renewed':
-            return 'Another month together — we love having you around';
+        // case 'renewed':
+        //     return 'Another month together — we love having you around';
         case 'on_hold':
             return "Your Spot's Still Warm. Let's Figure This Out Together.";
         case 'cancelled':
@@ -82,15 +82,15 @@ export const getAcknowledgementPreviewText = (
 };
 
 export const getAcknowledgementTitle = (
-    status: 'active' | 'failed' | 'renewed' | 'on_hold' | 'cancelled' | 'expired',
+    status: 'active' | 'failed' | 'on_hold' | 'cancelled' | 'expired',
 ) => {
     switch (status) {
         case 'active':
             return 'Access Confirmed';
         case 'failed':
             return 'Activation Issue';
-        case 'renewed':
-            return 'Successfully Renewed';
+        // case 'renewed':
+        //     return 'Successfully Renewed';
         case 'on_hold':
             return "Your Spot's Still Warm";
         case 'cancelled':
@@ -103,15 +103,15 @@ export const getAcknowledgementTitle = (
 };
 
 export const getAcknowledgementSubtitle = (
-    status: 'active' | 'failed' | 'renewed' | 'on_hold' | 'cancelled' | 'expired',
+    status: 'active' | 'failed' | 'on_hold' | 'cancelled' | 'expired',
 ) => {
     switch (status) {
         case 'active':
             return 'No, this is not a boring activation email';
         case 'failed':
             return "Let's get this sorted quickly";
-        case 'renewed':
-            return 'Thanks for sticking with us';
+        // case 'renewed':
+        //     return 'Thanks for sticking with us';
         case 'on_hold':
             return "Alright, let's get you back in";
         case 'cancelled':
@@ -150,7 +150,7 @@ export const formattedPlan = (
 };
 
 export const getAcknowledgementMessageLines = (
-    status: 'active' | 'failed' | 'renewed' | 'on_hold' | 'cancelled' | 'expired',
+    status: 'active' | 'failed' | 'on_hold' | 'cancelled' | 'expired',
     currentPlan: 'solo_plan' | 'team_plan' | 'enterprise_plan' | undefined | null,
 ) => {
     switch (status) {
@@ -164,11 +164,11 @@ export const getAcknowledgementMessageLines = (
                 `We ran into an issue activating your subscription. Don't worry — these things happen, and we're here to help.`,
                 `Please check your payment method or contact our support team, and we'll get you set up right away.`,
             ];
-        case 'renewed':
-            return [
-                `Your ${formattedPlan(currentPlan)} has been successfully renewed. Thanks for continuing this journey with us!`,
-                `We're just an email away if you need anything.`,
-            ];
+        // case 'renewed':
+        //     return [
+        //         `Your ${formattedPlan(currentPlan)} has been successfully renewed. Thanks for continuing this journey with us!`,
+        //         `We're just an email away if you need anything.`,
+        //     ];
         case 'on_hold':
             return [
                 `Your subscription renewal didn't go through — probably a payment hiccup. No stress, it happens.`,

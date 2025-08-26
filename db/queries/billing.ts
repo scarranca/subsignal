@@ -22,10 +22,7 @@ export const billingQueries = {
      */
     async getActiveBillingRecordByUserId(userId: string): Promise<BillingSelect | undefined> {
         return await db.query.billing.findFirst({
-            where: and(
-                eq(billing.userId, userId),
-                or(eq(billing.status, 'active'), eq(billing.status, 'renewed')),
-            ),
+            where: and(eq(billing.userId, userId), eq(billing.status, 'active')),
         });
     },
 

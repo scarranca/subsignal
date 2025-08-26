@@ -67,7 +67,7 @@ export class EmailService {
         status:
             | 'active' // Subscription is active - successful activation
             | 'failed' // Subscription is failed - failed activation
-            | 'renewed' // Subscription is renewed - successful renewal
+            // | 'renewed' // Subscription is renewed - successful renewal
             | 'on_hold' // Subscription is on hold - failed renewal
             | 'cancelled' // Subscription is cancelled - successful cancellation
             | 'expired', // Subscription is expired - successful expiry

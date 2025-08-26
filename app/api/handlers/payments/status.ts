@@ -30,7 +30,7 @@ export async function handleGetPaymentStatus(c: Context) {
         }
 
         const response = {
-            isPaying: billingRecord.status === 'active' || billingRecord.status === 'renewed',
+            isPaying: billingRecord.status === 'active',
             currentPlan: billingRecord.currentPlan,
             userName: user.name,
             userEmail: user.email,

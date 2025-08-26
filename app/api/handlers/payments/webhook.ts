@@ -42,14 +42,8 @@ export async function handlePaymentsWebhook(c: Context) {
                 updatedEvent,
             );
 
-            // Create deduplication key that treats 'active' and 'renewed' as the same
-            // within a 1-hour window
-            const normalizedStatus = ['active', 'renewed'].includes(updatedBillingRecord.status)
-                ? 'active-or-renewed'
-                : updatedBillingRecord.status;
-
             const hourWindow = Math.floor(Date.now() / (60 * 60 * 1000)); // Current hour
-            const dedupKey = `ack-${userRecord.id}-${updatedBillingRecord.subscriptionId}-${normalizedStatus}-${hourWindow}`;
+            const dedupKey = `ack-${userRecord.id}-${updatedBillingRecord.subscriptionId}-${updatedBillingRecord.status}-${hourWindow}`;
 
             await inngest.send({
                 name: 'app/send.acknowledgement.email',
@@ -110,10 +104,6 @@ async function processEntitlementUpdate(
         case 'subscription.active':
             return handleSubscriptionActive(webhookPayload);
 
-        // Subscription renewed
-        case 'subscription.renewed':
-            return handleSubscriptionRenewed(webhookPayload);
-
         // Plan changed
         case 'subscription.plan_changed':
             return handleSubscriptionPlanChanged(webhookPayload);
@@ -166,24 +156,24 @@ function handleSubscriptionActive(
  * Handle subscription renewed events.
  * Occurs when a subscription is successfully renewed.
  */
-function handleSubscriptionRenewed(
-    webhookPayload: DodoWebhookPayload,
-): Partial<BillingInsert> | null {
-    if (!isSubscriptionWebhook(webhookPayload)) {
-        return null;
-    }
+// function handleSubscriptionRenewed(
+//     webhookPayload: DodoWebhookPayload,
+// ): Partial<BillingInsert> | null {
+//     if (!isSubscriptionWebhook(webhookPayload)) {
+//         return null;
+//     }
 
-    const data = webhookPayload.data;
-    const plan = getPlanFromProductId(data.product_id);
+//     const data = webhookPayload.data;
+//     const plan = getPlanFromProductId(data.product_id);
 
-    return {
-        status: 'renewed',
-        currentPlan: plan,
-        provider: 'dodo',
-        subscriptionId: data.subscription_id,
-        customerId: data.customer.customer_id,
-    };
-}
+//     return {
+//         status: 'renewed',
+//         currentPlan: plan,
+//         provider: 'dodo',
+//         subscriptionId: data.subscription_id,
+//         customerId: data.customer.customer_id,
+//     };
+// }
 
 /**
  * Handle subscription plan changed events.

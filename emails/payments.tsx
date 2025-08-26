@@ -19,7 +19,7 @@ import {
 } from '@react-email/components';
 
 interface AcknowledgementEmailProps {
-    status: 'active' | 'failed' | 'renewed' | 'on_hold' | 'cancelled' | 'expired';
+    status: 'active' | 'failed' | 'on_hold' | 'cancelled' | 'expired';
     currentPlan?: 'solo_plan' | 'team_plan' | 'enterprise_plan' | null;
     subscriptionId?: string | null;
     subscriptionStartedAt?: Date | null;

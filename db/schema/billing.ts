@@ -7,7 +7,7 @@ import { user } from './auth';
 export const entitlementStatusEnum = pgEnum('entitlement_status', [
     'active', // Subscription is active - successful activation
     'failed', // Subscription is failed - failed activation
-    'renewed', // Subscription is renewed - successful renewal
+    // 'renewed', // Subscription is renewed - successful renewal
     'on_hold', // Subscription is on hold - failed renewal
     'cancelled', // Subscription is cancelled - successful cancellation
     'expired', // Subscription is expired - successful expiry
@@ -46,9 +46,6 @@ export const billing = pgTable(
         provider: providerEnum('provider').notNull().default('dodo'),
         subscriptionId: text('subscription_id'),
         customerId: text('customer_id'),
-
-        // Period tracking
-        // currentPeriodEnd: timestamp('current_period_end', { withTimezone: true, mode: 'date' }),
 
         // Timestamps
         createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
