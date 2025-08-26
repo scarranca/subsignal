@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { OnboardingStepOne } from './steps/OnboardingStepOne';
-import { OnboardingStepTwo } from './steps/OnboardingStepTwo';
-import { OnboardingStepThree } from './steps/OnboardingStepThree';
-import { OnboardingStepFour } from './steps/OnboardingStepFour';
-import { OnboardingStepFive } from './steps/OnboardingStepFive';
+import { PageSelectionStep } from './steps/PageSelectionStep';
+import { SignalSelectionStep } from './steps/SignalSelectionStep';
+import { FrequencySelectionStep } from './steps/FrequencySelectionStep';
+import { OnboardingCompleteStep } from './steps/OnboardingCompleteStep';
+import { PlanSelectionStep } from './steps/PlanSelectionStep';
 import { apiClient } from '@/client/api';
 import type { BatchCreateCompaniesResponse } from '@/client/api';
 import { toast } from 'sonner';
@@ -181,7 +181,7 @@ export const OnboardingSteps = ({ currentStep, onNext }: OnboardingStepsProps) =
     switch (currentStep) {
         case 1:
             return (
-                <OnboardingStepOne
+                <PageSelectionStep
                     onComplete={handleStep1Update}
                     onAdvance={handleAdvanceFromStep1}
                     isLoading={isLoading}
@@ -190,7 +190,7 @@ export const OnboardingSteps = ({ currentStep, onNext }: OnboardingStepsProps) =
             );
         case 2:
             return (
-                <OnboardingStepTwo
+                <SignalSelectionStep
                     onComplete={handleStep2Update}
                     onAdvance={onNext}
                     isLoading={isLoading}
@@ -200,7 +200,7 @@ export const OnboardingSteps = ({ currentStep, onNext }: OnboardingStepsProps) =
             );
         case 3:
             return (
-                <OnboardingStepThree
+                <FrequencySelectionStep
                     onComplete={handleStep3Update}
                     onAdvance={handleAdvanceFromStep3}
                     isLoading={isLoading}
@@ -209,14 +209,16 @@ export const OnboardingSteps = ({ currentStep, onNext }: OnboardingStepsProps) =
                 />
             );
         case 4:
-            return <OnboardingStepFive onComplete={onNext} />;
+            return <PlanSelectionStep onComplete={onNext} />;
+
         case 5:
             return (
-                <OnboardingStepFour
+                <OnboardingCompleteStep
                     onComplete={onNext}
                     companiesCreated={data.batchResults?.summary.successful || 0}
                 />
             );
+
         default:
             return null;
     }

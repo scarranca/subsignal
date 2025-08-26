@@ -5,11 +5,11 @@ import { OnboardingContainer } from '../shared';
 import { PricingComponent } from '../../PricingComponent';
 import { CAL_URL } from '@/constants/contact';
 
-interface OnboardingStepFiveProps {
+interface PlanSelectionStepProps {
     onComplete: () => void;
 }
 
-export const OnboardingStepFive = ({ onComplete }: OnboardingStepFiveProps) => {
+export const PlanSelectionStep = ({ onComplete }: PlanSelectionStepProps) => {
     const { setCurrentStep } = useOnboardingStore();
 
     const handleCheckoutComplete = () => {

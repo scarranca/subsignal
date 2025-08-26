@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { DEFAULT_PREFERENCES } from '@/constants/preferences';
 import type { BatchCreateCompaniesResponse } from '@/client/api';
 
-interface OnboardingStepTwoProps {
+interface SignalSelectionStepProps {
     onComplete: (
         properties: (
             | 'pricing'
@@ -63,7 +63,7 @@ const PROPERTY_OPTIONS = [
     },
 ];
 
-export const OnboardingStepTwo = ({
+export const SignalSelectionStep = ({
     onComplete,
     onAdvance,
     initialProperties = DEFAULT_PREFERENCES.properties as (
@@ -74,7 +74,7 @@ export const OnboardingStepTwo = ({
         | 'branding'
         | 'messaging'
     )[],
-}: OnboardingStepTwoProps) => {
+}: SignalSelectionStepProps) => {
     const [selectedProperties, setSelectedProperties] =
         useState<NonNullable<typeof initialProperties>>(initialProperties);
 

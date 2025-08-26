@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { Calendar, CalendarDays, CalendarRange, Clock, Timer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-interface OnboardingStepThreeProps {
+interface FrequencySelectionStepProps {
     onComplete: (frequency: '7_day' | '15_day' | '1_month' | '3_month' | '6_month') => void;
     onAdvance: (frequency: '7_day' | '15_day' | '1_month' | '3_month' | '6_month') => Promise<void>;
     isLoading: boolean;
@@ -47,12 +47,12 @@ const FREQUENCY_OPTIONS = [
     },
 ];
 
-export const OnboardingStepThree = ({
+export const FrequencySelectionStep = ({
     onComplete,
     onAdvance,
     isLoading,
     initialFrequency,
-}: OnboardingStepThreeProps) => {
+}: FrequencySelectionStepProps) => {
     const [selectedFrequency, setSelectedFrequency] =
         useState<typeof initialFrequency>(initialFrequency);
 

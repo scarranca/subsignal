@@ -44,19 +44,19 @@ const urlSchema = z.object({
 
 type UrlFormData = z.infer<typeof urlSchema>;
 
-interface OnboardingStepOneProps {
+interface PageSelectionStepProps {
     onComplete: (urls: string[]) => void;
     onAdvance: (urls: string[]) => Promise<void>;
     isLoading: boolean;
     initialUrls: string[];
 }
 
-export const OnboardingStepOne = ({
+export const PageSelectionStep = ({
     onComplete,
     onAdvance,
     isLoading,
     initialUrls,
-}: OnboardingStepOneProps) => {
+}: PageSelectionStepProps) => {
     const form = useForm<UrlFormData>({
         resolver: zodResolver(urlSchema),
         defaultValues: {

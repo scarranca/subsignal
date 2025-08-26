@@ -9,12 +9,12 @@ import BoringAvatar from 'boring-avatars';
 import confetti from 'canvas-confetti';
 import { useOnboardingStore } from '@/lib/stores/onboarding';
 
-interface OnboardingStepFourProps {
+interface OnboardingCompleteStepProps {
     onComplete: () => void;
     companiesCreated: number;
 }
 
-export const OnboardingStepFour = ({ onComplete }: OnboardingStepFourProps) => {
+export const OnboardingCompleteStep = ({ onComplete }: OnboardingCompleteStepProps) => {
     const { data: session, isPending } = authClient.useSession();
     const { resetStep } = useOnboardingStore();
     const userName = session?.user?.name || 'Anonymous User';
