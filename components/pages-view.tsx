@@ -58,6 +58,8 @@ const extractDomain = (url: string) => {
 
 export function PagesView() {
     const queryClient = useQueryClient();
+    const [currentPage, setCurrentPage] = useState(1);
+    const companiesPerPage = 4;
 
     // TanStack Query for companies data
     const {
@@ -65,11 +67,16 @@ export function PagesView() {
         isLoading: loading,
         isError,
     } = useQuery({
-        queryKey: queryKeys.companies({ page: 1, pageSize: 100, sortBy: 'name', sortOrder: 'asc' }),
+        queryKey: queryKeys.companies({
+            page: currentPage,
+            pageSize: companiesPerPage,
+            sortBy: 'name',
+            sortOrder: 'asc',
+        }),
         queryFn: async () => {
             const result = await apiClient.getCompanies({
-                page: 1,
-                pageSize: 100,
+                page: currentPage,
+                pageSize: companiesPerPage,
                 sortBy: 'name',
                 sortOrder: 'asc',
             });
@@ -115,9 +122,6 @@ export function PagesView() {
     const [isSubmittingPage, setIsSubmittingPage] = useState(false);
     const [isSubmittingFirstPage, setIsSubmittingFirstPage] = useState(false);
 
-    const [currentPage, setCurrentPage] = useState(1);
-    const companiesPerPage = 4;
-
     // Mutations
     const deletePagesMutation = useMutation({
         mutationFn: async (pageIds: string[]) => {
@@ -133,12 +137,22 @@ export function PagesView() {
 
             // Snapshot the previous value
             const previousCompanies = queryClient.getQueryData(
-                queryKeys.companies({ page: 1, pageSize: 100, sortBy: 'name', sortOrder: 'asc' }),
+                queryKeys.companies({
+                    page: currentPage,
+                    pageSize: companiesPerPage,
+                    sortBy: 'name',
+                    sortOrder: 'asc',
+                }),
             );
 
             // Optimistically update by removing the deleted pages
             queryClient.setQueryData(
-                queryKeys.companies({ page: 1, pageSize: 100, sortBy: 'name', sortOrder: 'asc' }),
+                queryKeys.companies({
+                    page: currentPage,
+                    pageSize: companiesPerPage,
+                    sortBy: 'name',
+                    sortOrder: 'asc',
+                }),
                 (old: unknown) => {
                     if (!old || typeof old !== 'object' || !('data' in old)) return old;
 
@@ -171,8 +185,8 @@ export function PagesView() {
             if (context?.previousCompanies) {
                 queryClient.setQueryData(
                     queryKeys.companies({
-                        page: 1,
-                        pageSize: 100,
+                        page: currentPage,
+                        pageSize: companiesPerPage,
                         sortBy: 'name',
                         sortOrder: 'asc',
                     }),
@@ -202,6 +216,8 @@ export function PagesView() {
             setNewCompanyUrl('');
             setShowAddDialog(false);
             setIsSubmittingPage(false);
+            // Reset to first page after creating a new page
+            setCurrentPage(1);
             toast.success('Page created successfully');
         },
         onError: (error: Error) => {
@@ -223,6 +239,8 @@ export function PagesView() {
             setFirstPageUrl('');
             setShowFirstPageDialog(false);
             setIsSubmittingFirstPage(false);
+            // Reset to first page after creating first page
+            setCurrentPage(1);
 
             if (data?.data?.errors && data.data.errors.length > 0) {
                 toast.error(data.data.errors[0].error);
@@ -236,10 +254,9 @@ export function PagesView() {
         },
     });
 
-    const totalPages = Math.ceil(companies.length / companiesPerPage);
-    const startIndex = (currentPage - 1) * companiesPerPage;
-    const endIndex = startIndex + companiesPerPage;
-    const currentCompanies = companies.slice(startIndex, endIndex);
+    // Use server-side pagination data
+    const totalPages = companiesResponse?.pagination?.totalPages || 1;
+    const currentCompanies = companies;
 
     const toggleExpanded = (id: string) => {
         setExpandedCompanies((prev) => {
@@ -332,6 +349,12 @@ export function PagesView() {
         batchCreateMutation.mutate([normalizedUrl]);
     };
 
+    const handlePageChange = (newPage: number) => {
+        setCurrentPage(newPage);
+        // Reset expanded companies when changing pages
+        setExpandedCompanies(new Set());
+    };
+
     if (loading) {
         return (
             <div className="flex-1 px-4 md:px-8 py-6 bg-white min-h-screen flex items-center justify-center">
@@ -349,9 +372,10 @@ export function PagesView() {
                 <div className="text-center">
                     <div className="text-red-600 mb-4">Failed to load companies</div>
                     <button
-                        onClick={() =>
-                            queryClient.invalidateQueries({ queryKey: queryKeys.companies() })
-                        }
+                        onClick={() => {
+                            setCurrentPage(1);
+                            queryClient.invalidateQueries({ queryKey: queryKeys.companies() });
+                        }}
                         className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-md"
                     >
                         Try Again
@@ -508,17 +532,29 @@ export function PagesView() {
                         </div>
 
                         {/* Pagination */}
-                        {totalPages > 1 && (
+                        {totalPages > 1 && (companiesResponse?.pagination?.totalItems ?? 0) > 0 && (
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-8 pt-6 space-y-4 sm:space-y-0">
                                 <div className="text-sm text-gray-600 text-center sm:text-left">
-                                    Showing {startIndex + 1}-{Math.min(endIndex, companies.length)}{' '}
-                                    of {companies.length} companies
+                                    Showing{' '}
+                                    {companiesResponse?.pagination?.page
+                                        ? (companiesResponse.pagination.page - 1) *
+                                              companiesPerPage +
+                                          1
+                                        : 1}
+                                    -
+                                    {Math.min(
+                                        companiesResponse?.pagination?.page
+                                            ? companiesResponse.pagination.page * companiesPerPage
+                                            : companiesPerPage,
+                                        companiesResponse?.pagination?.totalItems || 0,
+                                    )}{' '}
+                                    of {companiesResponse?.pagination?.totalItems || 0} companies
                                 </div>
                                 <div className="flex items-center justify-center space-x-2">
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => setCurrentPage(currentPage - 1)}
+                                        onClick={() => handlePageChange(currentPage - 1)}
                                         disabled={currentPage === 1}
                                         className="flex items-center space-x-1"
                                     >
@@ -535,7 +571,7 @@ export function PagesView() {
                                                         currentPage === page ? 'default' : 'outline'
                                                     }
                                                     size="sm"
-                                                    onClick={() => setCurrentPage(page)}
+                                                    onClick={() => handlePageChange(page)}
                                                     className={`w-8 h-8 p-0 ${
                                                         currentPage === page
                                                             ? 'bg-gray-900 hover:bg-gray-800 text-white'
@@ -551,7 +587,7 @@ export function PagesView() {
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => setCurrentPage(currentPage + 1)}
+                                        onClick={() => handlePageChange(currentPage + 1)}
                                         disabled={currentPage === totalPages}
                                         className="flex items-center space-x-1"
                                     >

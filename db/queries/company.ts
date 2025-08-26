@@ -5,36 +5,25 @@ import { page } from '../schema/page';
 import type { PaginationOptions, PaginatedResult } from './types';
 
 export const companyQueries = {
-    async getCompaniesByUrls(userId: string, urls: string[]) {
+    async getCompaniesByUrls(userId: string, urls: string[], pageOrderBy: 'asc' | 'desc' = 'asc') {
         if (urls.length === 0) return [];
 
-        const companies = await db
-            .select()
-            .from(company)
-            .where(
-                and(
-                    eq(company.userId, userId),
-                    inArray(company.url, urls),
-                    eq(company.isActive, true),
-                ),
-            )
-            .orderBy(desc(company.createdAt));
+        const pageOrder = pageOrderBy === 'asc' ? asc : desc;
 
-        // Get pages for each company
-        const companiesWithPages = await Promise.all(
-            companies.map(async (comp) => {
-                const pages = await db
-                    .select()
-                    .from(page)
-                    .where(and(eq(page.companyId, comp.id), eq(page.isActive, true)))
-                    .orderBy(page.createdAt);
-
-                return {
-                    ...comp,
-                    pages,
-                };
-            }),
-        );
+        const companiesWithPages = await db.query.company.findMany({
+            where: and(
+                eq(company.userId, userId),
+                inArray(company.url, urls),
+                eq(company.isActive, true),
+            ),
+            with: {
+                pages: {
+                    where: eq(page.isActive, true),
+                    orderBy: [pageOrder(page.createdAt)],
+                },
+            },
+            orderBy: [desc(company.createdAt)],
+        });
 
         return companiesWithPages;
     },
@@ -223,54 +212,45 @@ export const companyQueries = {
         } = options;
 
         const offset = (currentPage - 1) * pageSize;
-        const orderByColumn =
-            sortBy === 'name'
-                ? company.name
-                : sortBy === 'updatedAt'
-                  ? company.updatedAt
-                  : company.createdAt;
-        const orderDirection = sortOrder === 'asc' ? asc : desc;
 
-        // Get total count
-        const [{ count: totalItems }] = await db
-            .select({ count: count() })
-            .from(company)
-            .where(and(eq(company.userId, userId), eq(company.isActive, true)));
+        // Map sortBy to the correct orderBy function
+        const getOrderBy = () => {
+            const direction = sortOrder === 'asc' ? asc : desc;
+            switch (sortBy) {
+                case 'name':
+                    return direction(company.name);
+                case 'updatedAt':
+                    return direction(company.updatedAt);
+                default:
+                    return direction(company.createdAt);
+            }
+        };
 
-        const totalPages = Math.ceil(totalItems / pageSize);
-
-        // Get companies
-        const companies = await db
-            .select({
-                id: company.id,
-                userId: company.userId,
-                name: company.name,
-                url: company.url,
-                isActive: company.isActive,
-                createdAt: company.createdAt,
-                updatedAt: company.updatedAt,
-            })
-            .from(company)
-            .where(and(eq(company.userId, userId), eq(company.isActive, true)))
-            .orderBy(orderDirection(orderByColumn))
-            .limit(pageSize)
-            .offset(offset);
-
-        // Get pages for each company
-        const companiesWithPages = await Promise.all(
-            companies.map(async (comp) => {
-                const pages = await db
-                    .select()
-                    .from(page)
-                    .where(and(eq(page.companyId, comp.id), eq(page.isActive, true)))
-                    .orderBy(page.createdAt);
-
-                return {
-                    ...comp,
-                    pages,
-                };
+        // Execute both queries in parallel
+        const [companiesWithPages, totalCountResult] = await Promise.all([
+            // Main query with relations - this replaces your N+1 problem
+            db.query.company.findMany({
+                where: and(eq(company.userId, userId), eq(company.isActive, true)),
+                with: {
+                    pages: {
+                        where: eq(page.isActive, true),
+                        orderBy: [asc(page.createdAt)], // or whatever order you prefer for pages
+                    },
+                },
+                orderBy: [getOrderBy()],
+                limit: pageSize,
+                offset: offset,
             }),
-        );
+
+            // Count query
+            db
+                .select({ count: count() })
+                .from(company)
+                .where(and(eq(company.userId, userId), eq(company.isActive, true))),
+        ]);
+
+        const totalItems = totalCountResult[0].count;
+        const totalPages = Math.ceil(totalItems / pageSize);
 
         return {
             data: companiesWithPages,
