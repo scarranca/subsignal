@@ -5,18 +5,15 @@ import { user } from './auth';
  * Entitlement status enum
  */
 export const entitlementStatusEnum = pgEnum('entitlement_status', [
-    'active', // Subscription is active - successful activation
-    'failed', // Subscription is failed - failed activation
-    // 'renewed', // Subscription is renewed - successful renewal
-    'on_hold', // Subscription is on hold - failed renewal
-    'cancelled', // Subscription is cancelled - successful cancellation
-    'expired', // Subscription is expired - successful expiry
+    'active', // Entitlements are in full effect
+    'grace', // Entitlements are in effect, but some features are limited
+    'inactive', // Entitlements are not in effect
 ]);
 
 /**
  * Plan types enum
  */
-export const planEnum = pgEnum('plan', ['solo_plan', 'team_plan', 'enterprise_plan']);
+export const planEnum = pgEnum('plan', ['solo_plan', 'team_plan', 'custom_plan']);
 
 /**
  * Payment provider enum for future multi-provider support
@@ -69,3 +66,13 @@ export const billing = pgTable(
 
 export type BillingSelect = typeof billing.$inferSelect;
 export type BillingInsert = typeof billing.$inferInsert;
+
+export type BillingPlan = (typeof planEnum.enumValues)[number];
+export type BillingEntitlementStatus = (typeof entitlementStatusEnum.enumValues)[number];
+
+export type BillingProvider = (typeof providerEnum.enumValues)[number];
+
+/**
+ * Available plans that can be purchased (excluding custom plans)
+ */
+export type AvailableBillingPlan = Exclude<BillingPlan, 'custom_plan'>;

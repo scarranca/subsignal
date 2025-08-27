@@ -1,25 +1,10 @@
 'use client';
 
 import { CAL_URL } from '@/constants/contact';
+import { PlanFeature, PRICING_PLANS, type PricingPlan } from '@/constants/pricing';
 import { useRouter } from 'next/navigation';
 
-interface PricingFeature {
-    text: string;
-    included: boolean;
-}
-
-interface PricingPlan {
-    name: string;
-    price: string;
-    period?: string;
-    description: string;
-    features: PricingFeature[];
-    ctaText: string;
-    isPopular?: boolean;
-    isEnterprise?: boolean;
-}
-
-function PricingFeature({ text, included }: PricingFeature) {
+function PricingFeature({ text, included }: PlanFeature) {
     return (
         <li className="flex items-center gap-3 text-sm">
             <svg
@@ -103,55 +88,7 @@ export default function Pricing() {
         }
     };
 
-    const plans: PricingPlan[] = [
-        {
-            name: 'Solo',
-            price: '$99',
-            period: '/month',
-            description: 'For individual VCs tracking their deal flow',
-            features: [
-                { text: 'Track up to 10 companies', included: true },
-                { text: 'Monitor up to 50 pages', included: true },
-                { text: 'Refresh every 15 days', included: true },
-                { text: 'Email integration', included: true },
-                { text: 'CRM integration (Affinity, AngelList)', included: false },
-            ],
-            ctaText: 'Start Tracking',
-        },
-        {
-            name: 'Team',
-            price: '$299',
-            period: '/month',
-            description: 'For investment teams and small funds',
-            features: [
-                { text: 'Track up to 50 companies', included: true },
-                { text: 'Monitor up to 100 pages', included: true },
-                { text: 'Refresh every 7 days', included: true },
-                { text: 'Email & Slack integrations', included: true },
-                { text: 'CRM integrations (Affinity, AngelList)', included: true },
-                { text: 'Up to 10 seats', included: true },
-                { text: 'Dedicated success manager', included: true },
-            ],
-            ctaText: 'Contact Sales',
-            isPopular: true,
-        },
-        {
-            name: 'Fund',
-            price: 'Custom',
-            description: 'For large funds with extensive deal flow',
-            features: [
-                { text: 'Unlimited company tracking', included: true },
-                { text: 'Unlimited page monitoring', included: true },
-                { text: 'Unlimited seats', included: true },
-                { text: 'Refresh every 3 days', included: true },
-                { text: 'All integrations', included: true },
-                { text: 'Enterprise compliance (SOC2, GDPR)', included: true },
-                { text: 'Dedicated success manager', included: true },
-            ],
-            ctaText: 'Contact Sales',
-            isEnterprise: true,
-        },
-    ];
+    const plans = PRICING_PLANS;
 
     return (
         <section className="py-16 md:py-24 px-6 md:px-12 scroll-mt-20" id="pricing">

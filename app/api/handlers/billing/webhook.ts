@@ -197,7 +197,7 @@ function handleSubscriptionCancelled(
     const plan = getPlanFromProductId(data.product_id);
 
     return {
-        status: 'cancelled',
+        status: 'inactive',
         currentPlan: plan,
         subscriptionId: data.subscription_id,
         customerId: data.customer.customer_id,
@@ -219,7 +219,7 @@ function handleSubscriptionExpired(
     const plan = getPlanFromProductId(data.product_id);
 
     return {
-        status: 'expired',
+        status: 'inactive',
         currentPlan: plan,
         subscriptionId: data.subscription_id,
         customerId: data.customer.customer_id,
@@ -241,7 +241,7 @@ function handleSubscriptionFailed(
     const plan = getPlanFromProductId(data.product_id);
 
     return {
-        status: 'failed',
+        status: 'grace',
         currentPlan: plan,
         subscriptionId: data.subscription_id,
         customerId: data.customer.customer_id,
@@ -263,7 +263,7 @@ function handleSubscriptionOnHold(
     const plan = getPlanFromProductId(data.product_id);
 
     return {
-        status: 'on_hold',
+        status: 'grace',
         currentPlan: plan,
         subscriptionId: data.subscription_id,
         customerId: data.customer.customer_id,

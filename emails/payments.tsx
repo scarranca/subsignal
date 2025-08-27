@@ -6,6 +6,7 @@ import {
     getCurrentPeriodEnd,
     getSubscriptionStartDate,
 } from '@/constants/email';
+import { BillingEntitlementStatus, BillingPlan } from '@/db/schema/billing';
 import {
     Html,
     Head,
@@ -19,16 +20,14 @@ import {
 } from '@react-email/components';
 
 interface AcknowledgementEmailProps {
-    status: 'active' | 'failed' | 'on_hold' | 'cancelled' | 'expired';
-    currentPlan?: 'solo_plan' | 'team_plan' | 'enterprise_plan' | null;
+    status: BillingEntitlementStatus;
+    currentPlan?: BillingPlan;
     subscriptionId?: string | null;
-    subscriptionStartedAt?: Date | null;
-    currentPeriodEnd?: Date | null;
 }
 
 export const AcknowledgementEmail = ({
-    status,
-    currentPlan,
+    status = 'active',
+    currentPlan = 'solo_plan',
     subscriptionId,
 }: AcknowledgementEmailProps) => {
     const emailPreviewText = getAcknowledgementPreviewText(status);

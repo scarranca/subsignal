@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { PRICING_PLANS, type PlanType } from '@/constants/pricing';
+import { PRICING_PLANS } from '@/constants/pricing';
+import { AvailableBillingPlan, BillingPlan } from '@/db/schema/billing';
 import { SelectablePricingCard } from './onboarding/shared';
 import { apiClient } from '@/client/api';
 import { showToast } from '@/lib/toast';
@@ -37,13 +38,13 @@ export const PaywallPricing = ({
     userEmail,
     currentPaymentStatus,
 }: PaywallPricingProps) => {
-    const [selectedPlan, setSelectedPlan] = useState<PlanType>('solo_plan');
+    const [selectedPlan, setSelectedPlan] = useState<BillingPlan>('solo_plan');
     const [isProcessing, setIsProcessing] = useState(false);
 
     // Set initial selected plan based on current subscription
     useEffect(() => {
         if (currentPaymentStatus?.plan) {
-            setSelectedPlan(currentPaymentStatus.plan as PlanType);
+            setSelectedPlan(currentPaymentStatus.plan as AvailableBillingPlan);
         }
     }, [currentPaymentStatus]);
 

@@ -1,3 +1,5 @@
+import { BillingPlan } from '@/db/schema/billing';
+
 export interface ApiResponse<T = unknown> {
     data?: T;
     error?: string;
@@ -125,7 +127,7 @@ export interface DeletePagesRequest {
 }
 
 export interface PaymentStatus {
-    plan?: 'solo_plan' | 'team_plan' | 'enterprise_plan';
+    plan?: BillingPlan;
     subscriptionId?: string;
     status?: string;
     userName?: string;
