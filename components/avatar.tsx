@@ -7,19 +7,38 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { HelpCircle, LogOut } from 'lucide-react';
+import { HelpCircle, LogOut, CreditCard } from 'lucide-react';
 import { authClient } from '@/client/auth';
 import { showToast } from '@/lib/toast';
 import { AVATAR_COLORS, AVATAR_VARIANT } from '@/constants/palette';
 import BoringAvatar from 'boring-avatars';
+import { CAL_URL } from '@/constants/contact';
 
 // Common dropdown menu content
 function UserDropdownMenu({ onSignOut }: { onSignOut: () => void }) {
+    const handleSupportClick = () => {
+        window.open(CAL_URL, '_blank');
+    };
+
+    const handleBillingClick = () => {
+        window.location.href = '/get-started?step=4';
+    };
+
     return (
         <DropdownMenuContent align="end" className="bg-white border border-gray-200 shadow-lg w-56">
-            <DropdownMenuItem className="hover:bg-gray-50 focus:bg-gray-50 cursor-pointer">
+            <DropdownMenuItem
+                className="hover:bg-gray-50 focus:bg-gray-50 cursor-pointer"
+                onClick={handleSupportClick}
+            >
                 <HelpCircle className="h-4 w-4 mr-2" />
                 Support
+            </DropdownMenuItem>
+            <DropdownMenuItem
+                className="hover:bg-gray-50 focus:bg-gray-50 cursor-pointer"
+                onClick={handleBillingClick}
+            >
+                <CreditCard className="h-4 w-4 mr-2" />
+                Billing
             </DropdownMenuItem>
             <DropdownMenuSeparator className="bg-gray-200" />
             <DropdownMenuItem

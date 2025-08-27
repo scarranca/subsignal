@@ -17,7 +17,7 @@ import { IntegrationCard } from '@/components/ui/integration-card';
 import { apiClient } from '@/client/api';
 import { toast } from 'sonner';
 import { queryKeys } from '@/lib/query-keys';
-import { PricingComponent } from '@/components/PricingComponent';
+import SettingsViewSkeleton from './skeleton/skeleton-settings-view';
 
 export function SettingsView() {
     const queryClient = useQueryClient();
@@ -170,14 +170,7 @@ export function SettingsView() {
     };
 
     if (loading) {
-        return (
-            <div className="flex-1 px-4 md:px-8 py-6 bg-white min-h-screen flex items-center justify-center">
-                <div className="flex items-center space-x-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Loading preferences...</span>
-                </div>
-            </div>
-        );
+        return <SettingsViewSkeleton />;
     }
 
     if (isError && !error?.message?.includes('not found')) {
@@ -280,23 +273,6 @@ export function SettingsView() {
                             </Select>
                         </div>
                     </div>
-                </div>
-
-                {/* Billing & Subscription */}
-                <div>
-                    <PricingComponent
-                        title="Billing & Subscription"
-                        description="Manage your subscription and billing preferences"
-                        compact={true}
-                        headerButtonMode={true}
-                        primaryButtonText={{
-                            default: 'Upgrade Plan',
-                            processing: 'Processing...',
-                            existing: 'Change Plan',
-                        }}
-                        successUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/dashboard`}
-                        cancelUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/dashboard`}
-                    />
                 </div>
 
                 {/* Integrations */}

@@ -31,10 +31,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { apiClient, type Company as ApiCompany, type Page as ApiPage } from '@/client/api';
+import { apiClient } from '@/client/api';
+import type { Company as ApiCompany, Page as ApiPage } from '@/types/api';
 import { normalizeUrl, isValidUrl } from '@/lib/url';
 import { toast } from 'sonner';
 import { queryKeys } from '@/lib/query-keys';
+import PagesViewSkeleton from './skeleton/skeleton-pages-view';
 
 interface Company extends Omit<ApiCompany, 'pages'> {
     domain: string;
@@ -356,14 +358,7 @@ export function PagesView() {
     };
 
     if (loading) {
-        return (
-            <div className="flex-1 px-4 md:px-8 py-6 bg-white min-h-screen flex items-center justify-center">
-                <div className="flex items-center space-x-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Almost there...</span>
-                </div>
-            </div>
-        );
+        return <PagesViewSkeleton />;
     }
 
     if (isError) {
