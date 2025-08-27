@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { requireAuth } from '@/app/api/middleware/auth';
+import { requireBilling } from '@/app/api/middleware/billing';
 import {
     handleGetPagesByUser,
     handleGetPage,
@@ -12,8 +13,9 @@ const pages = new Hono();
 
 /**
  * Apply auth middleware to all page routes
+ * Billing is required for all page routes
  */
-pages.use('*', requireAuth);
+pages.use('*', requireAuth, requireBilling);
 
 /**
  * GET /api/pages - Fetch user pages with pagination

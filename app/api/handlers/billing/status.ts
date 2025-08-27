@@ -1,15 +1,7 @@
 import { Context } from 'hono';
 import { billingQueries } from '@/db/queries';
-import { USER_MIDDLEWARE_CONTEXT_KEY } from '@/constants/middleware';
 import { PaymentStatus } from '@/types/api';
-
-export const getUser = (c: Context) => {
-    const user = c.get(USER_MIDDLEWARE_CONTEXT_KEY);
-    if (!user) {
-        throw new Error('User not found in context');
-    }
-    return user;
-};
+import { getUser } from '@/app/api/middleware/auth';
 
 /**
  * Handle GET request to get user payment status
@@ -18,7 +10,7 @@ export async function handleGetPaymentStatus(c: Context) {
     try {
         const user = getUser(c);
 
-        const billingRecord = await billingQueries.getActiveBillingRecordByUserId(user.id);
+        const billingRecord = await billingQueries.getBillingRecordForUser(user.id);
 
         const paymentStatusResponse: PaymentStatus = {
             userName: user.name,
@@ -59,10 +51,9 @@ export async function handleValidatePaymentStatus(c: Context) {
         const { subscription_id } = c.req.query();
 
         // Get billing record
-        const billingRecord = await billingQueries.getActiveBillingRecordByUserId(user.id);
+        const billingRecord = await billingQueries.getBillingRecordForUser(user.id);
 
         if (!billingRecord) {
-            console.error('[PAYMENT STATUS] No billing record found');
             return c.json({ isValid: false }, 404);
         }
 

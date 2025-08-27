@@ -1,16 +1,8 @@
-import { USER_MIDDLEWARE_CONTEXT_KEY } from '@/constants/middleware';
 import { getDodoProductIdFromPlanId } from '@/constants/pricing';
 import { billingQueries } from '@/db/queries/billing';
 import { dodopayments } from '@/payments/dodo';
 import { Context } from 'hono';
-
-export const getUser = (c: Context) => {
-    const user = c.get(USER_MIDDLEWARE_CONTEXT_KEY);
-    if (!user) {
-        throw new Error('User not found in context');
-    }
-    return user;
-};
+import { getUser } from '@/app/api/middleware/auth';
 
 /**
  * Handle POST request to create checkout session
@@ -47,6 +39,9 @@ export async function handleCreateNewSubscription(c: Context) {
     }
 }
 
+/**
+ * Handle POST request to update existing subscription
+ */
 export async function handleUpdateExistingSubscription(c: Context) {
     try {
         const user = getUser(c);
@@ -57,7 +52,7 @@ export async function handleUpdateExistingSubscription(c: Context) {
             return c.json({ error: 'Invalid plan selected' }, 400);
         }
 
-        const billingRecord = await billingQueries.getActiveBillingRecordByUserId(user.id);
+        const billingRecord = await billingQueries.getBillingRecordForUser(user.id);
         if (!billingRecord) {
             return c.json({ error: 'No active billing record found' }, 400);
         }

@@ -1,16 +1,8 @@
 import { Context } from 'hono';
 import { preferenceQueries } from '@/db/queries';
-import { USER_MIDDLEWARE_CONTEXT_KEY } from '@/constants/middleware';
 import { updatePreferenceSchema } from '@/schema/api';
 import { z } from 'zod';
-
-export const getUser = (c: Context) => {
-    const user = c.get(USER_MIDDLEWARE_CONTEXT_KEY);
-    if (!user) {
-        throw new Error('User not found in context');
-    }
-    return user;
-};
+import { getUser } from '@/app/api/middleware/auth';
 
 /**
  * Handle GET request to fetch user preference

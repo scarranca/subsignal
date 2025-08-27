@@ -1,4 +1,9 @@
-import { BillingPlan, AvailableBillingPlan } from '@/db/schema/billing';
+import {
+    BillingPlan,
+    AvailableBillingPlan,
+    BillingEntitlement,
+    BillingSelect,
+} from '@/db/schema/billing';
 
 /**
  * Plan feature
@@ -38,7 +43,7 @@ export const PRICING_PLANS: PricingPlan[] = [
         features: [
             { text: 'Track up to 10 companies', included: true },
             { text: 'Monitor up to 50 pages', included: true },
-            { text: 'Refresh every 15 days', included: true },
+            { text: 'Refresh every 7 days', included: true },
             { text: 'Email integration', included: true },
             { text: 'CRM integration (Affinity, AngelList)', included: false },
         ],
@@ -53,7 +58,7 @@ export const PRICING_PLANS: PricingPlan[] = [
         features: [
             { text: 'Track up to 50 companies', included: true },
             { text: 'Monitor up to 100 pages', included: true },
-            { text: 'Refresh every 7 days', included: true },
+            { text: 'Refresh every 3 days', included: true },
             { text: 'Email & Slack integrations', included: true },
             { text: 'CRM integrations (Affinity, AngelList)', included: true },
             { text: 'Up to 10 seats', included: true },
@@ -72,15 +77,140 @@ export const PRICING_PLANS: PricingPlan[] = [
             { text: 'Unlimited company tracking', included: true },
             { text: 'Unlimited page monitoring', included: true },
             { text: 'Unlimited seats', included: true },
-            { text: 'Refresh every 3 days', included: true },
-            { text: 'All integrations', included: true },
-            { text: 'Enterprise compliance (SOC2, GDPR)', included: true },
+            { text: 'Refresh every 1 day', included: true },
+            { text: 'Custom integrations', included: true },
             { text: 'Dedicated success manager', included: true },
+            { text: 'Enterprise compliance (SOC2, GDPR)', included: true },
         ],
         ctaText: 'Contact Sales',
         isEnterprise: true,
     },
 ];
+
+/**
+ * Get the page limit for a given plan
+ * @param plan - The plan to get the page limit for
+ * @returns
+ */
+function getPageLimit(plan: BillingPlan): number {
+    switch (plan) {
+        case 'solo_plan':
+            return 50;
+        case 'team_plan':
+            return 100;
+        case 'custom_plan':
+            return 1000; // Proxy for unlimited
+    }
+
+    return 10;
+}
+
+/**
+ * Get the company limit for a given plan
+ * @param plan - The plan to get the company limit for
+ * @returns
+ */
+function getCompanyLimit(plan: BillingPlan): number {
+    switch (plan) {
+        case 'solo_plan':
+            return 10;
+        case 'team_plan':
+            return 50;
+        case 'custom_plan':
+            return 250; // Proxy for unlimited
+    }
+
+    return 10;
+}
+
+/**
+ * Get the record limit for a given plan
+ * @param plan - The plan to get the record limit for
+ * @returns
+ */
+function getRecordLimit(plan: BillingPlan): number {
+    switch (plan) {
+        case 'solo_plan':
+            return 4;
+        case 'team_plan':
+            return 8;
+        case 'custom_plan':
+            return 12;
+    }
+
+    return 4;
+}
+
+/**
+ * Get the refresh limit for a given plan
+ * @param plan - The plan to get the refresh limit for
+ * @returns
+ */
+function getRefreshLimit(plan: BillingPlan): '1_day' | '3_day' | '7_day' {
+    switch (plan) {
+        case 'solo_plan':
+            return '7_day';
+        case 'team_plan':
+            return '3_day';
+        case 'custom_plan':
+            return '1_day';
+    }
+
+    return '7_day';
+}
+
+/**
+ * Get the zapier enabled for a given plan
+ * @param plan - The plan to get the zapier enabled for
+ * @returns
+ */
+function getZapierEnabled(plan: BillingPlan): boolean {
+    switch (plan) {
+        case 'solo_plan':
+            return false;
+        case 'team_plan':
+        case 'custom_plan':
+            return true;
+    }
+
+    return false;
+}
+
+/**
+ * Get the email enabled for a given plan
+ * @param plan - The plan to get the email enabled for
+ * @returns
+ */
+function getEmailEnabled(plan: BillingPlan): boolean {
+    switch (plan) {
+        case 'solo_plan':
+        case 'team_plan':
+        case 'custom_plan':
+            return true;
+    }
+
+    return false;
+}
+
+/**
+ * Get the billing entitlement for a given record
+ * @param record - The record to get the billing entitlement for
+ * @returns
+ */
+export function getBillingEntitlement(record: BillingSelect): BillingEntitlement {
+    const plan = record.currentPlan || 'solo_plan';
+
+    return {
+        ...record,
+        currentPlan: plan,
+        pageLimit: getPageLimit(plan),
+        companyLimit: getCompanyLimit(plan),
+        recordLimit: getRecordLimit(plan),
+        refreshLimit: getRefreshLimit(plan),
+        zapierEnabled: getZapierEnabled(plan),
+        emailEnabled: getEmailEnabled(plan),
+    };
+}
 
 /**
  * Plan ID mapping for API calls

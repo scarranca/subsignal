@@ -3,7 +3,7 @@ import { billingQueries, userQueries } from '@/db/queries';
 import type { BillingInsert } from '@/db/schema/billing';
 import { getWebhookData } from '@/app/api/middleware/payments';
 import { isSubscriptionWebhook } from '@/payments/webhook';
-import DodoWebhookPayload, { SubscriptionWebhookPayload } from '@/payments/types';
+import { SubscriptionWebhookPayload } from '@/payments/types';
 import { getPlanFromProductId } from '@/constants/pricing';
 
 export async function handlePaymentsWebhook(c: Context) {
@@ -23,42 +23,37 @@ export async function handlePaymentsWebhook(c: Context) {
     try {
         const customerEmail = webhookPayload.data.customer.email;
         if (!customerEmail) {
-            return c.json({ success: true, message: 'No customer email' }, 200);
-        }
-
-        const userRecord = await userQueries.getUserRecordByEmail(customerEmail);
-        if (!userRecord) {
-            return c.json({ success: true, message: 'User not found' }, 200);
-        }
-
-        // Process the event
-        const updatedEvent = await processEntitlementUpdate(webhookPayload);
-
-        if (updatedEvent) {
-            // Always update billing record to stay in sync with upstream
-            const updatedBillingRecord = await billingQueries.upsertBilling(
-                userRecord.id,
-                updatedEvent,
-            );
-
             return c.json(
-                {
-                    success: true,
-                    message: 'Entitlements updated',
-                    update: {
-                        userId: userRecord.id,
-                        status: updatedBillingRecord.status,
-                        plan: updatedBillingRecord.currentPlan,
-                    },
-                },
+                { success: true, message: 'Customer email unavailable in webhook payload' },
                 200,
             );
         }
 
+        const userRecord = await userQueries.getUserRecordByEmail(customerEmail);
+        if (!userRecord) {
+            return c.json({ success: true, message: 'Customer record unavailable' }, 200);
+        }
+
+        // Process the event
+        const updatedEvent = await processEntitlementUpdate(webhookPayload);
+        if (!updatedEvent) {
+            return c.json({ success: true, message: 'No update needed' }, 200);
+        }
+
+        const updatedBillingRecord = await billingQueries.upsertBilling(
+            userRecord.id,
+            updatedEvent,
+        );
+
         return c.json(
             {
                 success: true,
-                message: 'No update needed',
+                message: 'Entitlements updated',
+                update: {
+                    userId: userRecord.id,
+                    status: updatedBillingRecord.status,
+                    plan: updatedBillingRecord.currentPlan,
+                },
             },
             200,
         );
@@ -84,188 +79,60 @@ export async function handlePaymentsWebhook(c: Context) {
 async function processEntitlementUpdate(
     webhookPayload: SubscriptionWebhookPayload,
 ): Promise<Partial<BillingInsert> | null> {
+    const updatedEvent: Partial<BillingInsert> = {
+        provider: 'dodo',
+        customerId: webhookPayload.data.customer.customer_id,
+        subscriptionId: webhookPayload.data.subscription_id,
+        currentPlan: getPlanFromProductId(webhookPayload.data.product_id),
+        webhookEvent: webhookPayload.type,
+    };
+
     switch (webhookPayload.type) {
         // Subscription activated
         case 'subscription.active':
-            return handleSubscriptionActive(webhookPayload);
+            // We set the status to grace to indicate that the user has access to the feature until the trial period ends or the first payment is successful
+            updatedEvent.status = 'grace';
+            break;
+        // Subscription renewed
+        case 'subscription.renewed':
+            // We set the status to active to indicate that the user has access to the feature.
+            updatedEvent.status = 'active';
+            break;
 
         // Plan changed
         case 'subscription.plan_changed':
-            return handleSubscriptionPlanChanged(webhookPayload);
+            // We set the status to grace to indicate that the user has access to the feature until there's a successful payment
+            updatedEvent.status = 'grace';
+            break;
 
         // Subscription cancelled
         case 'subscription.cancelled':
-            return handleSubscriptionCancelled(webhookPayload);
+            // We set the status to inactive to indicate that the user no longer has access to the feature. This is an explicit behavior with active user involvement hence we set the status to inactive right away.
+            updatedEvent.status = 'inactive';
+            break;
 
         // Subscription expired
         case 'subscription.expired':
-            return handleSubscriptionExpired(webhookPayload);
+            // We set the status to grace to indicate that the user has access to the feature until the grace period ends. This is implicit behavior without active user involvement.
+            updatedEvent.status = 'grace';
+            break;
 
         // Subscription failed
         case 'subscription.failed':
-            return handleSubscriptionFailed(webhookPayload);
+            // We set the status to inactive to indicate that the user does not have access to the feature due to a failed mandate. This is an explicit behavior with active user involvement hence we set the status to inactive right away.
+            updatedEvent.status = 'inactive';
+            break;
 
-        // Subscription on hold (payment issue)
+        // Subscription on hold
         case 'subscription.on_hold':
-            return handleSubscriptionOnHold(webhookPayload);
+            // We set the status to grace to indicate that the user has access to the feature until the grace period ends. This is an implicit behavior without active user involvement.
+            updatedEvent.status = 'grace';
+            break;
 
         default:
+            // Make the entitlement updates a no-op if the webhook type is not supported
             return null;
     }
-}
 
-/**
- * Handle subscription active events.
- * Indicates that a subscription is now active and recurring charges are scheduled.
- */
-function handleSubscriptionActive(
-    webhookPayload: DodoWebhookPayload,
-): Partial<BillingInsert> | null {
-    if (!isSubscriptionWebhook(webhookPayload)) {
-        return null;
-    }
-
-    const data = webhookPayload.data;
-    const plan = getPlanFromProductId(data.product_id);
-
-    return {
-        status: 'active',
-        currentPlan: plan,
-        provider: 'dodo',
-        subscriptionId: data.subscription_id,
-        customerId: data.customer.customer_id,
-    };
-}
-
-/**
- * Handle subscription renewed events.
- * Occurs when a subscription is successfully renewed.
- */
-// function handleSubscriptionRenewed(
-//     webhookPayload: DodoWebhookPayload,
-// ): Partial<BillingInsert> | null {
-//     if (!isSubscriptionWebhook(webhookPayload)) {
-//         return null;
-//     }
-
-//     const data = webhookPayload.data;
-//     const plan = getPlanFromProductId(data.product_id);
-
-//     return {
-//         status: 'renewed',
-//         currentPlan: plan,
-//         provider: 'dodo',
-//         subscriptionId: data.subscription_id,
-//         customerId: data.customer.customer_id,
-//     };
-// }
-
-/**
- * Handle subscription plan changed events.
- * Triggered when a subscription is upgraded, downgraded, or modified with different addons.
- */
-function handleSubscriptionPlanChanged(
-    webhookPayload: DodoWebhookPayload,
-): Partial<BillingInsert> | null {
-    if (!isSubscriptionWebhook(webhookPayload)) {
-        return null;
-    }
-
-    const data = webhookPayload.data;
-    const newPlan = getPlanFromProductId(data.product_id);
-
-    return {
-        status: 'active',
-        currentPlan: newPlan,
-        subscriptionId: data.subscription_id,
-        customerId: data.customer.customer_id,
-    };
-}
-
-/**
- * Handle subscription cancelled events.
- * Triggered when a subscription is cancelled.
- */
-function handleSubscriptionCancelled(
-    webhookPayload: DodoWebhookPayload,
-): Partial<BillingInsert> | null {
-    if (!isSubscriptionWebhook(webhookPayload)) {
-        return null;
-    }
-
-    const data = webhookPayload.data;
-    const plan = getPlanFromProductId(data.product_id);
-
-    return {
-        status: 'inactive',
-        currentPlan: plan,
-        subscriptionId: data.subscription_id,
-        customerId: data.customer.customer_id,
-    };
-}
-
-/**
- * Handle subscription expired events.
- * Triggered when a subscription reaches the end of its term and expires.
- */
-function handleSubscriptionExpired(
-    webhookPayload: DodoWebhookPayload,
-): Partial<BillingInsert> | null {
-    if (!isSubscriptionWebhook(webhookPayload)) {
-        return null;
-    }
-
-    const data = webhookPayload.data;
-    const plan = getPlanFromProductId(data.product_id);
-
-    return {
-        status: 'inactive',
-        currentPlan: plan,
-        subscriptionId: data.subscription_id,
-        customerId: data.customer.customer_id,
-    };
-}
-
-/**
- * Handle subscription failed events.
- * Indicates a failed subscription. This means that we were unable to create a mandate.
- */
-function handleSubscriptionFailed(
-    webhookPayload: DodoWebhookPayload,
-): Partial<BillingInsert> | null {
-    if (!isSubscriptionWebhook(webhookPayload)) {
-        return null;
-    }
-
-    const data = webhookPayload.data;
-    const plan = getPlanFromProductId(data.product_id);
-
-    return {
-        status: 'grace',
-        currentPlan: plan,
-        subscriptionId: data.subscription_id,
-        customerId: data.customer.customer_id,
-    };
-}
-
-/**
- * Handle subscription on hold events.
- * Triggered when a subscription is temporarily put on hold due to failed renewal.
- */
-function handleSubscriptionOnHold(
-    webhookPayload: DodoWebhookPayload,
-): Partial<BillingInsert> | null {
-    if (!isSubscriptionWebhook(webhookPayload)) {
-        return null;
-    }
-
-    const data = webhookPayload.data;
-    const plan = getPlanFromProductId(data.product_id);
-
-    return {
-        status: 'grace',
-        currentPlan: plan,
-        subscriptionId: data.subscription_id,
-        customerId: data.customer.customer_id,
-    };
+    return updatedEvent;
 }

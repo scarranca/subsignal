@@ -1,6 +1,5 @@
 import { Context } from 'hono';
 import { snapshotService } from '@/services/snapshot';
-import { USER_MIDDLEWARE_CONTEXT_KEY } from '@/constants/middleware';
 import {
     createSnapshotSchema,
     fetchSnapshotQuerySchema,
@@ -9,14 +8,7 @@ import {
 import { z } from 'zod';
 import { inngest } from '@/ingest/client';
 import { pageQueries, preferenceQueries } from '@/db/queries';
-
-export const getUser = (c: Context) => {
-    const user = c.get(USER_MIDDLEWARE_CONTEXT_KEY);
-    if (!user) {
-        throw new Error('User not found in context');
-    }
-    return user;
-};
+import { getUser } from '@/app/api/middleware/auth';
 
 /**
  * Handle POST request to create a snapshot for a page

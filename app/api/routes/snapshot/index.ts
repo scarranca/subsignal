@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { requireAuth } from '@/app/api/middleware/auth';
+import { requireBilling } from '@/app/api/middleware/billing';
 import {
     handleCreateSnapshot,
     handleGetLatestSnapshotForPage,
@@ -12,7 +13,7 @@ const snapshots = new Hono();
 /**
  * Apply auth middleware to all snapshot routes
  */
-snapshots.use('*', requireAuth);
+snapshots.use('*', requireAuth, requireBilling);
 
 /**
  * POST /api/snapshots - Create a new snapshot for a page

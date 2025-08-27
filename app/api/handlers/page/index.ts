@@ -1,6 +1,5 @@
 import { Context } from 'hono';
 import { pageQueries, preferenceQueries } from '@/db/queries';
-import { USER_MIDDLEWARE_CONTEXT_KEY } from '@/constants/middleware';
 import {
     createPageSchema,
     updatePageSchema,
@@ -11,14 +10,7 @@ import { fetchPageTitle, generateFallbackTitle } from '@/lib/url';
 import { z } from 'zod';
 import { inngest } from '@/ingest/client';
 import { DEFAULT_PREFERENCES } from '@/constants/preferences';
-
-export const getUser = (c: Context) => {
-    const user = c.get(USER_MIDDLEWARE_CONTEXT_KEY);
-    if (!user) {
-        throw new Error('User not found in context');
-    }
-    return user;
-};
+import { getUser } from '@/app/api/middleware/auth';
 
 /**
  * Handle GET request to fetch pages by company with pagination

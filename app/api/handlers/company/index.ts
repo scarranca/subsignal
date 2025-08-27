@@ -1,6 +1,5 @@
 import { Context } from 'hono';
 import { companyQueries, preferenceQueries } from '@/db/queries';
-import { USER_MIDDLEWARE_CONTEXT_KEY } from '@/constants/middleware';
 import {
     createCompanySchema,
     updateCompanySchema,
@@ -11,14 +10,7 @@ import { fetchPageTitle, generateFallbackTitle, normalizeAndDeduplicateUrls } fr
 import { z } from 'zod';
 import { inngest } from '@/ingest/client';
 import { DEFAULT_PREFERENCES } from '@/constants/preferences';
-
-export const getUser = (c: Context) => {
-    const user = c.get(USER_MIDDLEWARE_CONTEXT_KEY);
-    if (!user) {
-        throw new Error('User not found in context');
-    }
-    return user;
-};
+import { getUser } from '@/app/api/middleware/auth';
 
 /**
  * Handle GET request to fetch user companies with their pages (paginated)
@@ -213,6 +205,7 @@ export async function handleBatchCreateCompanies(c: Context) {
         // Step 2: Send event to ingest to batch create companies
         await inngest.send({
             name: 'onboarding/batch.create.company',
+            id: `onboarding-batch.create.company-${user.id}`,
             data: {
                 userId: user.id,
                 urls: normalizedUrls,

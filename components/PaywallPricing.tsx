@@ -127,7 +127,7 @@ export const PaywallPricing = ({
         }
     }, [selectedPlan, userEmail, hasActiveSubscription, isSwitchingPlan, currentPaymentStatus]);
 
-    const plans = PRICING_PLANS.map((plan) => ({
+    const plans = PRICING_PLANS.filter((plan) => plan.id !== 'custom_plan').map((plan) => ({
         ...plan,
         // isCurrent: currentPaymentStatus?.plan === plan.id, // Mark current plan
         isPopular: plan.id === 'team_plan', // Show team plan as popular

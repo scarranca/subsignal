@@ -1,29 +1,32 @@
 import { and, eq, gte, or } from 'drizzle-orm';
 import { db } from '../index';
 import { billing } from '../schema/billing';
-import type { BillingInsert, BillingSelect } from '../schema/billing';
+import type { BillingEntitlement, BillingInsert, BillingSelect } from '../schema/billing';
+import { getBillingEntitlement } from '@/constants/pricing';
 
 export const billingQueries = {
-    /**
-     * Get billing record by user ID
-     * @param userId - The ID of the user to get the billing record for
-     * @returns The billing record for the user, or undefined if no record is found
-     */
-    async getBillingRecordByUserId(userId: string): Promise<BillingSelect | undefined> {
-        return await db.query.billing.findFirst({
-            where: eq(billing.userId, userId),
-        });
-    },
-
     /**
      * Get active billing record by user ID
      * @param userId - The ID of the user to get the active billing record for
      * @returns The active billing record for the user, or undefined if no record is found
      */
-    async getActiveBillingRecordByUserId(userId: string): Promise<BillingSelect | undefined> {
-        return await db.query.billing.findFirst({
-            where: and(eq(billing.userId, userId), eq(billing.status, 'active')),
+    async getBillingRecordForUser(
+        userId: string,
+        includeInactive: boolean = false,
+    ): Promise<BillingEntitlement | undefined> {
+        const result = await db.query.billing.findFirst({
+            where: and(
+                eq(billing.userId, userId),
+                includeInactive
+                    ? undefined
+                    : or(eq(billing.status, 'active'), eq(billing.status, 'grace')),
+            ),
         });
+        if (!result) {
+            return undefined;
+        }
+
+        return getBillingEntitlement(result);
     },
 
     /**

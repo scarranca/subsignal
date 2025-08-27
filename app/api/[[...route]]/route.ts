@@ -61,8 +61,10 @@ const v1 = new Hono();
 v1.route('/preferences', preferences);
 v1.route('/companies', companies);
 v1.route('/pages', pages);
-v1.route('/snapshots', snapshots);
 v1.route('/payments', payments);
+// Add these once we have the archive feature in UI
+// v1.route('/snapshots', snapshots);
+// v1.route('/reports', reports);
 
 app.route('/v1', v1);
 

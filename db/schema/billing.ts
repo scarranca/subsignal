@@ -43,6 +43,7 @@ export const billing = pgTable(
         provider: providerEnum('provider').notNull().default('dodo'),
         subscriptionId: text('subscription_id'),
         customerId: text('customer_id'),
+        webhookEvent: text('webhook_event'),
 
         // Timestamps
         createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
@@ -69,6 +70,17 @@ export type BillingInsert = typeof billing.$inferInsert;
 
 export type BillingPlan = (typeof planEnum.enumValues)[number];
 export type BillingEntitlementStatus = (typeof entitlementStatusEnum.enumValues)[number];
+
+export type BillingEntitlement = BillingSelect & {
+    status: BillingEntitlementStatus; // Current status
+    currentPlan: BillingPlan; // Current plan
+    pageLimit: number; // Maximum number of pages
+    companyLimit: number; // Maximum number of companies
+    recordLimit: number; // Maximum number of records
+    refreshLimit: '1_day' | '3_day' | '7_day'; // Highest supported refresh frequency
+    zapierEnabled: boolean; // Whether zapier is enabled
+    emailEnabled: boolean; // Whether email is enabled
+};
 
 export type BillingProvider = (typeof providerEnum.enumValues)[number];
 

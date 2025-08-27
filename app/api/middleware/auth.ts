@@ -33,3 +33,16 @@ export async function requireAuth(c: Context, next: Next) {
 
     await next();
 }
+
+/**
+ * Get the user from the context
+ * @param c - The context object
+ * @returns The user object
+ */
+export function getUser(c: Context) {
+    const user = c.get(USER_MIDDLEWARE_CONTEXT_KEY);
+    if (!user) {
+        throw new Error('User not found in context');
+    }
+    return user;
+}
