@@ -15,4 +15,6 @@ export const queryKeys = {
 
     // Add more query keys as needed
     pages: (companyId?: string) => (companyId ? ['pages', { companyId }] : ['pages']),
+
+    paymentStatus: () => ['paymentStatus'],
 } as const;

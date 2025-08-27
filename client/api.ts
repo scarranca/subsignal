@@ -2,143 +2,31 @@
  * API Client for making authenticated requests to Subsignal API
  */
 
+import {
+    ApiResponse,
+    BatchCreateCompaniesRequest,
+    BatchCreateCompaniesResponse,
+    Company,
+    CreateCompanyRequest,
+    CreateNewSubscriptionRequest,
+    CreateNewSubscriptionResponse,
+    CreatePageRequest,
+    DeletePagesRequest,
+    Page,
+    PaginatedResponse,
+    PaginationParams,
+    PaymentStatus,
+    Preference,
+    UpdateCompanyRequest,
+    UpdatePageRequest,
+    UpdatePreferenceRequest,
+    UpdateSubscriptionRequest,
+    UpdateSubscriptionResponse,
+    ValidatePaymentStatusRequest,
+    ValidatePaymentStatusResponse,
+} from '@/types/api';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api/v1';
-
-export interface ApiResponse<T = unknown> {
-    data?: T;
-    error?: string;
-    success?: boolean;
-    details?: any;
-}
-
-export interface PaginatedResponse<T> {
-    data: T[];
-    pagination: {
-        page: number;
-        pageSize: number;
-        totalItems: number;
-        totalPages: number;
-        hasNext: boolean;
-        hasPrevious: boolean;
-    };
-}
-
-export interface PaginationParams {
-    page?: number;
-    pageSize?: number;
-    sortBy?: 'createdAt' | 'updatedAt' | 'name' | 'title';
-    sortOrder?: 'asc' | 'desc';
-}
-
-// Type definitions based on our schemas
-export interface Preference {
-    id: string;
-    userId: string;
-    properties: ('pricing' | 'product' | 'customer' | 'partnership' | 'branding' | 'messaging')[];
-    frequency: '7_day' | '15_day' | '1_month' | '3_month' | '6_month';
-    isActive: boolean;
-    createdAt: string;
-    updatedAt: string;
-}
-
-export interface Company {
-    id: string;
-    userId: string;
-    name: string;
-    url: string;
-    isActive: boolean;
-    createdAt: string;
-    updatedAt: string;
-    pages?: Page[];
-}
-
-export interface Page {
-    id: string;
-    companyId: string;
-    title: string;
-    url: string;
-    isActive: boolean;
-    createdAt: string;
-    updatedAt: string;
-}
-
-export interface CreateCompanyRequest {
-    company: {
-        name: string;
-        url: string;
-    };
-    page: {
-        title?: string; // Optional since we auto-fetch it on the server
-        url: string;
-    };
-}
-
-export interface BatchCreateCompaniesRequest {
-    urls: string[];
-}
-
-export interface BatchCreateCompaniesResponse {
-    success: boolean;
-    results: Array<{
-        url: string;
-        success: true;
-        company: Company;
-        page: Page | null;
-        skipped?: boolean;
-    }>;
-    errors: Array<{
-        url: string;
-        success: false;
-        error: string;
-    }>;
-    summary: {
-        total: number;
-        successful: number;
-        failed: number;
-        created?: number;
-        skipped?: number;
-    };
-}
-
-export interface UpdateCompanyRequest {
-    name?: string;
-    url?: string;
-}
-
-export interface CreatePageRequest {
-    page: {
-        title?: string; // Optional since we auto-fetch it on the server
-        url: string;
-    };
-    company: {
-        id?: string; // For existing company
-        name?: string; // For new company
-        url?: string; // For new company
-    };
-}
-
-export interface UpdatePageRequest {
-    title?: string;
-    url?: string;
-}
-
-export interface UpdatePreferenceRequest {
-    properties: ('pricing' | 'product' | 'customer' | 'partnership' | 'branding' | 'messaging')[];
-    frequency: '7_day' | '15_day' | '1_month' | '3_month' | '6_month';
-}
-
-export interface DeletePagesRequest {
-    pageIds: string[];
-}
-
-export interface PaymentStatus {
-    isPaying: boolean;
-    currentPlan?: 'solo_plan' | 'team_plan';
-    subscriptionId?: string;
-    status?: string;
-    userName?: string;
-    userEmail?: string;
-}
 
 class ApiClient {
     private baseURL: string;
@@ -220,7 +108,55 @@ class ApiClient {
      * @returns Promise with payment status data including user info
      */
     async getPaymentStatus(): Promise<ApiResponse<PaymentStatus>> {
-        return this.request<PaymentStatus>('/payments/status');
+        return this.request<PaymentStatus>('/payments');
+    }
+
+    /**
+     * Create a checkout session
+     * @param data - Checkout session request data
+     * @returns Promise with checkout session response data
+     */
+    async createNewSubscription(
+        data: CreateNewSubscriptionRequest,
+    ): Promise<ApiResponse<CreateNewSubscriptionResponse>> {
+        return this.request<CreateNewSubscriptionResponse>('/payments', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+    }
+
+    /**
+     * Update an existing subscription
+     * @param data - Subscription update request data
+     * @returns Promise with subscription update response data
+     */
+    async updateExistingSubscription(
+        data: UpdateSubscriptionRequest,
+    ): Promise<ApiResponse<UpdateSubscriptionResponse>> {
+        return this.request<UpdateSubscriptionResponse>('/payments', {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        });
+    }
+
+    /**
+     * Validate payment status
+     * @param data - Payment status request data
+     * @returns Promise with validation result
+     */
+    async validatePaymentStatus(
+        data: ValidatePaymentStatusRequest,
+    ): Promise<ApiResponse<ValidatePaymentStatusResponse>> {
+        const queryParams = new URLSearchParams({
+            subscription_id: data.subscription_id,
+        });
+
+        return this.request<ValidatePaymentStatusResponse>(
+            `/payments/validate?${queryParams.toString()}`,
+            {
+                method: 'GET',
+            },
+        );
     }
 
     /**
