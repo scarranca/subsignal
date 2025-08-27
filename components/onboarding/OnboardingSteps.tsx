@@ -7,8 +7,9 @@ import { FrequencySelectionStep } from './steps/FrequencySelectionStep';
 import { OnboardingCompleteStep } from './steps/OnboardingCompleteStep';
 import { PlanSelectionStep } from './steps/PlanSelectionStep';
 import { apiClient } from '@/client/api';
-import type { BatchCreateCompaniesResponse } from '@/client/api';
+import type { BatchCreateCompaniesResponse } from '@/types/api';
 import { toast } from 'sonner';
+import PageSelectionStepSkeleton from '../skeleton/skeleton-page-selection';
 
 interface OnboardingStepsProps {
     currentStep: number;
@@ -168,14 +169,9 @@ export const OnboardingSteps = ({ currentStep, onNext }: OnboardingStepsProps) =
         }
     };
 
-    // Show loading state while fetching initial data
+    // Show generic skeleton while fetching initial data
     if (isInitialLoading) {
-        return (
-            <div className="w-full max-w-sm mx-auto px-4 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-                <p className="mt-2 text-sm text-gray-600">Almost there...</p>
-            </div>
-        );
+        return <PageSelectionStepSkeleton />;
     }
 
     switch (currentStep) {
@@ -209,15 +205,10 @@ export const OnboardingSteps = ({ currentStep, onNext }: OnboardingStepsProps) =
                 />
             );
         case 4:
-            return <PlanSelectionStep onComplete={onNext} />;
+            return <PlanSelectionStep />;
 
         case 5:
-            return (
-                <OnboardingCompleteStep
-                    onComplete={onNext}
-                    companiesCreated={data.batchResults?.summary.successful || 0}
-                />
-            );
+            return <OnboardingCompleteStep />;
 
         default:
             return null;

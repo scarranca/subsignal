@@ -1,44 +1,65 @@
 'use client';
 
-import { useOnboardingStore } from '@/lib/stores/onboarding';
 import { OnboardingContainer } from '../shared';
-import { PricingComponent } from '../../PricingComponent';
-import { CAL_URL } from '@/constants/contact';
+import { authClient } from '@/client/auth';
+import { useEffect, useState } from 'react';
 
-interface PlanSelectionStepProps {
-    onComplete: () => void;
-}
+import apiClient from '@/client/api';
+import { PaywallPricing } from '@/components/PaywallPricing';
+import { PaymentStatus } from '@/types/api';
 
-export const PlanSelectionStep = ({ onComplete }: PlanSelectionStepProps) => {
-    const { setCurrentStep } = useOnboardingStore();
+import PageSelectionStepSkeleton from '@/components/skeleton/skeleton-page-selection';
 
-    const handleCheckoutComplete = () => {
-        // Set next step before continuing so user continues after payment
-        setCurrentStep(5);
-        // Also advance current flow
-        onComplete();
-    };
+export const PlanSelectionStep = () => {
+    const { data: session } = authClient.useSession();
+    const [paymentStatus, setPaymentStatus] = useState<PaymentStatus | null>(null);
+    const [isLoadingStatus, setIsLoadingStatus] = useState(true);
 
+    // Check payment status on component mount
+    useEffect(() => {
+        const checkPaymentStatus = async () => {
+            try {
+                const response = await apiClient.getPaymentStatus();
+
+                if (response.success && response.data) {
+                    setPaymentStatus(response.data);
+                } else {
+                    setPaymentStatus({
+                        ...(response.data && {
+                            userName: response.data.userName,
+                            userEmail: response.data.userEmail,
+                        }),
+                    });
+                }
+            } catch (error) {
+                console.error('Error checking payment status:', error);
+            } finally {
+                setIsLoadingStatus(false);
+            }
+        };
+
+        checkPaymentStatus();
+    }, []);
+
+    // Show loading state while checking payment status
+    if (isLoadingStatus) {
+        return <PageSelectionStepSkeleton />;
+    }
+
+    // Always show the PaywallPricing component - it will handle both scenarios
     return (
         <div className="w-full px-3 sm:px-4">
             <OnboardingContainer maxWidth="2xl">
-                <PricingComponent
+                <PaywallPricing
                     title="Choose Your Plan"
-                    description="Select a plan that works best for you"
-                    primaryButtonText={{
-                        default: 'Get Started',
+                    description="Select a plan to complete your setup"
+                    buttonText={{
+                        default: 'Subscribe',
                         processing: 'Almost there...',
-                        existing: 'Switch Plan',
+                        continue: 'Continue to Next Step',
                     }}
-                    secondaryButtonText={{
-                        existing: 'Request Support',
-                        new: 'Request Discount Code',
-                    }}
-                    onCheckoutComplete={handleCheckoutComplete}
-                    showSecondaryAction={true}
-                    successUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/get-started?step=5`}
-                    cancelUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/get-started?step=4`}
-                    secondaryActionUrl={CAL_URL}
+                    userEmail={session?.user?.email || ''}
+                    currentPaymentStatus={paymentStatus}
                 />
             </OnboardingContainer>
         </div>

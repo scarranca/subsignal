@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { TrendingUp, Package, Users, Handshake, Palette, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DEFAULT_PREFERENCES } from '@/constants/preferences';
-import type { BatchCreateCompaniesResponse } from '@/client/api';
+import type { BatchCreateCompaniesResponse } from '@/types/api';
 
 interface SignalSelectionStepProps {
     onComplete: (
