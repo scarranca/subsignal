@@ -5,7 +5,6 @@ import { getWebhookData } from '@/app/api/middleware/payments';
 import { isSubscriptionWebhook } from '@/payments/webhook';
 import DodoWebhookPayload, { SubscriptionWebhookPayload } from '@/payments/types';
 import { getPlanFromProductId } from '@/constants/pricing';
-import { inngest } from '@/ingest/client';
 
 export async function handlePaymentsWebhook(c: Context) {
     // Parse webhook data from context
@@ -41,20 +40,6 @@ export async function handlePaymentsWebhook(c: Context) {
                 userRecord.id,
                 updatedEvent,
             );
-
-            const hourWindow = Math.floor(Date.now() / (60 * 60 * 1000)); // Current hour
-            const dedupKey = `ack-${userRecord.id}-${updatedBillingRecord.subscriptionId}-${updatedBillingRecord.status}-${hourWindow}`;
-
-            await inngest.send({
-                name: 'app/send.acknowledgement.email',
-                id: dedupKey, // Inngest will deduplicate based on this key
-                data: {
-                    userEmail: userRecord.email,
-                    status: updatedBillingRecord.status,
-                    currentPlan: updatedBillingRecord.currentPlan,
-                    subscriptionId: updatedBillingRecord.subscriptionId,
-                },
-            });
 
             return c.json(
                 {
