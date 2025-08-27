@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { TermsCheckbox } from '@/components/ui/terms-checkbox';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Testimonials } from '@/components/onboarding/Testimonials';
@@ -13,9 +14,15 @@ const testimonials = LOGIN_TESTIMONIALS;
 
 const LoginPage = () => {
     const [loading, setLoading] = useState(false);
+    const [agreedToTerms, setAgreedToTerms] = useState(true); // Default to checked
 
     // Sign in with Google
     const signInWithGoogle = async () => {
+        if (!agreedToTerms) {
+            showToast.error('Please agree to the Terms of Service and Privacy Policy to continue.');
+            return;
+        }
+
         setLoading(true);
 
         try {
@@ -61,7 +68,12 @@ const LoginPage = () => {
     // Add keyboard shortcut for Cmd+Enter
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
-            if ((event.metaKey || event.ctrlKey) && event.key === 'Enter' && !loading) {
+            if (
+                (event.metaKey || event.ctrlKey) &&
+                event.key === 'Enter' &&
+                !loading &&
+                agreedToTerms
+            ) {
                 event.preventDefault();
                 signInWithGoogle();
             }
@@ -69,7 +81,7 @@ const LoginPage = () => {
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [loading]);
+    }, [loading, agreedToTerms]);
 
     return (
         <div className="flex min-h-screen">
@@ -80,7 +92,7 @@ const LoginPage = () => {
                     </Link>
                 </nav>
                 <div className="flex flex-1 flex-col items-center justify-center min-h-screen">
-                    <div className="w-full max-w-xs flex flex-col items-center">
+                    <div className="w-full max-w-sm flex flex-col items-center">
                         <h1 className="text-2xl font-semibold mb-2 text-center font-lora">
                             Let&apos;s get you signed in
                         </h1>
@@ -89,8 +101,10 @@ const LoginPage = () => {
                         </p>
                         <Button
                             onClick={signInWithGoogle}
-                            disabled={loading}
-                            className="w-full h-10 text-base font-normal justify-center mt-2"
+                            disabled={loading || !agreedToTerms}
+                            className={`w-full h-10 text-base font-normal justify-center mt-2 ${
+                                !agreedToTerms ? 'opacity-50 cursor-not-allowed' : ''
+                            }`}
                             variant="outline"
                         >
                             {loading ? (
@@ -122,6 +136,13 @@ const LoginPage = () => {
                                 </div>
                             )}
                         </Button>
+
+                        {/* Terms and Privacy Policy Checkbox */}
+                        <TermsCheckbox
+                            checked={agreedToTerms}
+                            onChange={setAgreedToTerms}
+                            mode="login"
+                        />
 
                         <div className="mt-4 text-center">
                             <div className="flex justify-center gap-4 text-xs text-gray-500">

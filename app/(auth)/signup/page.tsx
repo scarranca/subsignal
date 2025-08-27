@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { TermsCheckbox } from '@/components/ui/terms-checkbox';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Testimonials } from '@/components/onboarding/Testimonials';
@@ -13,9 +14,15 @@ const testimonials = SIGNUP_TESTIMONIALS;
 
 const SignupPage = () => {
     const [loading, setLoading] = useState(false);
+    const [agreedToTerms, setAgreedToTerms] = useState(true); // Default to checked
 
     // Sign up with Google
     const signUpWithGoogle = async () => {
+        if (!agreedToTerms) {
+            showToast.error('Please agree to the Terms of Service and Privacy Policy to continue.');
+            return;
+        }
+
         setLoading(true);
 
         try {
@@ -61,7 +68,12 @@ const SignupPage = () => {
     // Add keyboard shortcut for Cmd+Enter
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
-            if ((event.metaKey || event.ctrlKey) && event.key === 'Enter' && !loading) {
+            if (
+                (event.metaKey || event.ctrlKey) &&
+                event.key === 'Enter' &&
+                !loading &&
+                agreedToTerms
+            ) {
                 event.preventDefault();
                 signUpWithGoogle();
             }
@@ -69,7 +81,7 @@ const SignupPage = () => {
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [loading]);
+    }, [loading, agreedToTerms]);
 
     return (
         <div className="flex min-h-screen">
@@ -89,8 +101,10 @@ const SignupPage = () => {
                         </p>
                         <Button
                             onClick={signUpWithGoogle}
-                            disabled={loading}
-                            className="w-full h-10 text-base font-normal justify-center mt-2"
+                            disabled={loading || !agreedToTerms}
+                            className={`w-full h-10 text-base font-normal justify-center mt-2 ${
+                                !agreedToTerms ? 'opacity-50 cursor-not-allowed' : ''
+                            }`}
                             variant="outline"
                         >
                             {loading ? (
@@ -100,7 +114,10 @@ const SignupPage = () => {
                                 </div>
                             ) : (
                                 <div className="flex items-center gap-2">
-                                    <svg className="w-5 h-5" viewBox="0 0 24 24">
+                                    <svg
+                                        className={`w-5 h-5 ${!agreedToTerms ? 'opacity-40' : ''}`}
+                                        viewBox="0 0 24 24"
+                                    >
                                         <path
                                             fill="#4285F4"
                                             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -122,6 +139,13 @@ const SignupPage = () => {
                                 </div>
                             )}
                         </Button>
+
+                        {/* Terms and Privacy Policy Checkbox */}
+                        <TermsCheckbox
+                            checked={agreedToTerms}
+                            onChange={setAgreedToTerms}
+                            mode="signup"
+                        />
 
                         <div className="mt-4 text-center">
                             <div className="flex justify-center gap-4 text-xs text-gray-500">
