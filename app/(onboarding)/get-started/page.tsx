@@ -9,6 +9,8 @@ import { useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { LOGIN_TESTIMONIALS } from '@/constants/testimonials';
 import { useOnboardingStore } from '@/lib/stores/onboarding';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query-keys';
 
 const testimonials = LOGIN_TESTIMONIALS;
 
@@ -17,6 +19,12 @@ const OnboardingContent = () => {
     const searchParams = useSearchParams();
     const router = useRouter();
     const pathname = usePathname();
+    const queryClient = useQueryClient();
+
+    // Invalidate payment status cache when user navigates to get-started
+    useEffect(() => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.paymentStatus() });
+    }, [queryClient]);
 
     // Handle URL step parameter (for payment redirects)
     useEffect(() => {
