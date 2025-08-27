@@ -5,7 +5,7 @@ import { TermsCheckbox } from '@/components/ui/terms-checkbox';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Testimonials } from '@/components/onboarding/Testimonials';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { showToast } from '@/lib/toast';
 import { SIGNUP_TESTIMONIALS } from '@/constants/testimonials';
 import { authClient } from '@/client/auth';
@@ -17,7 +17,7 @@ const SignupPage = () => {
     const [agreedToTerms, setAgreedToTerms] = useState(true); // Default to checked
 
     // Sign up with Google
-    const signUpWithGoogle = async () => {
+    const signUpWithGoogle = useCallback(async () => {
         if (!agreedToTerms) {
             showToast.error('Please agree to the Terms of Service and Privacy Policy to continue.');
             return;
@@ -63,7 +63,7 @@ const SignupPage = () => {
             showToast.error(errorMessage);
             setLoading(false);
         }
-    };
+    }, [agreedToTerms]);
 
     // Add keyboard shortcut for Cmd+Enter
     useEffect(() => {
@@ -81,7 +81,7 @@ const SignupPage = () => {
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [loading, agreedToTerms]);
+    }, [loading, agreedToTerms, signUpWithGoogle]);
 
     return (
         <div className="flex min-h-screen">

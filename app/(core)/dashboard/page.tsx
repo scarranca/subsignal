@@ -1,19 +1,63 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Sidebar } from '@/components/sidebar';
 import { SettingsView } from '@/components/settings-view';
 import { PagesView } from '@/components/pages-view';
 import { ChevronDown } from 'lucide-react';
 import { MobileAvatar } from '@/components/avatar';
+import { apiClient } from '@/client/api';
+import { queryKeys } from '@/lib/query-keys';
+import { DashboardPaywallView } from '@/components/DashboardPaywallView';
+import PagesViewSkeleton from '@/components/skeleton/skeleton-pages-view';
 
 export default function Dashboard() {
     const [activeView, setActiveView] = useState('pages');
     const [dropdownOpen, setDropdownOpen] = useState(false);
 
-    // Removed unused function getViewDisplayName
+    // Fetch payment status
+    const {
+        data: paymentStatus,
+        isLoading,
+        error,
+    } = useQuery({
+        queryKey: queryKeys.paymentStatus(),
+        queryFn: () => apiClient.getPaymentStatus(),
+        retry: 2,
+    });
+
+    // Show toast on error
+    useEffect(() => {
+        if (error) {
+            console.error('Dashboard error:', error);
+        }
+    }, [error]);
+
+    // Check if user has active subscription
+    const hasActiveSubscription =
+        paymentStatus?.success &&
+        paymentStatus.data?.subscriptionId &&
+        paymentStatus.data?.plan &&
+        paymentStatus.data?.status === 'active';
 
     const renderContent = () => {
+        // Show skeleton loading state
+        if (isLoading) {
+            return <PagesViewSkeleton />;
+        }
+
+        // Show minimal error state with skeleton fallback
+        if (error) {
+            return <PagesViewSkeleton />;
+        }
+
+        // Show DashboardPaywallView if no active subscription
+        if (!hasActiveSubscription) {
+            return <DashboardPaywallView paymentStatus={paymentStatus?.data || null} />;
+        }
+
+        // Show dashboard content for users with active subscription
         switch (activeView) {
             case 'settings':
                 return <SettingsView />;
