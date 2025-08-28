@@ -21,15 +21,6 @@ export const afterUserCreationHook = (async (user) => {
         // Create default preferences for the new user
         await preferenceQueries.upsertUserPreference(user.id, DEFAULT_PREFERENCES);
         console.log(`Default preferences created for user: ${user.id}`);
-
-        // Send onboarding email
-        await inngest.send({
-            name: 'app/send.onboarding.email',
-            data: {
-                userEmail: user.email,
-                userId: user.id,
-            },
-        });
     } catch (error) {
         console.warn('Error creating default preferences in afterUserCreationHook:', error);
     }

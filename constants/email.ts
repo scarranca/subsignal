@@ -86,8 +86,6 @@ export const getAcknowledgementPreviewText = (status: BillingEntitlementStatus) 
     switch (status) {
         case 'active':
             return 'You made our nights and weekends worth it';
-        case 'grace':
-            return 'Looks like we have a tiny issue';
         case 'inactive':
             return "Your Spot's Still Warm. Let's Figure This Out Together";
         default:
@@ -104,8 +102,6 @@ export const getAcknowledgementTitle = (status: BillingEntitlementStatus) => {
     switch (status) {
         case 'active':
             return 'You are in!';
-        case 'grace':
-            return "Your Spot's Still Warm";
         case 'inactive':
             return "We're Here When You're Ready";
         default:
@@ -122,8 +118,6 @@ export const getAcknowledgementSubtitle = (status: BillingEntitlementStatus) => 
     switch (status) {
         case 'active':
             return 'No, this is not a boring activation email';
-        case 'grace':
-            return "Let's get this sorted quickly";
         case 'inactive':
             return "Alright, let's get you back in";
         default:
@@ -184,11 +178,6 @@ export const getAcknowledgementMessageLines = (
             return [
                 `We know activation emails are supposed to be boring, but we can't resist saying a heartfelt thanks.`,
                 `Your ${formattedPlan(currentPlan)} has been activated, and we're thrilled to have you with us. Cheers!`,
-            ];
-        case 'grace':
-            return [
-                `We ran into an issue activating your subscription. Don't worry — these things happen, and we're here to help.`,
-                `Please check your payment method or contact our support team, and we'll get you set up right away.`,
             ];
         case 'inactive':
             return [

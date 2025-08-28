@@ -10,6 +10,7 @@ import { apiClient } from '@/client/api';
 import type { BatchCreateCompaniesResponse } from '@/types/api';
 import { toast } from 'sonner';
 import PageSelectionStepSkeleton from '../skeleton/skeleton-page-selection';
+import { Frequency, Properties } from '@/db/schema/preference';
 
 interface OnboardingStepsProps {
     currentStep: number;
@@ -18,8 +19,8 @@ interface OnboardingStepsProps {
 
 export interface OnboardingData {
     urls: string[];
-    properties: ('pricing' | 'product' | 'customer' | 'partnership' | 'branding' | 'messaging')[];
-    frequency: '7_day' | '15_day' | '1_month' | '3_month' | '6_month';
+    properties: Properties[];
+    frequency: Frequency;
     batchResults?: BatchCreateCompaniesResponse;
 }
 

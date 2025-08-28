@@ -1,4 +1,5 @@
 import { BillingPlan } from '@/db/schema/billing';
+import { Frequency, Properties } from '@/db/schema/preference';
 
 export interface ApiResponse<T = unknown> {
     data?: T;
@@ -29,8 +30,8 @@ export interface PaginationParams {
 export interface Preference {
     id: string;
     userId: string;
-    properties: ('pricing' | 'product' | 'customer' | 'partnership' | 'branding' | 'messaging')[];
-    frequency: '7_day' | '15_day' | '1_month' | '3_month' | '6_month';
+    properties: Properties[];
+    frequency: Frequency;
     isActive: boolean;
     createdAt: string;
     updatedAt: string;
@@ -118,8 +119,8 @@ export interface UpdatePageRequest {
 }
 
 export interface UpdatePreferenceRequest {
-    properties: ('pricing' | 'product' | 'customer' | 'partnership' | 'branding' | 'messaging')[];
-    frequency: '7_day' | '15_day' | '1_month' | '3_month' | '6_month';
+    properties: Properties[];
+    frequency: Frequency;
 }
 
 export interface DeletePagesRequest {

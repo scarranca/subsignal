@@ -2,6 +2,7 @@ import { pgTable, text, timestamp, boolean, pgEnum, index } from 'drizzle-orm/pg
 import { user } from './auth';
 
 export const frequencyEnum = pgEnum('frequency', [
+    '3_day',
     '7_day',
     '15_day',
     '1_month',
@@ -41,3 +42,6 @@ export const preference = pgTable(
         index('idx_preference_frequency_active').on(table.frequency, table.isActive),
     ],
 );
+
+export type Frequency = (typeof frequencyEnum.enumValues)[number];
+export type Properties = (typeof propertiesEnum.enumValues)[number];

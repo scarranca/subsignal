@@ -11,6 +11,7 @@ import { page } from '@/db/schema/page';
 import { snapshot } from '@/db/schema/snapshot';
 import { reportService } from '@/services/report';
 import * as yaml from 'js-yaml';
+import { Frequency, Properties } from '@/db/schema/preference';
 
 export class BriefingService {
     private static instance: BriefingService;
@@ -120,7 +121,7 @@ export class BriefingService {
         companyId: string,
         companyUrl: string,
         companyName: string,
-        frequency: '7_day' | '15_day' | '1_month' | '3_month' | '6_month',
+        frequency: Frequency,
     ): Promise<Briefing> {
         const emptyBriefing = this.reportService.generateEmptyBriefing(companyName, frequency);
 
@@ -148,7 +149,7 @@ export class BriefingService {
      */
     private filterSnapshotsByProperties(
         snapshots: Array<typeof snapshot.$inferSelect>,
-        properties: string[],
+        properties: Properties[],
     ): Record<string, string> {
         const yamlInputs: Record<string, string> = {};
 
@@ -194,8 +195,8 @@ export class BriefingService {
         companyId: string,
         companyUrl: string,
         companyName: string,
-        properties: string[],
-        frequency: '7_day' | '15_day' | '1_month' | '3_month' | '6_month',
+        properties: Properties[],
+        frequency: Frequency,
     ): Promise<Briefing> {
         console.log(
             'createBriefingForCompany',

@@ -146,14 +146,14 @@ function getRecordLimit(plan: BillingPlan): number {
  * @param plan - The plan to get the refresh limit for
  * @returns
  */
-function getRefreshLimit(plan: BillingPlan): '1_day' | '3_day' | '7_day' {
+function getRefreshLimit(plan: BillingPlan): '3_day' | '7_day' {
     switch (plan) {
         case 'solo_plan':
             return '7_day';
         case 'team_plan':
             return '3_day';
         case 'custom_plan':
-            return '1_day';
+            return '3_day'; // Lowest refresh frequency
     }
 
     return '7_day';

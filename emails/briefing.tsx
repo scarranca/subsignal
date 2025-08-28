@@ -10,8 +10,8 @@ import {
     Link,
     Hr,
 } from '@react-email/components';
+import { Frequency } from '@/db/schema/preference';
 
-type Period = '7_day' | '15_day' | '1_month' | '3_month' | '6_month';
 
 interface Change {
     text: string;
@@ -25,7 +25,7 @@ interface ChangeData {
 
 interface BriefingEmailProps {
     company?: string;
-    period?: Period;
+    period?: Frequency;
     generatedAt?: string;
     data?: Record<string, ChangeData>;
 }
@@ -36,11 +36,14 @@ export const BriefingEmail = ({
     generatedAt = new Date().toISOString(),
     data = {},
 }: BriefingEmailProps) => {
-    const calculateDateRange = (period: Period, currentDate = new Date()) => {
+    const calculateDateRange = (period: Frequency, currentDate = new Date()) => {
         const toDate = new Date(currentDate);
         const fromDate = new Date(currentDate);
 
         switch (period) {
+            case '3_day':
+                fromDate.setDate(toDate.getDate() - 3);
+                break;
             case '7_day':
                 fromDate.setDate(toDate.getDate() - 7);
                 break;
@@ -76,18 +79,20 @@ export const BriefingEmail = ({
         };
     };
 
-    const getPeriodLabel = (period: Period) => {
+    const getPeriodLabel = (period: Frequency) => {
         switch (period) {
+            case '3_day':
+                return 'Bi-weekly';
             case '7_day':
                 return 'Weekly';
             case '15_day':
-                return 'Bi-weekly';
+                return 'Bi-monthly';
             case '1_month':
                 return 'Monthly';
             case '3_month':
                 return 'Quarterly';
             case '6_month':
-                return 'Semi-annual';
+                return 'Semi-annually';
         }
     };
 

@@ -6,6 +6,7 @@ import { openai } from '@ai-sdk/openai';
 import { generateObject } from 'ai';
 import * as yaml from 'js-yaml';
 import { DEFAULT_SUMMARY_MODEL } from '@/constants/models';
+import { Frequency } from '@/db/schema/preference';
 
 export class ReportService {
     private static instance: ReportService;
@@ -30,7 +31,7 @@ export class ReportService {
     async generateBriefing(
         yamlInputs: Record<string, string>,
         companyName: string,
-        frequency: '7_day' | '15_day' | '1_month' | '3_month' | '6_month',
+        frequency: Frequency,
     ): Promise<BriefingEmailProps> {
         // Handle case when no meaningful changes - return empty structure
         if (Object.keys(yamlInputs).length === 0) {
@@ -71,10 +72,7 @@ export class ReportService {
      * @param period - Time period for the briefing
      * @returns Empty briefing structure
      */
-    generateEmptyBriefing(
-        company: string,
-        period: '7_day' | '15_day' | '1_month' | '3_month' | '6_month',
-    ): BriefingEmailProps {
+    generateEmptyBriefing(company: string, period: Frequency): BriefingEmailProps {
         return {
             company,
             period,
@@ -94,7 +92,7 @@ export class ReportService {
     async renderBriefingAsHtml(
         data: Record<string, ChangeData>,
         company: string = 'Company',
-        period: '7_day' | '15_day' | '1_month' | '3_month' | '6_month' = '7_day',
+        period: Frequency = '7_day',
         generatedAt: string = new Date().toISOString(),
     ): Promise<string> {
         const briefingProps: BriefingEmailProps = {
@@ -235,7 +233,7 @@ Make it readable. Make it useful. Make it human. Do not over word it.`;
     private transformCategoriesToBriefing(
         categorySummaries: CategorySummary[],
         companyName: string,
-        frequency: '7_day' | '15_day' | '1_month' | '3_month' | '6_month',
+        frequency: Frequency,
     ): BriefingEmailProps {
         // Transform array of category summaries into record keyed by category name
         const data: Record<string, ChangeData> = {};

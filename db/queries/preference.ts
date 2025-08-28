@@ -1,6 +1,6 @@
 import { and, eq } from 'drizzle-orm';
 import { db } from '../index';
-import { preference } from '../schema/preference';
+import { Frequency, preference, Properties } from '../schema/preference';
 import { user } from '../schema/auth';
 
 export const preferenceQueries = {
@@ -13,8 +13,8 @@ export const preferenceQueries = {
     async upsertUserPreference(
         userId: string,
         data: {
-            properties: string[];
-            frequency: '7_day' | '15_day' | '1_month' | '3_month' | '6_month';
+            properties: Properties[];
+            frequency: Frequency;
         },
     ) {
         const existingPreference = await db.query.preference.findFirst({
@@ -50,7 +50,7 @@ export const preferenceQueries = {
             .where(eq(preference.userId, userId));
     },
 
-    async getUsersByFrequency(frequency: '7_day' | '15_day' | '1_month' | '3_month' | '6_month') {
+    async getUsersByFrequency(frequency: Frequency) {
         return await db
             .select({
                 userId: user.id,

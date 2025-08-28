@@ -3,20 +3,14 @@
 import { useState, useCallback } from 'react';
 import { Calendar, CalendarDays, CalendarRange, Clock, Timer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Frequency, Properties } from '@/db/schema/preference';
 
 interface FrequencySelectionStepProps {
-    onComplete: (frequency: '7_day' | '15_day' | '1_month' | '3_month' | '6_month') => void;
-    onAdvance: (frequency: '7_day' | '15_day' | '1_month' | '3_month' | '6_month') => Promise<void>;
+    onComplete: (frequency: Frequency) => void;
+    onAdvance: (frequency: Frequency) => Promise<void>;
     isLoading: boolean;
-    initialFrequency: '7_day' | '15_day' | '1_month' | '3_month' | '6_month';
-    selectedProperties: (
-        | 'pricing'
-        | 'product'
-        | 'customer'
-        | 'partnership'
-        | 'branding'
-        | 'messaging'
-    )[];
+    initialFrequency: Frequency;
+    selectedProperties: Properties[];
 }
 
 const FREQUENCY_OPTIONS = [

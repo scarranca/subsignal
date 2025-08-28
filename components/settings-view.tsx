@@ -18,6 +18,7 @@ import { apiClient } from '@/client/api';
 import { toast } from 'sonner';
 import { queryKeys } from '@/lib/query-keys';
 import SettingsViewSkeleton from './skeleton/skeleton-settings-view';
+import { Frequency } from '@/db/schema/preference';
 
 export function SettingsView() {
     const queryClient = useQueryClient();
@@ -70,9 +71,7 @@ export function SettingsView() {
           };
 
     const [localProperties, setLocalProperties] = useState(properties);
-    const [frequency, setFrequency] = useState<
-        '7_day' | '15_day' | '1_month' | '3_month' | '6_month'
-    >(preferences?.frequency || '15_day');
+    const [frequency, setFrequency] = useState<Frequency>(preferences?.frequency || '15_day');
 
     const hasPreferences = !!preferences;
 
@@ -93,6 +92,7 @@ export function SettingsView() {
     }, [preferences]);
 
     const frequencyOptions = [
+        { value: '3_day', label: '3 days' },
         { value: '7_day', label: '7 days' },
         { value: '15_day', label: '15 days' },
         { value: '1_month', label: '1 month' },
@@ -111,7 +111,7 @@ export function SettingsView() {
                 | 'branding'
                 | 'messaging'
             )[];
-            frequency: '7_day' | '15_day' | '1_month' | '3_month' | '6_month';
+            frequency: Frequency;
         }) => {
             const result = hasPreferences
                 ? await apiClient.updatePreferences(data)
