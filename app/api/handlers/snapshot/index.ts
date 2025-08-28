@@ -32,7 +32,7 @@ export async function handleCreateSnapshot(c: Context) {
 
         if (validatedData.type === 'archive') {
             await inngest.send({
-                name: 'snapshot/create.archive.snapshot',
+                name: 'snapshot/archive.created',
                 data: {
                     pageId: page.id,
                     userId: user.id,
@@ -42,7 +42,7 @@ export async function handleCreateSnapshot(c: Context) {
             });
         } else if (validatedData.type === 'live') {
             await inngest.send({
-                name: 'snapshot/create.live.snapshot',
+                name: 'snapshot/live.created',
                 data: {
                     pageId: validatedData.pageId,
                     userId: user.id,

@@ -11,7 +11,7 @@ import { NonRetriableError } from 'inngest';
  */
 export const createBriefingForUser = inngest.createFunction(
     { id: 'create-briefing' },
-    { event: 'briefing/create.briefing' },
+    { event: 'briefing/briefing.created' },
     async ({ event, step }) => {
         const { userId, properties, frequency } = event.data;
         if (!userId) {
@@ -79,7 +79,7 @@ export const createBriefingForUser = inngest.createFunction(
 
         for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
             const batch = batches[batchIndex];
-            await step.sendEvent('briefing/send.briefing', batch);
+            await step.sendEvent('briefing/briefing.sent', batch);
         }
 
         return {
@@ -105,7 +105,7 @@ export const sendBriefingToUser = inngest.createFunction(
             period: '5s',
         },
     },
-    { event: 'briefing/send.briefing' },
+    { event: 'briefing/briefing.sent' },
     async ({ event, step }) => {
         const { userId, companyId } = event.data;
 

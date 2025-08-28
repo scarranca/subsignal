@@ -45,7 +45,7 @@ export class DurableBriefingService {
 
         for (let batchIndex = 0; batchIndex < briefingBatches.length; batchIndex++) {
             const batch = briefingBatches[batchIndex];
-            await step.sendEvent('briefing/create.briefing', batch);
+            await step.sendEvent('briefing/briefing.created', batch);
         }
 
         return { briefingsSent: briefingEvents.length };

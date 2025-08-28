@@ -124,7 +124,7 @@ export async function handleCreatePage(c: Context) {
 
             // Send event to ingest to create archive snapshot
             await inngest.send({
-                name: 'snapshot/create.archive.snapshot',
+                name: 'snapshot/archive.created',
                 data: {
                     pageId: newPage.id,
                     userId: user.id,
@@ -147,7 +147,7 @@ export async function handleCreatePage(c: Context) {
 
             // Send event to ingest to create archive snapshot
             await inngest.send({
-                name: 'snapshot/create.archive.snapshot',
+                name: 'snapshot/archive.created',
                 data: {
                     pageId: result.page.id,
                     userId: user.id,
@@ -199,7 +199,7 @@ export async function handleUpdatePage(c: Context) {
         // If the page url is updated, we need to create a new archive snapshot
         if (validatedData.url) {
             await inngest.send({
-                name: 'snapshot/create.archive.snapshot',
+                name: 'snapshot/archive.created',
                 data: {
                     pageId: updatedPage.id,
                     userId: user.id,

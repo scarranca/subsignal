@@ -98,7 +98,7 @@ export async function handleCreateCompany(c: Context) {
 
         // Send event to ingest to create archive snapshot
         await inngest.send({
-            name: 'snapshot/create.archive.snapshot',
+            name: 'snapshot/archive.created',
             data: {
                 userId: user.id,
                 pageId: result.initialPage.id,
@@ -204,8 +204,7 @@ export async function handleBatchCreateCompanies(c: Context) {
 
         // Step 2: Send event to ingest to batch create companies
         await inngest.send({
-            name: 'onboarding/batch.create.company',
-            id: `onboarding-batch.create.company-${user.id}`,
+            name: 'batch/company.created',
             data: {
                 userId: user.id,
                 urls: normalizedUrls,

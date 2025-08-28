@@ -1,4 +1,5 @@
 import { briefing } from '@/db/schema/briefing';
+import { Frequency } from '@/db/schema/preference';
 
 // Base briefing type from database
 export type Briefing = typeof briefing.$inferSelect;
@@ -60,7 +61,7 @@ export interface ChangeData {
 
 export interface BriefingEmailProps {
     company?: string;
-    period?: '7_day' | '15_day' | '1_month' | '3_month' | '6_month';
+    period?: Frequency;
     generatedAt?: string;
     data?: Record<string, ChangeData>;
 }

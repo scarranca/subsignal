@@ -1,10 +1,11 @@
-import { batchCreateCompany, sendOnboardingEmail } from './functions/onboarding';
+import { batchCreateCompany } from './functions/batch';
 import {
     // Create snapshot functions
     createArchiveSnapshot,
     createLiveSnapshot,
 
     // Refresh snapshot functions
+    refreshSnapshot3Day,
     refreshSnapshot7Day,
     refreshSnapshot15Day,
     refreshSnapshot1Month,
@@ -12,17 +13,18 @@ import {
     refreshSnapshot6Month,
 } from './functions/snapshot';
 import { createBriefingForUser, sendBriefingToUser } from './functions/briefing';
-import { sendPaymentAcknowledgement } from './functions/payments';
 
 // Export all functions
 export const functions = [
-    // Onboarding functions
+    // Batch functions
     batchCreateCompany,
-    sendOnboardingEmail,
 
     // Snapshot functions
     createArchiveSnapshot,
     createLiveSnapshot,
+
+    // Refresh snapshot functions
+    refreshSnapshot3Day,
     refreshSnapshot7Day,
     refreshSnapshot15Day,
     refreshSnapshot1Month,
@@ -32,7 +34,4 @@ export const functions = [
     // Briefing functions
     createBriefingForUser,
     sendBriefingToUser,
-
-    // Payment functions
-    sendPaymentAcknowledgement,
 ];

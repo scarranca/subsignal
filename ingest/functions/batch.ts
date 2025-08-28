@@ -1,27 +1,6 @@
 import { companyQueries } from '@/db/queries/company';
-import { preferenceQueries } from '@/db/queries/preference';
 import { inngest } from '../client';
 import { extractCompanyName, fetchPageTitle, groupUrlsByHostnames } from '@/lib/url';
-import { DEFAULT_PREFERENCES } from '@/constants/preferences';
-import { emailService } from '@/services/email';
-
-export const sendOnboardingEmail = inngest.createFunction(
-    { id: 'send-onboarding-email' },
-    { event: 'app/send.onboarding.email' },
-    async ({ event, step }) => {
-        const { userEmail, userId } = event.data;
-
-        await step.run(`send-onboarding-email-${userId}`, async () => {
-            await emailService.sendOnboardingEmail(userEmail);
-        });
-
-        return {
-            message: `Send onboarding email to ${userEmail}`,
-            userId,
-            userEmail,
-        };
-    },
-);
 
 /**
  * Batch create companies and pages with resilient error handling
@@ -46,14 +25,12 @@ export const batchCreateCompany = inngest.createFunction(
         ],
         retries: 3, // 3 retries for a single user
     },
-    { event: 'onboarding/batch.create.company' },
+    { event: 'batch/company.created' },
     async ({ event, step }) => {
         const { userId, urls } = event.data;
 
         const urlsByHostname = groupUrlsByHostnames(urls);
         console.log('API Handler - Grouped URLs by hostname:', urlsByHostname);
-
-        const newPages: { pageId: string; pageURL: string }[] = [];
 
         // Process all companies in one step (since it's mostly I/O bound external calls)
         const processResults = await step.run('process-all-companies', async () => {
@@ -138,82 +115,11 @@ export const batchCreateCompany = inngest.createFunction(
             return settledResults;
         });
 
-        // Process results (simple data manipulation - no need for steps)
-        const successfulResults = processResults
-            .filter(
-                (result): result is PromiseFulfilledResult<any> => result.status === 'fulfilled',
-            )
-            .map((result) => result.value)
-            .filter((value) => value.success);
-
-        const failedResults = processResults
-            .filter(
-                (result): result is PromiseFulfilledResult<any> => result.status === 'fulfilled',
-            )
-            .map((result) => result.value)
-            .filter((value) => !value.success);
-
-        const unexpectedFailures = processResults
-            .filter((result): result is PromiseRejectedResult => result.status === 'rejected')
-            .map((result) => ({
-                success: false,
-                error: result.reason?.message || 'Unexpected processing error',
-            }));
-
-        const totalProcessed = successfulResults.length;
-        const totalFailed = failedResults.length + unexpectedFailures.length;
-        const totalPagesFailed = [...successfulResults, ...failedResults].reduce(
-            (sum, result) => sum + (result.pageStats?.failed || 0),
-            0,
-        );
-
-        // Collect new page IDs
-        successfulResults.forEach((result) => {
-            if (result.pages?.newPages) {
-                newPages.push(
-                    ...result.pages.newPages.map((page: any) => ({
-                        pageId: page.id,
-                        pageURL: page.url,
-                    })),
-                );
-            }
-        });
-
-        // Get user preferences (simple DB query)
-        let userPreference = null;
-        try {
-            userPreference = await preferenceQueries.getUserPreference(userId);
-        } catch (error) {
-            console.error(`Failed to get user preference for user ${userId}:`, error);
-        }
-
-        // Send snapshot events (this is worth making durable since it's the actual work)
-        if (newPages.length > 0) {
-            const snapshotEvents = newPages.map((page: { pageId: string; pageURL: string }) => ({
-                name: 'snapshot/create.archive.snapshot',
-                data: {
-                    pageId: page.pageId,
-                    userId: userId,
-                    pageProperties: userPreference?.properties || DEFAULT_PREFERENCES.properties,
-                    pageURL: page.pageURL,
-                },
-            }));
-
-            console.log('API Handler - Snapshot events:', snapshotEvents);
-
-            await step.sendEvent('snapshot/create.archive.snapshot', snapshotEvents);
-        }
-
         return {
-            message: `Batch processing completed: ${totalProcessed} companies created successfully, ${totalFailed} failed`,
-            userId,
-            stats: {
-                companiesProcessed: totalProcessed,
-                companiesFailed: totalFailed,
-                totalPagesFailedToFetch: totalPagesFailed,
-            },
-            results: successfulResults,
-            failures: [...failedResults, ...unexpectedFailures],
+            totalProcessed: processResults.length,
+            totalFailed: processResults.filter((result) => result.status === 'rejected').length,
+            totalSuccessful: processResults.filter((result) => result.status === 'fulfilled')
+                .length,
         };
     },
 );

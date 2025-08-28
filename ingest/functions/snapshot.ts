@@ -3,6 +3,7 @@ import { preferenceQueries } from '@/db/queries/preference';
 import { durableBriefingService } from '@/services/briefing/durable';
 import { durableSnapshotService } from '@/services/snapshot/durable';
 import { GetStepTools } from 'inngest';
+import { Frequency } from '@/db/schema/preference';
 
 /**
  * Create an archive snapshot for a page
@@ -11,8 +12,8 @@ import { GetStepTools } from 'inngest';
  * @returns The snapshot ID
  */
 export const createArchiveSnapshot = inngest.createFunction(
-    { id: 'create-archive-snapshot' },
-    { event: 'snapshot/create.archive.snapshot' },
+    { id: 'create-archive-snapshot' }, // A unique identifier for the function. This should not change between deploys.
+    { event: 'snapshot/archive.created' }, // A name for the function. If defined, this will be shown in the UI as a friendly display name instead of the ID. namespace/object.action
     async ({ event, step }) => {
         const { pageId, userId, pageProperties, pageURL } = event.data;
         const snapshot = await durableSnapshotService.createArchiveSnapshotForPage(
@@ -41,7 +42,7 @@ export const createArchiveSnapshot = inngest.createFunction(
  */
 export const createLiveSnapshot = inngest.createFunction(
     {
-        id: 'create-live-snapshot',
+        id: 'create-live-snapshot', // A unique identifier for the function. This should not change between deploys.
         throttle: {
             limit: 30, // 30 requests per minute across ALL requests
             period: '1m', // Per minute
@@ -49,7 +50,7 @@ export const createLiveSnapshot = inngest.createFunction(
             // No key = global throttling across entire service
         },
     },
-    { event: 'snapshot/create.live.snapshot' },
+    { event: 'snapshot/live.created' }, // A name for the function. If defined, this will be shown in the UI as a friendly display name instead of the ID. namespace/object.action
     async ({ event, step }) => {
         const { pageId, userId, pageProperties, pageURL } = event.data;
         const snapshot = await durableSnapshotService.createLiveSnapshotForPage(
@@ -70,6 +71,21 @@ export const createLiveSnapshot = inngest.createFunction(
     },
 );
 
+export const refreshSnapshot3Day = inngest.createFunction(
+    {
+        id: 'refresh-snapshot-3-day',
+        throttle: {
+            limit: 30,
+            period: '1m',
+            burst: 5,
+        },
+    },
+    { cron: '0 0 1,16 * *' },
+    async ({ event, step }) => {
+        return await refreshSnapshotsForFrequency(step, '3_day');
+    },
+);
+
 /**
  * Refresh snapshots for all users with 7 day frequency
  */
@@ -83,6 +99,7 @@ export const refreshSnapshot7Day = inngest.createFunction(
         },
     },
     { cron: '0 0 * * 0' },
+
     async ({ event, step }) => {
         return await refreshSnapshotsForFrequency(step, '7_day');
     },
@@ -92,7 +109,14 @@ export const refreshSnapshot7Day = inngest.createFunction(
  * Refresh snapshots for all users with 15 day frequency
  */
 export const refreshSnapshot15Day = inngest.createFunction(
-    { id: 'refresh-snapshot-15-day' },
+    {
+        id: 'refresh-snapshot-15-day',
+        throttle: {
+            limit: 30,
+            period: '1m',
+            burst: 5,
+        },
+    },
     { cron: '0 0 1,16 * *' },
     async ({ event, step }) => {
         return await refreshSnapshotsForFrequency(step, '15_day');
@@ -103,7 +127,14 @@ export const refreshSnapshot15Day = inngest.createFunction(
  * Refresh snapshots for all users with 1 month frequency
  */
 export const refreshSnapshot1Month = inngest.createFunction(
-    { id: 'refresh-snapshot-1-month' },
+    {
+        id: 'refresh-snapshot-1-month',
+        throttle: {
+            limit: 30,
+            period: '1m',
+            burst: 5,
+        },
+    },
     { cron: '0 0 1 * *' },
     async ({ event, step }) => {
         return await refreshSnapshotsForFrequency(step, '1_month');
@@ -114,7 +145,14 @@ export const refreshSnapshot1Month = inngest.createFunction(
  * Refresh snapshots for all users with 3 month frequency
  */
 export const refreshSnapshot3Month = inngest.createFunction(
-    { id: 'refresh-snapshot-3-month' },
+    {
+        id: 'refresh-snapshot-3-month',
+        throttle: {
+            limit: 30,
+            period: '1m',
+            burst: 5,
+        },
+    },
     { cron: '0 0 1 */3 *' },
     async ({ event, step }) => {
         return await refreshSnapshotsForFrequency(step, '3_month');
@@ -125,7 +163,14 @@ export const refreshSnapshot3Month = inngest.createFunction(
  * Refresh snapshots for all users with 6 month frequency
  */
 export const refreshSnapshot6Month = inngest.createFunction(
-    { id: 'refresh-snapshot-6-month' },
+    {
+        id: 'refresh-snapshot-6-month',
+        throttle: {
+            limit: 30,
+            period: '1m',
+            burst: 5,
+        },
+    },
     { cron: '0 0 1 */6 *' },
     async ({ event, step }) => {
         return await refreshSnapshotsForFrequency(step, '6_month');
@@ -141,7 +186,7 @@ export const refreshSnapshot6Month = inngest.createFunction(
  */
 async function refreshSnapshotsForFrequency(
     step: GetStepTools<typeof inngest>,
-    frequency: '7_day' | '15_day' | '1_month' | '3_month' | '6_month',
+    frequency: Frequency,
     options: {
         includeBriefing?: boolean;
         briefingDelay?: string;

@@ -203,7 +203,7 @@ export class DurableSnapshotService {
 
             for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
                 const batch = batches[batchIndex];
-                await step.sendEvent('snapshot/create.live.snapshot', batch);
+                await step.sendEvent('snapshot/live.created', batch);
             }
 
             successfulUsers++;
