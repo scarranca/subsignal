@@ -6,7 +6,6 @@ import { user } from './auth';
  */
 export const entitlementStatusEnum = pgEnum('entitlement_status', [
     'active', // Entitlements are in full effect
-    'grace', // Entitlements are in effect, but some features are limited
     'inactive', // Entitlements are not in effect
 ]);
 
@@ -33,16 +32,17 @@ export const billing = pgTable(
             .notNull()
             .references(() => user.id, { onDelete: 'cascade' }),
 
-        // Entitlement status - THE source of truth for access
-        status: entitlementStatusEnum('status').notNull().default('active'),
+        // Entitlement info
+        status: entitlementStatusEnum('status').notNull().default('active'), // Current entitlement status
+        currentPlan: planEnum('current_plan'), // Current entitlement plan
 
-        // Current plan
-        currentPlan: planEnum('current_plan'),
+        // Subscription info
+        subscriptionId: text('subscription_id'), // Internal dodopayments subscription id
+        productId: text('product_id'), // Internal dodopayments product id
+        customerId: text('customer_id'), // Internal dodopayments customer id
 
         // Provider info
         provider: providerEnum('provider').notNull().default('dodo'),
-        subscriptionId: text('subscription_id'),
-        customerId: text('customer_id'),
         webhookEvent: text('webhook_event'),
 
         // Timestamps
@@ -77,7 +77,7 @@ export type BillingEntitlement = BillingSelect & {
     pageLimit: number; // Maximum number of pages
     companyLimit: number; // Maximum number of companies
     recordLimit: number; // Maximum number of records
-    refreshLimit: '1_day' | '3_day' | '7_day'; // Highest supported refresh frequency
+    refreshLimit: '3_day' | '7_day'; // Highest supported refresh frequency
     zapierEnabled: boolean; // Whether zapier is enabled
     emailEnabled: boolean; // Whether email is enabled
 };
