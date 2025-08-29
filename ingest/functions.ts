@@ -13,6 +13,15 @@ import {
     refreshSnapshot6Month,
 } from './functions/snapshot';
 import { createBriefingForUser, sendBriefingToUser } from './functions/briefing';
+import { refreshOnboardingSnapshot, sendOnboardingEmail } from './functions/onboarding';
+import {
+    sendPlanChangeAcknowledgementEmail,
+    sendPlanChangeConfirmationEmail,
+    sendPlanDeactivationConfirmationEmail,
+    sendPlanExpiredEmail,
+    sendPlanReactivationTriggerEmail,
+    sendPlanRenewalConfirmationEmail,
+} from './functions/billing';
 
 // Export all functions
 export const functions = [
@@ -34,4 +43,16 @@ export const functions = [
     // Briefing functions
     createBriefingForUser,
     sendBriefingToUser,
+
+    // Onboarding functions
+    sendOnboardingEmail,
+    refreshOnboardingSnapshot,
+
+    // Billing functions
+    sendPlanChangeAcknowledgementEmail,
+    sendPlanChangeConfirmationEmail,
+    sendPlanRenewalConfirmationEmail,
+    sendPlanDeactivationConfirmationEmail,
+    sendPlanReactivationTriggerEmail,
+    sendPlanExpiredEmail,
 ];

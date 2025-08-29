@@ -185,7 +185,7 @@ export class DurableSnapshotService {
 
             // Step 2: Create snapshot events for this user's pages
             const snapshotEvents = userPages.map((pageWithCompany) => ({
-                name: 'snapshot/create.live.snapshot',
+                name: 'snapshot/live.created',
                 data: {
                     pageId: pageWithCompany.page.id,
                     userId: user.userId,

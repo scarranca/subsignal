@@ -1,12 +1,14 @@
 import {
-    getAcknowledgementMessageLines,
-    getAcknowledgementPreviewText,
-    getAcknowledgementSubtitle,
-    getAcknowledgementTitle,
-    getCurrentPeriodEnd,
-    getSubscriptionStartDate,
+    getMessageLines,
+    getPreviewText,
+    getSubtitle,
+    getTitle,
+    getFormattedPlan,
+    getActionButtonText,
+    getActionButtonUrl,
+    EmailScenario,
 } from '@/constants/email';
-import { BillingEntitlementStatus, BillingPlan } from '@/db/schema/billing';
+import { BillingPlan } from '@/db/schema/billing';
 import {
     Html,
     Head,
@@ -17,23 +19,68 @@ import {
     Text,
     Link,
     Hr,
+    Button,
 } from '@react-email/components';
 
 interface AcknowledgementEmailProps {
-    status: BillingEntitlementStatus;
-    currentPlan?: BillingPlan;
+    scenario: EmailScenario;
     subscriptionId?: string | null;
+    // Parameters from your Inngest functions
+    newPlan?: BillingPlan; // plan-change events
+    currentPlan?: BillingPlan; // plan-renewal, active/inactive
+    deactivatedPlan?: BillingPlan; // plan-deactivation
+    onHoldPlan?: BillingPlan; // plan-reactivation
+    expiredPlan?: BillingPlan; // plan-expired
 }
 
 export const AcknowledgementEmail = ({
-    status = 'active',
-    currentPlan = 'solo_plan',
+    scenario,
     subscriptionId,
+    newPlan,
+    currentPlan,
+    deactivatedPlan,
+    onHoldPlan,
+    expiredPlan,
 }: AcknowledgementEmailProps) => {
-    const emailPreviewText = getAcknowledgementPreviewText(status);
-    const emailTitle = getAcknowledgementTitle(status);
-    const emailSubtitle = getAcknowledgementSubtitle(status);
-    const emailMessageLines = getAcknowledgementMessageLines(status, currentPlan);
+    const emailPreviewText = getPreviewText(scenario);
+    const emailTitle = getTitle(scenario);
+    const emailSubtitle = getSubtitle(scenario);
+    const emailMessageLines = getMessageLines(scenario, {
+        newPlan,
+        currentPlan,
+        deactivatedPlan,
+        onHoldPlan,
+        expiredPlan,
+    });
+    const actionButtonText = getActionButtonText(scenario);
+    const actionButtonUrl = getActionButtonUrl(scenario);
+
+    // Determine which plan to show in details
+    const displayPlan = newPlan || currentPlan || deactivatedPlan || onHoldPlan || expiredPlan;
+
+    // Determine status display text
+    const getStatusDisplay = (): string => {
+        switch (scenario) {
+            case 'subscription_active':
+                return 'Active';
+            case 'subscription_inactive':
+                return 'Inactive - Payment Required';
+            case 'plan_change_ack':
+                return 'Plan Change Pending';
+            case 'plan_change_confirmed':
+                return 'Active';
+            case 'plan_renewal_confirmed':
+                return 'Active - Recently Renewed';
+            case 'plan_deactivation':
+                return 'Deactivated';
+            case 'plan_reactivation':
+                return 'Active - Recently Reactivated';
+            case 'plan_expired':
+                return 'Expired';
+            default:
+                return 'Active';
+        }
+    };
 
     return (
         <Html>
@@ -54,22 +101,33 @@ export const AcknowledgementEmail = ({
                         ))}
                     </Section>
 
+                    {/* Action Button */}
+                    {actionButtonText && actionButtonUrl && (
+                        <Section style={buttonSection}>
+                            <Button href={actionButtonUrl} style={button}>
+                                {actionButtonText}
+                            </Button>
+                        </Section>
+                    )}
+
                     <Section style={detailsSection}>
                         <Text style={detailsTitle}>Subscription Details</Text>
                         <table style={table}>
                             <tbody>
                                 <tr>
                                     <td style={cellLabel}>Plan</td>
-                                    <td style={cellValue}>{currentPlan || '—'}</td>
+                                    <td style={cellValue}>{getFormattedPlan(displayPlan)}</td>
                                 </tr>
                                 <tr>
                                     <td style={cellLabel}>Status</td>
-                                    <td style={cellValue}>{status}</td>
+                                    <td style={cellValue}>{getStatusDisplay()}</td>
                                 </tr>
-                                <tr>
-                                    <td style={cellLabel}>Subscription ID</td>
-                                    <td style={cellValue}>{subscriptionId || '—'}</td>
-                                </tr>
+                                {subscriptionId && (
+                                    <tr>
+                                        <td style={cellLabel}>Subscription ID</td>
+                                        <td style={cellValue}>{subscriptionId}</td>
+                                    </tr>
+                                )}
                             </tbody>
                         </table>
                     </Section>
@@ -78,8 +136,8 @@ export const AcknowledgementEmail = ({
 
                     <Section style={supportSection}>
                         <Text style={supportText}>Need help? We're here:</Text>
-                        <Link href="mailto:support@subsignal.app" style={supportLink}>
-                            support@subsignal.app
+                        <Link href="mailto:hey@subsignal.app" style={supportLink}>
+                            hey@subsignal.app
                         </Link>
                     </Section>
 
@@ -90,7 +148,7 @@ export const AcknowledgementEmail = ({
     );
 };
 
-// Styles (unchanged)
+// Styles
 const main = {
     backgroundColor: '#ffffff',
     fontFamily:
@@ -104,7 +162,7 @@ const container = {
 } as React.CSSProperties;
 
 const logoText = {
-    textAlign: 'center',
+    textAlign: 'center' as const,
     fontSize: '24px',
     color: '#000',
     marginBottom: '40px',
@@ -116,7 +174,7 @@ const title = {
     fontWeight: '600',
     color: '#000',
     marginBottom: '8px',
-    textAlign: 'center',
+    textAlign: 'center' as const,
 } as React.CSSProperties;
 
 const subtitle = {
@@ -125,7 +183,7 @@ const subtitle = {
     fontWeight: '400',
     color: '#666',
     marginBottom: '24px',
-    textAlign: 'center',
+    textAlign: 'center' as const,
 } as React.CSSProperties;
 
 const messageSection = {
@@ -137,6 +195,23 @@ const messageText = {
     lineHeight: '1.5',
     color: '#333',
     marginBottom: '16px',
+} as React.CSSProperties;
+
+const buttonSection = {
+    textAlign: 'center' as const,
+    marginBottom: '32px',
+} as React.CSSProperties;
+
+const button = {
+    backgroundColor: '#000',
+    borderRadius: '8px',
+    color: '#fff',
+    fontSize: '16px',
+    fontWeight: '600',
+    textDecoration: 'none',
+    textAlign: 'center' as const,
+    display: 'inline-block',
+    padding: '12px 24px',
 } as React.CSSProperties;
 
 const detailsSection = {
@@ -181,7 +256,7 @@ const divider = {
 } as React.CSSProperties;
 
 const supportSection = {
-    textAlign: 'center',
+    textAlign: 'center' as const,
     marginBottom: '32px',
 } as React.CSSProperties;
 
@@ -200,78 +275,7 @@ const supportLink = {
 const footer = {
     fontSize: '12px',
     color: '#666',
-    textAlign: 'center',
+    textAlign: 'center' as const,
 } as React.CSSProperties;
 
 export default AcknowledgementEmail;
-
-// Preview Component with Test Data for All Statuses
-// const PreviewAcknowledgementEmail = () => {
-//     // Active subscription example
-//     return (
-//         <AcknowledgementEmail
-//             status="active"
-//             currentPlan="solo_plan"
-//             subscriptionId="sub_1QK8xY2eZvKYlo2C3m8Zr9X4"
-//             subscriptionStartedAt={new Date('2024-01-15')}
-//             currentPeriodEnd={new Date('2024-02-15')}
-//         />
-//     );
-
-//     // Failed subscription example (failed activation)
-//     return (
-//         <AcknowledgementEmail
-//             status="failed"
-//             currentPlan="team_plan"
-//             subscriptionId="sub_1QK8xY2eZvKYlo2C3m8Zr9X4"
-//             subscriptionStartedAt={new Date('2024-01-15')}
-//             currentPeriodEnd={new Date('2024-02-15')}
-//         />
-//     );
-
-//     // Renewed subscription example
-//     return (
-//         <AcknowledgementEmail
-//             status="renewed"
-//             currentPlan="enterprise_plan"
-//             subscriptionId="sub_1QK8xY2eZvKYlo2C3m8Zr9X4"
-//             subscriptionStartedAt={new Date('2023-12-01')}
-//             currentPeriodEnd={new Date('2024-02-28')}
-//         />
-//     );
-
-//     // On hold example (failed renewal)
-//     return (
-//         <AcknowledgementEmail
-//             status="on_hold"
-//             currentPlan="solo_plan"
-//             subscriptionId="sub_1QK8xY2eZvKYlo2C3m8Zr9X4"
-//             subscriptionStartedAt={new Date('2023-12-01')}
-//             currentPeriodEnd={new Date('2024-01-28')}
-//         />
-//     );
-
-//     // Cancelled subscription (will not renew)
-//     return (
-//         <AcknowledgementEmail
-//             status="cancelled"
-//             currentPlan="enterprise_plan"
-//             subscriptionId="sub_1QK8xY2eZvKYlo2C3m8Zr9X4"
-//             subscriptionStartedAt={new Date('2023-06-15')}
-//             currentPeriodEnd={new Date('2024-02-10')}
-//         />
-//     );
-
-//     // Expired subscription
-//     return (
-//         <AcknowledgementEmail
-//             status="expired"
-//             currentPlan="team_plan"
-//             subscriptionId="sub_1QK8xY2eZvKYlo2C3m8Zr9X4"
-//             subscriptionStartedAt={new Date('2023-08-20')}
-//             currentPeriodEnd={new Date('2024-01-20')}
-//         />
-//     );
-// };
-
-// export default PreviewAcknowledgementEmail;

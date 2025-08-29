@@ -12,7 +12,6 @@ import {
 } from '@react-email/components';
 import { Frequency } from '@/db/schema/preference';
 
-
 interface Change {
     text: string;
     urls?: string[];

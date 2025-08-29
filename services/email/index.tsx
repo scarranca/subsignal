@@ -1,12 +1,44 @@
 import { OutboundEmailService } from './outbound';
 import { OnboardingEmail } from '@/emails/onboarding';
 import AcknowledgementEmail from '@/emails/payments';
-import {
-    getSubscriptionSubject,
-    getBriefingSubject,
-    getOnboardingSubject,
-} from '@/constants/email';
-import { BillingEntitlementStatus, BillingPlan } from '@/db/schema/billing';
+import { BillingPlan } from '@/db/schema/billing';
+import { getBriefingSubject, getEmailSubject, getOnboardingSubject } from '@/constants/email';
+
+interface PlanChangeAckEmailData {
+    email: string;
+    newPlan: BillingPlan;
+    subscriptionId?: string;
+}
+
+interface PlanChangeConfirmedEmailData {
+    email: string;
+    newPlan: BillingPlan;
+    subscriptionId?: string;
+}
+
+interface PlanRenewalConfirmedEmailData {
+    email: string;
+    currentPlan: BillingPlan;
+    subscriptionId?: string;
+}
+
+interface PlanDeactivationEmailData {
+    email: string;
+    deactivatedPlan: BillingPlan;
+    subscriptionId?: string;
+}
+
+interface PlanReactivationEmailData {
+    email: string;
+    onHoldPlan: BillingPlan;
+    subscriptionId?: string;
+}
+
+interface PlanExpiredEmailData {
+    email: string;
+    expiredPlan: BillingPlan;
+    subscriptionId?: string;
+}
 
 /**
  * Email service
@@ -37,11 +69,11 @@ export class EmailService {
      * @param recipients - The email address of the recipient
      */
     async sendOnboardingEmail(recipients: string[] | string) {
-        await this.outboundEmailService.sendEmail(
-            recipients,
-            getOnboardingSubject(),
-            <OnboardingEmail />,
-        );
+        const subject = getOnboardingSubject();
+
+        const emailComponent = <OnboardingEmail />;
+
+        await this.outboundEmailService.sendEmail(recipients, subject, emailComponent);
     }
 
     /**
@@ -59,25 +91,99 @@ export class EmailService {
     }
 
     /**
-     * Send a subscription email to a user
-     * @param recipients - The email address of the recipient
-     * @param subscription - The subscription to send
+     * Send a plan change acknowledgement email to a user
+     * @param data - The data for the email
      */
-    async sendAcknowledgementEmail(
-        recipients: string[],
-        status: BillingEntitlementStatus,
-        currentPlan: BillingPlan,
-        subscriptionId: string,
-    ) {
-        await this.outboundEmailService.sendEmail(
-            recipients,
-            getSubscriptionSubject(status),
-            <AcknowledgementEmail
-                status={status}
-                currentPlan={currentPlan}
-                subscriptionId={subscriptionId}
-            />,
-        );
+    async sendPlanChangeAcknowledgementEmail(data: PlanChangeAckEmailData): Promise<void> {
+        const subject = getEmailSubject('plan_change_ack');
+
+        const emailComponent = AcknowledgementEmail({
+            scenario: 'plan_change_ack',
+            newPlan: data.newPlan,
+            subscriptionId: data.subscriptionId,
+        });
+
+        await this.outboundEmailService.sendEmail(data.email, subject, emailComponent);
+    }
+
+    /**
+     * Send a plan change confirmation email to a user
+     * @param data - The data for the email
+     */
+    async sendPlanChangeConfirmationEmail(data: PlanChangeConfirmedEmailData): Promise<void> {
+        const subject = getEmailSubject('plan_change_confirmed');
+
+        const emailComponent = AcknowledgementEmail({
+            scenario: 'plan_change_confirmed',
+            newPlan: data.newPlan,
+            subscriptionId: data.subscriptionId,
+        });
+
+        await this.outboundEmailService.sendEmail(data.email, subject, emailComponent);
+    }
+
+    /**
+     * Send a plan renewal confirmation email to a user
+     * @param data - The data for the email
+     */
+    async sendPlanRenewalConfirmationEmail(data: PlanRenewalConfirmedEmailData): Promise<void> {
+        const subject = getEmailSubject('plan_renewal_confirmed');
+
+        const emailComponent = AcknowledgementEmail({
+            scenario: 'plan_renewal_confirmed',
+            currentPlan: data.currentPlan,
+            subscriptionId: data.subscriptionId,
+        });
+
+        await this.outboundEmailService.sendEmail(data.email, subject, emailComponent);
+    }
+
+    /**
+     * Send a plan deactivation confirmation email to a user
+     * @param data - The data for the email
+     */
+    async sendPlanDeactivationConfirmationEmail(data: PlanDeactivationEmailData): Promise<void> {
+        const subject = getEmailSubject('plan_deactivation');
+
+        const emailComponent = AcknowledgementEmail({
+            scenario: 'plan_deactivation',
+            deactivatedPlan: data.deactivatedPlan,
+            subscriptionId: data.subscriptionId,
+        });
+
+        await this.outboundEmailService.sendEmail(data.email, subject, emailComponent);
+    }
+
+    /**
+     * Send a plan reactivation trigger email to a user
+     * @param data - The data for the email
+     */
+    async sendPlanReactivationTriggerEmail(data: PlanReactivationEmailData): Promise<void> {
+        const subject = getEmailSubject('plan_reactivation');
+
+        const emailComponent = AcknowledgementEmail({
+            scenario: 'plan_reactivation',
+            onHoldPlan: data.onHoldPlan,
+            subscriptionId: data.subscriptionId,
+        });
+
+        await this.outboundEmailService.sendEmail(data.email, subject, emailComponent);
+    }
+
+    /**
+     * Send a plan expired email to a user
+     * @param data - The data for the email
+     */
+    async sendPlanExpiredEmail(data: PlanExpiredEmailData): Promise<void> {
+        const subject = getEmailSubject('plan_expired');
+
+        const emailComponent = AcknowledgementEmail({
+            scenario: 'plan_expired',
+            expiredPlan: data.expiredPlan,
+            subscriptionId: data.subscriptionId,
+        });
+
+        await this.outboundEmailService.sendEmail(data.email, subject, emailComponent);
     }
 }
 
