@@ -13,6 +13,8 @@ export async function handlePaymentsWebhook(c: Context) {
 
     const { webhookPayload } = webhookData;
 
+    // console.log('Received webhook payload', webhookPayload);
+
     // Ignore all non-subscription events
     if (!isSubscriptionWebhook(webhookPayload)) {
         return c.json({ success: true, message: 'Ignored non-subscription event' }, 200);

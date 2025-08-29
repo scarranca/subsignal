@@ -28,7 +28,7 @@ export class DurableBriefingService {
 
         // Create briefing events
         const briefingEvents = userData.map((user) => ({
-            name: 'briefing/create.briefing',
+            name: 'briefing/briefing.created',
             data: {
                 userId: user.userId,
                 properties: user.properties,

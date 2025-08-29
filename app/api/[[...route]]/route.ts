@@ -8,7 +8,6 @@ import auth from '../routes/auth';
 import preferences from '../routes/preference';
 import companies from '../routes/company';
 import pages from '../routes/page';
-import snapshots from '../routes/snapshot';
 import payments from '../routes/payments';
 
 /**

@@ -12,11 +12,11 @@ export const batchCreateCompany = inngest.createFunction(
     {
         id: 'batch-create-company',
         priority: { run: '180' },
-        rateLimit: {
-            limit: 3, // 3 requests per 3 hours for a single user
-            period: '3h', // Per 3 hours
-            key: 'event.data.userId', // Throttle per userId
-        },
+        // rateLimit: {
+        //     limit: 3, // 3 requests per 3 hours for a single user
+        //     period: '3h', // Per 3 hours
+        //     key: 'event.data.userId', // Throttle per userId
+        // },
         concurrency: [
             {
                 key: 'event.data.userId',

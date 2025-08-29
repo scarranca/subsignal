@@ -63,7 +63,7 @@ export const createBriefingForUser = inngest.createFunction(
 
         // Step 3: Send briefing events in batches
         const briefingEvents = companies.map((company) => ({
-            name: 'briefing/send.briefing',
+            name: 'briefing/briefing.sent',
             data: {
                 userId,
                 companyId: company.id,

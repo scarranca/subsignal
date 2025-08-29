@@ -115,7 +115,6 @@ export const billingQueries = {
     async deactivateSubscription(
         userId: string,
         data: {
-            productId: string;
             subscriptionId: string;
             customerId: string;
             provider: 'dodo';
@@ -134,7 +133,6 @@ export const billingQueries = {
 
         // Check if the existing record matches the provided data
         const isMatchingRecord =
-            existingRecord.productId === data.productId &&
             existingRecord.customerId === data.customerId &&
             existingRecord.provider === (data.provider || 'dodo') &&
             existingRecord.subscriptionId === data.subscriptionId;

@@ -3,6 +3,7 @@ import { billingQueries } from '@/db/queries/billing';
 import { BillingInsert } from '@/db/schema/billing';
 import { dodopayments } from '@/payments/dodo';
 import { SubscriptionWebhookPayload } from '@/payments/types';
+import { inngest } from '@/ingest/client';
 
 export class BillingService {
     private static instance: BillingService;
@@ -30,19 +31,46 @@ export class BillingService {
             });
 
         if (createdSubscription) {
-            // FTU is activating their subscription
-            // Send onboarding email to the user
-            // Kickoff the gated onboarding event
-            console.log('FTU is activating their subscription, sending onboarding email...');
-            console.log('Kicking off gated onboarding event...');
+            // Send onboarding email to the first time user
+            await inngest.send({
+                name: 'onboarding/email.sent',
+                data: {
+                    userId: subscriptionData.userId,
+                },
+                // Add a unique ID to the event to prevent duplicate events
+                id: `send-onboarding-email-${subscriptionData.userId}`,
+            });
+
+            // Refresh the snapshot for the user's active pages
+            await inngest.send({
+                name: 'onboarding/snapshot.refreshed',
+                data: {
+                    userId: subscriptionData.userId,
+                },
+                id: `refresh-onboarding-snapshot-${subscriptionData.userId}`,
+            });
         } else if (updatedSubscription) {
             // RTU is updating their subscription
             // Send email confirming plan change for the user
-            console.log('RTU is updating their subscription, confirming plan change...');
+            await inngest.send({
+                name: 'billing/plan-change.confirmed',
+                data: {
+                    userId: subscriptionData.userId,
+                    newPlan: subscriptionData.currentPlan,
+                    subscriptionId: subscriptionData.subscriptionId,
+                },
+            });
         } else if (renewedSubscription) {
             // FTU is renewing their subscription
             // Send renewal email to the user
-            console.log('FTU is renewing their subscription, sending renewal email...');
+            await inngest.send({
+                name: 'billing/plan-renewal.confirmed',
+                data: {
+                    userId: subscriptionData.userId,
+                    currentPlan: subscriptionData.currentPlan,
+                    subscriptionId: subscriptionData.subscriptionId,
+                },
+            });
         }
 
         return billingRecord;
@@ -58,7 +86,6 @@ export class BillingService {
         const { deactivated } = await billingQueries.deactivateSubscription(
             subscriptionData.userId,
             {
-                productId: subscriptionData.productId!,
                 subscriptionId: subscriptionData.subscriptionId!,
                 customerId: subscriptionData.customerId!,
                 provider: subscriptionData.provider!,
@@ -73,33 +100,48 @@ export class BillingService {
 
         if (options.reactivation) {
             // Send email notifying the user that their subscription has been put on hold and needs to be reactivated
-            console.log('User subscription has been put on hold, sending email...');
+            await inngest.send({
+                name: 'billing/plan-reactivation.triggered',
+                data: {
+                    userId: subscriptionData.userId,
+                    onHoldPlan: subscriptionData.currentPlan,
+                    subscriptionId: subscriptionData.subscriptionId,
+                },
+            });
         } else {
             // Send email notifying the user that their subscription has been deactivated
-            console.log('User subscription has been deactivated, sending email...');
+            await inngest.send({
+                name: 'billing/plan-deactivation.confirmed',
+                data: {
+                    userId: subscriptionData.userId,
+                    deactivatedPlan: subscriptionData.currentPlan,
+                    subscriptionId: subscriptionData.subscriptionId,
+                },
+            });
         }
     }
 
     async reactivateSubscription(subscriptionData: BillingInsert) {
         // Send an email notifying the user that their subscription has been put on hold and needs to be reactivated
-        const updatedSubscription = await dodopayments.subscriptions.update(
-            subscriptionData.subscriptionId!,
-            {
-                status: 'cancelled',
-                metadata: {
-                    reason: 'reactivation',
-                },
+        await dodopayments.subscriptions.update(subscriptionData.subscriptionId!, {
+            status: 'cancelled',
+            metadata: {
+                reason: 'reactivation',
             },
-        );
+        });
     }
 
     async deferSubscription(subscriptionData: BillingInsert) {
         // Triggered on subscription.plan_changed
         // Notify the user acknowledging that plan change request has been received and would be in effect once the first payment is successful
-        console.log(
-            'User subscription plan change request has been received, sending email...',
-            subscriptionData,
-        );
+        await inngest.send({
+            name: 'billing/plan-change.ack',
+            data: {
+                userId: subscriptionData.userId,
+                newPlan: subscriptionData.currentPlan,
+                subscriptionId: subscriptionData.subscriptionId,
+            },
+        });
     }
 
     async expireSubscription(subscriptionData: BillingInsert) {
@@ -109,7 +151,6 @@ export class BillingService {
         const { deactivated } = await billingQueries.deactivateSubscription(
             subscriptionData.userId,
             {
-                productId: subscriptionData.productId!,
                 subscriptionId: subscriptionData.subscriptionId!,
                 customerId: subscriptionData.customerId!,
                 provider: subscriptionData.provider!,
@@ -119,7 +160,14 @@ export class BillingService {
 
         if (deactivated) {
             // Send email notifying the user that their subscription has been deactivated
-            console.log('User subscription has expired, sending email...', subscriptionData);
+            await inngest.send({
+                name: 'billing/plan-expiry.confirmed',
+                data: {
+                    userId: subscriptionData.userId,
+                    expiredPlan: subscriptionData.currentPlan,
+                    subscriptionId: subscriptionData.subscriptionId,
+                },
+            });
         }
     }
 
