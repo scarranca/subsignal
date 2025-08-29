@@ -64,7 +64,7 @@ export async function handleUpdateExistingSubscription(c: Context) {
 
         await dodopayments.subscriptions.changePlan(subscriptionId, {
             product_id: productId,
-            proration_billing_mode: 'prorated_immediately',
+            proration_billing_mode: 'difference_immediately',
             quantity: 1,
         });
 

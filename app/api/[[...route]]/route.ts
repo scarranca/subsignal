@@ -9,6 +9,7 @@ import preferences from '../routes/preference';
 import companies from '../routes/company';
 import pages from '../routes/page';
 import payments from '../routes/payments';
+import { rateLimit } from '../middleware/ratelimits';
 
 /**
  * Force Node.js runtime to support googleapis and other Node.js modules
@@ -38,6 +39,11 @@ app.use(
         allowHeaders: ['Content-Type', 'Authorization'],
     }),
 );
+
+/**
+ * Apply rate limiting after CORS but before routes
+ */
+app.use('*', rateLimit);
 
 /**
  * Stable Routes (no versioning)
