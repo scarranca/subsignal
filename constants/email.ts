@@ -172,7 +172,7 @@ export const getMessageLines = (
         case 'plan_deactivation':
             return [
                 `Your ${getFormattedPlan(params.deactivatedPlan)} has been deactivated as requested.`,
-                `If you decide to reactivate in the future, just update your payment method and we'll get you back on track. Cheers!`,
+                `If you decide to reactivate in the future, just head over to the dashboard and we'll get you back on track. Cheers!`,
             ];
         case 'plan_reactivation':
             return [
