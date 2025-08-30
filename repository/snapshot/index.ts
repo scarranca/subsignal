@@ -120,7 +120,7 @@ export class SnapshotRepository {
 
     private getSnapshotUrl(snapshotId: number): string {
         const { screenshot } = this.getSnapshotPaths(snapshotId);
-        return `${process.env.SNAPSHOT_R2_BUCKET_BASE}/${screenshot}`;
+        return `${process.env.SNAPSHOT_BUCKET_BASE}/${screenshot}`;
     }
 
     /**
