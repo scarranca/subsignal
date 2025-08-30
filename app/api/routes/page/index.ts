@@ -8,6 +8,7 @@ import {
     handleUpdatePage,
     handleBulkDeletePages,
 } from '@/app/api/handlers/page';
+import { injectLimits, injectUsage } from '@/app/api/middleware/entitlement';
 
 const pages = new Hono();
 
@@ -15,7 +16,7 @@ const pages = new Hono();
  * Apply auth middleware to all page routes
  * Billing is required for all page routes
  */
-pages.use('*', requireAuth, requireBilling);
+pages.use('*', requireAuth, requireBilling, injectLimits, injectUsage);
 
 /**
  * GET /api/pages - Fetch user pages with pagination

@@ -3,6 +3,7 @@ import { preferenceQueries } from '@/db/queries';
 import { updatePreferenceSchema } from '@/schema/api';
 import { z } from 'zod';
 import { getUser } from '@/app/api/middleware/auth';
+import { isBillingEnabled, exceededRefreshLimit } from '../../middleware/entitlement';
 
 /**
  * Handle GET request to fetch user preference
@@ -33,6 +34,29 @@ export async function handleUpsertPreference(c: Context) {
         const body = await c.req.json();
 
         const validatedData = updatePreferenceSchema.parse(body);
+
+        // Check if the user has reached the refresh limit
+        const refreshLimitExceeded = exceededRefreshLimit(c, validatedData.frequency);
+        if (refreshLimitExceeded) {
+            // If billing is enabled, return 403
+            // If billing is disabled, return 201 with 0 processed
+            // This is to prevent holding up the onboarding flow
+            if (isBillingEnabled(c)) {
+                return c.json(
+                    {
+                        error: 'You have reached the minimum refresh limit allowed for your plan',
+                    },
+                    403,
+                );
+            } else {
+                return c.json(
+                    {
+                        error: 'You have reached the minimum refresh limit allowed for your plan',
+                    },
+                    201,
+                );
+            }
+        }
 
         await preferenceQueries.upsertUserPreference(user.id, validatedData);
 

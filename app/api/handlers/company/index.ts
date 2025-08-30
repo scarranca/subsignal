@@ -6,11 +6,21 @@ import {
     paginationSchema,
     batchCreateCompaniesSchema,
 } from '@/schema/api';
-import { fetchPageTitle, generateFallbackTitle, normalizeAndDeduplicateUrls } from '@/lib/url';
+import {
+    fetchPageTitle,
+    generateFallbackTitle,
+    groupUrlsByHostnames,
+    normalizeAndDeduplicateUrls,
+} from '@/lib/url';
 import { z } from 'zod';
 import { inngest } from '@/ingest/client';
 import { DEFAULT_PREFERENCES } from '@/constants/preferences';
 import { getUser } from '@/app/api/middleware/auth';
+import {
+    isBillingEnabled,
+    exceededCompanyLimit,
+    exceededPageLimit,
+} from '../../middleware/entitlement';
 
 /**
  * Handle GET request to fetch user companies with their pages (paginated)
@@ -69,6 +79,28 @@ export async function handleCreateCompany(c: Context) {
         const body = await c.req.json();
 
         const validatedData = createCompanySchema.parse(body);
+
+        // Check if the user has reached the page limit
+        const pageLimitExceeded = exceededPageLimit(c, 1);
+        if (pageLimitExceeded) {
+            return c.json(
+                {
+                    error: 'You have reached the maximum number of pages for your plan, please upgrade to add more pages.',
+                },
+                403,
+            );
+        }
+
+        // Check if the user has reached the company limit
+        const companyLimitExceeded = exceededCompanyLimit(c, 1);
+        if (companyLimitExceeded) {
+            return c.json(
+                {
+                    error: 'You have reached the maximum number of companies for your plan, please upgrade to add more companies.',
+                },
+                403,
+            );
+        }
 
         // Auto-fetch page title from URL if not provided
         let pageTitle = validatedData.page.title;
@@ -201,6 +233,64 @@ export async function handleBatchCreateCompanies(c: Context) {
         console.log(
             `API Handler - Normalized ${validatedData.urls.length} URLs to ${normalizedUrls.length} (removed ${duplicatesRemoved} duplicates)`,
         );
+
+        // Check if the user has reached the page limit
+        const pageLimitExceeded = exceededPageLimit(c, normalizedUrls.length);
+        if (pageLimitExceeded) {
+            // If billing is enabled, return 403
+            // If billing is disabled, return 201 with 0 processed
+            // This is to prevent holding up the onboarding flow
+            // While preventing abuse
+            if (isBillingEnabled(c)) {
+                return c.json(
+                    {
+                        error: 'You have reached the maximum number of pages for your plan, please upgrade to add more pages.',
+                    },
+                    403,
+                );
+            } else {
+                return c.json(
+                    {
+                        success: true,
+                        summary: {
+                            total: validatedData.urls.length,
+                            processed: 0,
+                            duplicatesRemoved,
+                        },
+                    },
+                    201,
+                );
+            }
+        }
+
+        const urlsByHostname = groupUrlsByHostnames(normalizedUrls);
+        const companyLimitExceeded = exceededCompanyLimit(c, urlsByHostname.size);
+        if (companyLimitExceeded) {
+            // If billing is enabled, return 403
+            // If billing is disabled, return 201 with 0 processed
+            // This is to prevent holding up the onboarding flow
+            // While preventing abuse
+            if (isBillingEnabled(c)) {
+                return c.json(
+                    {
+                        error: 'You have reached the maximum number of companies for your plan, please upgrade to add more companies.',
+                    },
+                    403,
+                );
+            } else {
+                return c.json(
+                    {
+                        success: true,
+                        summary: {
+                            total: validatedData.urls.length,
+                            processed: 0,
+                            duplicatesRemoved,
+                        },
+                    },
+                    201,
+                );
+            }
+        }
 
         // Step 2: Send event to ingest to batch create companies
         await inngest.send({

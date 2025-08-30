@@ -11,6 +11,7 @@ import { z } from 'zod';
 import { inngest } from '@/ingest/client';
 import { DEFAULT_PREFERENCES } from '@/constants/preferences';
 import { getUser } from '@/app/api/middleware/auth';
+import { exceededCompanyLimit, exceededPageLimit } from '../../middleware/entitlement';
 
 /**
  * Handle GET request to fetch pages by company with pagination
@@ -97,6 +98,30 @@ export async function handleCreatePage(c: Context) {
         const body = await c.req.json();
 
         const validatedData = createPageSchema.parse(body);
+
+        // Check if the user has reached the page limit
+        const pageLimitExceeded = exceededPageLimit(c, 1);
+        if (pageLimitExceeded) {
+            return c.json(
+                {
+                    error: 'You have reached the maximum number of pages for your plan, please upgrade to add more pages.',
+                },
+                403,
+            );
+        }
+
+        // Check if the user has reached the company limit if the company is new
+        if (!validatedData.company.id) {
+            const companyLimitExceeded = exceededCompanyLimit(c, 1);
+            if (companyLimitExceeded) {
+                return c.json(
+                    {
+                        error: 'You have reached the maximum number of companies for your plan, please upgrade to add more companies.',
+                    },
+                    403,
+                );
+            }
+        }
 
         // Auto-fetch page title from URL if not provided
         let pageTitle = validatedData.page.title;
