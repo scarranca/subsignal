@@ -16,7 +16,7 @@ const subsignalLinks = [
 const legalLinks = [
     { href: '/privacy', label: 'Privacy Policy', isExternal: false },
     { href: '/terms', label: 'Terms of Service', isExternal: false },
-    { href: 'mailto:hey@subsignal.app', label: 'Contact', isExternal: true },
+    { href: 'mailto:nick@subsignal.vc', label: 'Contact', isExternal: true },
 ];
 
 const page = () => {

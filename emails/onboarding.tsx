@@ -91,8 +91,8 @@ export const OnboardingEmail = ({
 
                     <Section style={supportSection}>
                         <Text style={supportText}>Need help? We've got your back:</Text>
-                        <Link href="mailto:hey@subsignal.app" style={supportLink}>
-                            hey@subsignal.app
+                        <Link href="mailto:nick@subsignal.vc" style={supportLink}>
+                            nick@subsignal.vc
                         </Link>
                     </Section>
 

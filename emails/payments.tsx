@@ -136,8 +136,8 @@ export const AcknowledgementEmail = ({
 
                     <Section style={supportSection}>
                         <Text style={supportText}>Need help? We're here:</Text>
-                        <Link href="mailto:hey@subsignal.app" style={supportLink}>
-                            hey@subsignal.app
+                        <Link href="mailto:nick@subsignal.vc" style={supportLink}>
+                            nick@subsignal.vc
                         </Link>
                     </Section>
 

@@ -287,7 +287,7 @@ export function SettingsView() {
                             title="Success Manager"
                             description="Connect with success manager"
                             buttonText="Connect"
-                            onButtonClick={() => window.open('mailto:hey@subsignal.com', '_blank')}
+                            onButtonClick={() => window.open('mailto:nick@subsignal.vc', '_blank')}
                         />
                     </div>
                 </div>
