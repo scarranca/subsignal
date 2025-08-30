@@ -1,5 +1,6 @@
 import { BillingPlan } from '@/db/schema/billing';
 import { Frequency, Properties } from '@/db/schema/preference';
+import { Briefing } from '@/types/briefing';
 
 export interface ApiResponse<T = unknown> {
     data?: T;
@@ -158,4 +159,19 @@ export interface ValidatePaymentStatusResponse {
 
 export interface ValidatePaymentStatusRequest {
     subscription_id: string;
+}
+
+// Briefing-related types
+export interface BriefingWithContent extends Briefing {
+    content: string;
+}
+
+export interface CompanyBriefing {
+    company: Company;
+    briefings: BriefingWithContent[];
+}
+
+export interface BriefingResponse {
+    data: CompanyBriefing[];
+    errors: any[];
 }

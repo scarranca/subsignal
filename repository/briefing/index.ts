@@ -182,7 +182,7 @@ export class BriefingRepository {
 
             // Upload full content to R2 if provided, otherwise use the briefing text
             const contentToStore = briefingContent || briefingText;
-            await this.uploadToR2(path, contentToStore, 'text/plain');
+            await this.uploadToR2(path, contentToStore, 'text/html');
 
             return briefing;
         } catch (error) {

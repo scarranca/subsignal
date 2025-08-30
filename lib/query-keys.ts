@@ -17,4 +17,11 @@ export const queryKeys = {
     pages: (companyId?: string) => (companyId ? ['pages', { companyId }] : ['pages']),
 
     paymentStatus: () => ['paymentStatus'],
+
+    briefings: (params?: {
+        page?: number;
+        pageSize?: number;
+        sortBy?: string;
+        sortOrder?: string;
+    }) => (params ? ['briefings', params] : ['briefings']),
 } as const;

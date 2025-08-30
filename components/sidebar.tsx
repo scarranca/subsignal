@@ -35,6 +35,16 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
                         Companies
                     </button>
                     <button
+                        onClick={() => onViewChange('briefings')}
+                        className={`w-full text-left px-0 py-2 text-sm font-medium transition-colors ${
+                            activeView === 'briefings'
+                                ? 'text-gray-900'
+                                : 'text-gray-500 hover:text-gray-900'
+                        }`}
+                    >
+                        Briefings
+                    </button>
+                    <button
                         onClick={() => onViewChange('settings')}
                         className={`w-full text-left px-0 py-2 text-sm font-medium transition-colors ${
                             activeView === 'settings'

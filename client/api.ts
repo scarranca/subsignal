@@ -6,6 +6,7 @@ import {
     ApiResponse,
     BatchCreateCompaniesRequest,
     BatchCreateCompaniesResponse,
+    BriefingResponse,
     Company,
     CreateCompanyRequest,
     CreateNewSubscriptionRequest,
@@ -400,6 +401,29 @@ class ApiClient {
      */
     async deletePage(pageId: string): Promise<ApiResponse<any>> {
         return this.deletePages({ pageIds: [pageId] });
+    }
+
+    /**
+     * Briefings API methods
+     */
+
+    /**
+     * Get briefings for the authenticated user with pagination
+     * @param params - Optional pagination parameters
+     * @returns Promise with briefings data grouped by company
+     */
+    async getBriefings(params: PaginationParams = {}): Promise<ApiResponse<BriefingResponse>> {
+        const searchParams = new URLSearchParams();
+
+        if (params.page) searchParams.set('page', params.page.toString());
+        if (params.pageSize) searchParams.set('pageSize', params.pageSize.toString());
+        if (params.sortBy) searchParams.set('sortBy', params.sortBy);
+        if (params.sortOrder) searchParams.set('sortOrder', params.sortOrder);
+
+        const queryString = searchParams.toString();
+        const endpoint = queryString ? `/briefings?${queryString}` : '/briefings';
+
+        return this.request<BriefingResponse>(endpoint);
     }
 }
 
