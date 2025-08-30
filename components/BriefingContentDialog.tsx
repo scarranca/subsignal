@@ -24,18 +24,18 @@ interface BriefingContentDialogProps {
     } | null;
 }
 
-export function BriefingContentDialog({ open, onOpenChange, briefing }: BriefingContentDialogProps) {
+export function BriefingContentDialog({
+    open,
+    onOpenChange,
+    briefing,
+}: BriefingContentDialogProps) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-6xl w-[90vw] max-h-[90vh] p-0">
                 <DialogHeader className="p-6 pb-0">
-                    <DialogTitle className="mb-1">
-                        {briefing && briefing.companyName}
-                    </DialogTitle>
+                    <DialogTitle className="mb-1">{briefing && briefing.companyName}</DialogTitle>
                     {briefing && (
-                        <p className="text-sm text-gray-600">
-                            {formatDate(briefing.createdAt)}
-                        </p>
+                        <p className="text-sm text-gray-600">{formatDate(briefing.createdAt)}</p>
                     )}
                 </DialogHeader>
                 <div className="p-6 pt-4 h-[75vh]">

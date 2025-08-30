@@ -10,6 +10,7 @@ import type { CompanyBriefing } from '@/types/api';
 import { queryKeys } from '@/lib/query-keys';
 import PagesViewSkeleton from './skeleton/skeleton-pages-view';
 import { BriefingContentDialog } from './BriefingContentDialog';
+import { showToast } from '@/lib/toast';
 
 interface CompanyWithBriefings extends CompanyBriefing {
     domain: string;
@@ -210,13 +211,17 @@ export function BriefingView() {
                                                     )}
                                                 </Button>
                                             ) : (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="h-8 w-8 p-0"
+                                                <div
+                                                    className="h-8 w-8 p-0 flex items-center justify-center cursor-pointer opacity-50 hover:opacity-70 transition-opacity"
+                                                    onClick={() =>
+                                                        showToast.info(
+                                                            'No briefings yet, stay tuned',
+                                                        )
+                                                    }
+                                                    title="Nothing yet"
                                                 >
-                                                    <ChevronRight className="h-4 w-4" />
-                                                </Button>
+                                                    <ChevronRight className="h-4 w-4 text-gray-400" />
+                                                </div>
                                             )}
                                         </div>
                                     </div>
