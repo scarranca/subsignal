@@ -8,8 +8,6 @@ const formatDate = (date: Date | string) => {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
     });
 };
 
@@ -38,11 +36,11 @@ export function BriefingContentDialog({
                         <p className="text-sm text-gray-600">{formatDate(briefing.createdAt)}</p>
                     )}
                 </DialogHeader>
-                <div className="p-6 pt-4 h-[75vh]">
+                <div className="p-6 pt-2 pb-4 h-[75vh]">
                     {briefing && (
                         <iframe
                             src={briefing.contentUrl}
-                            className="w-full h-full border rounded-md"
+                            className="w-full h-full border-2 rounded-lg"
                             title={`Briefing content for ${briefing.companyName}`}
                             sandbox="allow-same-origin allow-scripts"
                         />

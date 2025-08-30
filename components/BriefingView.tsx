@@ -9,7 +9,7 @@ import { apiClient } from '@/client/api';
 import type { CompanyBriefing } from '@/types/api';
 import { queryKeys } from '@/lib/query-keys';
 import PagesViewSkeleton from './skeleton/skeleton-pages-view';
-import { PagePreviewDialog } from './PagePreviewDialog';
+import { BriefingContentDialog } from './BriefingContentDialog';
 import { showToast } from '@/lib/toast';
 
 interface CompanyWithBriefings extends CompanyBriefing {
@@ -32,8 +32,6 @@ const formatDate = (date: Date | string) => {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
     });
 };
 
@@ -44,9 +42,8 @@ export function BriefingView() {
     const [selectedBriefing, setSelectedBriefing] = useState<{
         id: string;
         companyName: string;
-        url: string;
+        contentUrl: string;
         createdAt: Date | string;
-        type: 'briefing';
     } | null>(null);
 
     // TanStack Query for briefings data
@@ -126,9 +123,8 @@ export function BriefingView() {
         setSelectedBriefing({
             id: String(briefingId),
             companyName,
-            url: contentUrl,
+            contentUrl: contentUrl,
             createdAt,
-            type: 'briefing',
         });
         setDialogOpen(true);
     };
@@ -315,10 +311,10 @@ export function BriefingView() {
                 )}
             </div>
 
-            <PagePreviewDialog
+            <BriefingContentDialog
                 open={dialogOpen}
                 onOpenChange={setDialogOpen}
-                content={selectedBriefing}
+                briefing={selectedBriefing}
             />
         </div>
     );
