@@ -2,6 +2,7 @@ import { and, eq } from 'drizzle-orm';
 import { db } from '../index';
 import { Frequency, preference, Properties } from '../schema/preference';
 import { user } from '../schema/auth';
+import { billing } from '../schema/billing';
 
 export const preferenceQueries = {
     async getUserPreference(userId: string) {
@@ -50,16 +51,35 @@ export const preferenceQueries = {
             .where(eq(preference.userId, userId));
     },
 
-    async getUsersByFrequency(frequency: Frequency) {
-        return await db
-            .select({
-                userId: user.id,
-                properties: preference.properties,
-                frequency: preference.frequency,
-            })
-            .from(preference)
-            .innerJoin(user, eq(preference.userId, user.id))
-            .where(and(eq(preference.frequency, frequency), eq(preference.isActive, true)));
+    async getUsersByFrequency(frequency: Frequency, excludeNonBillingUsers: boolean = true) {
+        if (excludeNonBillingUsers) {
+            return await db
+                .select({
+                    userId: user.id,
+                    properties: preference.properties,
+                    frequency: preference.frequency,
+                })
+                .from(preference)
+                .innerJoin(user, eq(preference.userId, user.id))
+                .innerJoin(billing, eq(user.id, billing.userId))
+                .where(
+                    and(
+                        eq(preference.frequency, frequency),
+                        eq(preference.isActive, true),
+                        eq(billing.status, 'active'),
+                    ),
+                );
+        } else {
+            return await db
+                .select({
+                    userId: user.id,
+                    properties: preference.properties,
+                    frequency: preference.frequency,
+                })
+                .from(preference)
+                .innerJoin(user, eq(preference.userId, user.id))
+                .where(and(eq(preference.frequency, frequency), eq(preference.isActive, true)));
+        }
     },
 
     async getPreferenceFrequencyByUser(userId: string) {
