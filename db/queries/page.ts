@@ -570,4 +570,14 @@ export const pageQueries = {
             })
             .where(eq(page.id, pageId));
     },
+
+    async getPageCountByUser(userId: string) {
+        const [totalResult] = await db
+            .select({ count: count() })
+            .from(page)
+            .innerJoin(company, eq(page.companyId, company.id))
+            .where(and(eq(company.userId, userId), eq(company.isActive, true)));
+
+        return totalResult.count;
+    },
 };

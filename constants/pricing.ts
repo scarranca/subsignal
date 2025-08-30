@@ -92,7 +92,7 @@ export const PRICING_PLANS: PricingPlan[] = [
  * @param plan - The plan to get the page limit for
  * @returns
  */
-function getPageLimit(plan: BillingPlan): number {
+export function getPageLimit(plan: BillingPlan): number {
     switch (plan) {
         case 'solo_plan':
             return 50;
@@ -110,7 +110,7 @@ function getPageLimit(plan: BillingPlan): number {
  * @param plan - The plan to get the company limit for
  * @returns
  */
-function getCompanyLimit(plan: BillingPlan): number {
+export function getCompanyLimit(plan: BillingPlan): number {
     switch (plan) {
         case 'solo_plan':
             return 10;
@@ -146,7 +146,7 @@ function getRecordLimit(plan: BillingPlan): number {
  * @param plan - The plan to get the refresh limit for
  * @returns
  */
-function getRefreshLimit(plan: BillingPlan): '3_day' | '7_day' {
+export function getRefreshLimit(plan: BillingPlan): '3_day' | '7_day' {
     switch (plan) {
         case 'solo_plan':
             return '7_day';

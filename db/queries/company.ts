@@ -540,4 +540,13 @@ export const companyQueries = {
             })
             .where(eq(company.id, companyId));
     },
+
+    async getCompanyCountByUser(userId: string) {
+        const [totalResult] = await db
+            .select({ count: count() })
+            .from(company)
+            .where(and(eq(company.userId, userId), eq(company.isActive, true)));
+
+        return totalResult.count;
+    },
 };

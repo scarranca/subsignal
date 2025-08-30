@@ -61,4 +61,13 @@ export const preferenceQueries = {
             .innerJoin(user, eq(preference.userId, user.id))
             .where(and(eq(preference.frequency, frequency), eq(preference.isActive, true)));
     },
+
+    async getPreferenceFrequencyByUser(userId: string) {
+        return await db
+            .select({
+                frequency: preference.frequency,
+            })
+            .from(preference)
+            .where(and(eq(preference.userId, userId), eq(preference.isActive, true)));
+    },
 };
