@@ -275,27 +275,20 @@ export function SettingsView() {
                     </div>
                 </div>
 
-                {/* Integrations */}
+                {/* Support */}
                 <div>
                     <div className="mb-8">
-                        <h2 className="text-xl font-semibold text-gray-900">Integrations</h2>
+                        <h2 className="text-xl font-semibold text-gray-900">Support</h2>
+                        <p className="text-sm text-gray-600 mt-1">Connect with support team</p>
                     </div>
 
                     <div className="space-y-6">
                         <IntegrationCard
-                            title="Zapier"
-                            description="Connect Subsignal to Zapier"
-                            buttonText="Request"
+                            title="Success Manager"
+                            description="Connect with success manager"
+                            buttonText="Connect"
                             onButtonClick={() =>
-                                toast.success('Rolling out Zapier access. Stay tuned!')
-                            }
-                        />
-                        <IntegrationCard
-                            title="Slack"
-                            description="Connect Subsignal to Slack"
-                            buttonText="Request"
-                            onButtonClick={() =>
-                                toast.success('Rolling out Slack access. Stay tuned!')
+                                window.open('mailto:support@subsignal.com', '_blank')
                             }
                         />
                     </div>

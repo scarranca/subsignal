@@ -6,6 +6,7 @@ import { Sidebar } from '@/components/sidebar';
 import { SettingsView } from '@/components/SettingsView';
 import { PagesView } from '@/components/PagesView';
 import { BriefingView } from '@/components/BriefingView';
+import { IntegrationsView } from '@/components/IntegrationsView';
 import { ChevronDown } from 'lucide-react';
 import { MobileAvatar } from '@/components/avatar';
 import { apiClient } from '@/client/api';
@@ -64,6 +65,8 @@ export default function Dashboard() {
                 return <SettingsView />;
             case 'briefings':
                 return <BriefingView />;
+            case 'integrations':
+                return <IntegrationsView />;
             case 'pages':
                 return <PagesView />;
             default:
@@ -130,6 +133,19 @@ export default function Dashboard() {
                                     }`}
                                 >
                                     Settings
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setActiveView('integrations');
+                                        setDropdownOpen(false);
+                                    }}
+                                    className={`w-full text-left px-4 py-2 text-sm font-medium transition-colors ${
+                                        activeView === 'integrations'
+                                            ? 'text-gray-900 bg-gray-50'
+                                            : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                                    }`}
+                                >
+                                    Integrations
                                 </button>
                             </div>
                         </>
