@@ -442,7 +442,9 @@ class ApiClient {
         pageId: string,
         params: PaginationParams = {},
         content: SnapshotContent = 'url',
-    ): Promise<ApiResponse<ResilientBatchResult<PartialSnapshot> & { total: number; hasMore: boolean }>> {
+    ): Promise<
+        ApiResponse<ResilientBatchResult<PartialSnapshot> & { total: number; hasMore: boolean }>
+    > {
         const searchParams = new URLSearchParams();
 
         if (params.page) searchParams.set('page', params.page.toString());
@@ -454,7 +456,9 @@ class ApiClient {
         const queryString = searchParams.toString();
         const endpoint = `/snapshots/page/${pageId}?${queryString}`;
 
-        return this.request<ResilientBatchResult<PartialSnapshot> & { total: number; hasMore: boolean }>(endpoint);
+        return this.request<
+            ResilientBatchResult<PartialSnapshot> & { total: number; hasMore: boolean }
+        >(endpoint);
     }
 }
 

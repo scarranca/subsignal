@@ -3,10 +3,8 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Loader2, ExternalLink, ChevronDown, ChevronRight } from 'lucide-react';
 import { apiClient } from '@/client/api';
-import { queryKeys } from '@/lib/query-keys';
 
 const formatDate = (date: Date | string) => {
     const dateObj = date instanceof Date ? date : new Date(date);
@@ -32,6 +30,7 @@ interface PagePreviewDialogProps {
 
 export function PagePreviewDialog({ open, onOpenChange, content }: PagePreviewDialogProps) {
     const [expandedSnapshots, setExpandedSnapshots] = useState<Set<number>>(new Set());
+    const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
     const toggleSnapshotExpanded = (snapshotId: number) => {
         setExpandedSnapshots((prev) => {
@@ -40,6 +39,18 @@ export function PagePreviewDialog({ open, onOpenChange, content }: PagePreviewDi
                 newSet.delete(snapshotId);
             } else {
                 newSet.add(snapshotId);
+            }
+            return newSet;
+        });
+    };
+
+    const toggleCategoryExpanded = (categoryId: string) => {
+        setExpandedCategories((prev) => {
+            const newSet = new Set(prev);
+            if (newSet.has(categoryId)) {
+                newSet.delete(categoryId);
+            } else {
+                newSet.add(categoryId);
             }
             return newSet;
         });
@@ -157,9 +168,148 @@ export function PagePreviewDialog({ open, onOpenChange, content }: PagePreviewDi
 
                                                     {isExpanded && hasChanges && (
                                                         <div className="bg-gray-50 p-3 rounded-md border">
-                                                            <pre className="text-xs font-mono text-gray-700 whitespace-pre-wrap">
-                                                                {snapshot.diff}
-                                                            </pre>
+                                                            {(() => {
+                                                                try {
+                                                                    const parsedDiff = JSON.parse(
+                                                                        snapshot.diff,
+                                                                    );
+                                                                    if (
+                                                                        parsedDiff &&
+                                                                        typeof parsedDiff ===
+                                                                            'object'
+                                                                    ) {
+                                                                        return (
+                                                                            <div className="space-y-2">
+                                                                                {Object.entries(
+                                                                                    parsedDiff,
+                                                                                ).map(
+                                                                                    ([
+                                                                                        key,
+                                                                                        changes,
+                                                                                    ]) => {
+                                                                                        const categoryId = `${snapshot.id}-${key}`;
+                                                                                        const isCategoryExpanded =
+                                                                                            expandedCategories.has(
+                                                                                                categoryId,
+                                                                                            );
+                                                                                        const changeCount =
+                                                                                            Array.isArray(
+                                                                                                changes,
+                                                                                            )
+                                                                                                ? changes.length
+                                                                                                : 1;
+
+                                                                                        return (
+                                                                                            <div
+                                                                                                key={
+                                                                                                    key
+                                                                                                }
+                                                                                            >
+                                                                                                <button
+                                                                                                    onClick={() =>
+                                                                                                        toggleCategoryExpanded(
+                                                                                                            categoryId,
+                                                                                                        )
+                                                                                                    }
+                                                                                                    className="flex items-center gap-2 text-sm font-semibold text-gray-800 hover:text-gray-900 w-full text-left"
+                                                                                                >
+                                                                                                    {isCategoryExpanded ? (
+                                                                                                        <ChevronDown className="w-3 h-3 flex-shrink-0" />
+                                                                                                    ) : (
+                                                                                                        <ChevronRight className="w-3 h-3 flex-shrink-0" />
+                                                                                                    )}
+                                                                                                    <span className="capitalize">
+                                                                                                        {key
+                                                                                                            .replace(
+                                                                                                                /([A-Z])/g,
+                                                                                                                ' $1',
+                                                                                                            )
+                                                                                                            .replace(
+                                                                                                                /^./,
+                                                                                                                (
+                                                                                                                    str,
+                                                                                                                ) =>
+                                                                                                                    str.toUpperCase(),
+                                                                                                            )}
+                                                                                                    </span>
+                                                                                                    <span className="text-xs text-gray-500 font-normal">
+                                                                                                        (
+                                                                                                        {
+                                                                                                            changeCount
+                                                                                                        }{' '}
+                                                                                                        change
+                                                                                                        {changeCount !==
+                                                                                                        1
+                                                                                                            ? 's'
+                                                                                                            : ''}
+
+                                                                                                        )
+                                                                                                    </span>
+                                                                                                </button>
+
+                                                                                                {isCategoryExpanded && (
+                                                                                                    <ul className="space-y-1 ml-5 mt-2">
+                                                                                                        {Array.isArray(
+                                                                                                            changes,
+                                                                                                        ) ? (
+                                                                                                            changes.map(
+                                                                                                                (
+                                                                                                                    change,
+                                                                                                                    index,
+                                                                                                                ) => (
+                                                                                                                    <li
+                                                                                                                        key={
+                                                                                                                            index
+                                                                                                                        }
+                                                                                                                        className="text-xs text-gray-600 flex items-start"
+                                                                                                                    >
+                                                                                                                        <span className="text-gray-400 mr-2 flex-shrink-0">
+                                                                                                                            •
+                                                                                                                        </span>
+                                                                                                                        <span>
+                                                                                                                            {String(
+                                                                                                                                change,
+                                                                                                                            ).replace(
+                                                                                                                                /^"|"$/g,
+                                                                                                                                '',
+                                                                                                                            )}
+                                                                                                                        </span>
+                                                                                                                    </li>
+                                                                                                                ),
+                                                                                                            )
+                                                                                                        ) : (
+                                                                                                            <li className="text-xs text-gray-600 flex items-start">
+                                                                                                                <span className="text-gray-400 mr-2 flex-shrink-0">
+                                                                                                                    •
+                                                                                                                </span>
+                                                                                                                <span>
+                                                                                                                    {String(
+                                                                                                                        changes,
+                                                                                                                    ).replace(
+                                                                                                                        /^"|"$/g,
+                                                                                                                        '',
+                                                                                                                    )}
+                                                                                                                </span>
+                                                                                                            </li>
+                                                                                                        )}
+                                                                                                    </ul>
+                                                                                                )}
+                                                                                            </div>
+                                                                                        );
+                                                                                    },
+                                                                                )}
+                                                                            </div>
+                                                                        );
+                                                                    }
+                                                                } catch {
+                                                                    // Fallback to raw display if JSON parsing fails
+                                                                }
+                                                                return (
+                                                                    <pre className="text-xs font-mono text-gray-700 whitespace-pre-wrap overflow-x-auto">
+                                                                        {snapshot.diff}
+                                                                    </pre>
+                                                                );
+                                                            })()}
                                                         </div>
                                                     )}
                                                 </div>
@@ -173,7 +323,7 @@ export function PagePreviewDialog({ open, onOpenChange, content }: PagePreviewDi
                                 <div className="text-center py-8">
                                     <p className="text-gray-500">No snapshots available yet</p>
                                     <p className="text-xs text-gray-400 mt-1">
-                                        Snapshots will appear here once they're available
+                                        Snapshots will appear here once they&apos;re available
                                     </p>
                                 </div>
                             )}

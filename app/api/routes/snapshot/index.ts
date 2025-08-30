@@ -1,12 +1,7 @@
 import { Hono } from 'hono';
 import { requireAuth } from '@/app/api/middleware/auth';
 import { requireBilling } from '@/app/api/middleware/billing';
-import {
-    handleCreateSnapshot,
-    handleGetLatestSnapshotForPage,
-    handleGetLatestSnapshotsForCompany,
-    handleListSnapshotsForPage,
-} from '@/app/api/handlers/snapshot';
+import { handleListSnapshotsForPage } from '@/app/api/handlers/snapshot';
 
 const snapshots = new Hono();
 

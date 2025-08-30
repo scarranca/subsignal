@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { inngest } from '@/ingest/client';
 import { pageQueries, preferenceQueries } from '@/db/queries';
 import { getUser } from '@/app/api/middleware/auth';
+import * as yaml from 'js-yaml';
 
 /**
  * Handle POST request to create a snapshot for a page
@@ -156,6 +157,25 @@ export async function handleListSnapshotsForPage(c: Context) {
             pagination,
             content,
         );
+
+        // Convert YAML diffs to JSON for prettier display
+        if (result.data && Array.isArray(result.data)) {
+            result.data = result.data.map((snapshot) => {
+                if (snapshot.diff && typeof snapshot.diff === 'string') {
+                    try {
+                        // Parse YAML and convert to pretty JSON string
+                        const parsedYaml = yaml.load(snapshot.diff);
+                        if (parsedYaml && typeof parsedYaml === 'object') {
+                            snapshot.diff = JSON.stringify(parsedYaml, null, 2);
+                        }
+                    } catch (error) {
+                        // If YAML parsing fails, keep the original diff
+                        console.warn('Failed to parse YAML diff:', error);
+                    }
+                }
+                return snapshot;
+            });
+        }
 
         return c.json(result);
     } catch (error) {

@@ -524,7 +524,9 @@ export function PagesView() {
                                                         />
                                                         <FileText className="w-4 h-4 text-gray-400 flex-shrink-0" />
                                                         <div
-                                                            onClick={() => openPageContent(page, company.name)}
+                                                            onClick={() =>
+                                                                openPageContent(page, company.name)
+                                                            }
                                                             className="min-w-0 flex-1 hover:text-blue-600 transition-colors cursor-pointer"
                                                         >
                                                             <div className="text-sm font-medium text-gray-900 truncate">

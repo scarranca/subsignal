@@ -123,12 +123,12 @@ export function BriefingView() {
         contentUrl: string,
         createdAt: Date | string,
     ) => {
-        setSelectedBriefing({ 
-            id: String(briefingId), 
-            companyName, 
-            url: contentUrl, 
+        setSelectedBriefing({
+            id: String(briefingId),
+            companyName,
+            url: contentUrl,
             createdAt,
-            type: 'briefing'
+            type: 'briefing',
         });
         setDialogOpen(true);
     };
