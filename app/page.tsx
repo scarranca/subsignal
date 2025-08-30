@@ -3,6 +3,7 @@ import Hero from '@/components/Hero';
 import Integrations from '@/components/Integrations';
 import Pricing from '@/components/Pricing';
 import Footer from '@/components/Footer';
+import Features from '@/components/Features';
 
 export default function Page() {
     return (
@@ -10,6 +11,7 @@ export default function Page() {
             <Navigation />
             <Hero />
             <Integrations />
+            <Features />
             <Pricing />
             <Footer />
         </div>
