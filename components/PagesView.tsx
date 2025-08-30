@@ -37,6 +37,7 @@ import { normalizeUrl, isValidUrl } from '@/lib/url';
 import { toast } from 'sonner';
 import { queryKeys } from '@/lib/query-keys';
 import PagesViewSkeleton from './skeleton/skeleton-pages-view';
+import { PagePreviewDialog } from './PagePreviewDialog';
 
 interface Company extends Omit<ApiCompany, 'pages'> {
     domain: string;
@@ -123,6 +124,14 @@ export function PagesView() {
     const [companyUrlError, setCompanyUrlError] = useState<string>('');
     const [isSubmittingPage, setIsSubmittingPage] = useState(false);
     const [isSubmittingFirstPage, setIsSubmittingFirstPage] = useState(false);
+    const [showPageDialog, setShowPageDialog] = useState(false);
+    const [selectedPage, setSelectedPage] = useState<{
+        id: string;
+        title: string;
+        url: string;
+        companyName: string;
+        type: 'page';
+    } | null>(null);
 
     // Mutations
     const deletePagesMutation = useMutation({
@@ -182,7 +191,7 @@ export function PagesView() {
             setSelectedPages(new Set());
             toast.success('Pages deleted successfully');
         },
-        onError: (error: Error, variables, context) => {
+        onError: (error: Error, _variables, context) => {
             // If the mutation fails, use the context returned from onMutate to roll back
             if (context?.previousCompanies) {
                 queryClient.setQueryData(
@@ -357,6 +366,17 @@ export function PagesView() {
         setExpandedCompanies(new Set());
     };
 
+    const openPageContent = (page: ApiPage, companyName: string) => {
+        setSelectedPage({
+            id: page.id,
+            title: page.title,
+            url: page.url,
+            companyName,
+            type: 'page',
+        });
+        setShowPageDialog(true);
+    };
+
     if (loading) {
         return <PagesViewSkeleton />;
     }
@@ -503,10 +523,8 @@ export function PagesView() {
                                                             }`}
                                                         />
                                                         <FileText className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                                                        <a
-                                                            href={page.url}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
+                                                        <div
+                                                            onClick={() => openPageContent(page, company.name)}
                                                             className="min-w-0 flex-1 hover:text-blue-600 transition-colors cursor-pointer"
                                                         >
                                                             <div className="text-sm font-medium text-gray-900 truncate">
@@ -516,7 +534,7 @@ export function PagesView() {
                                                                 {page.url}
                                                                 <ArrowUpRight className="w-3 h-3 text-gray-400 flex-shrink-0" />
                                                             </div>
-                                                        </a>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ))}
@@ -834,6 +852,12 @@ export function PagesView() {
                         </div>
                     </DialogContent>
                 </Dialog>
+
+                <PagePreviewDialog
+                    open={showPageDialog}
+                    onOpenChange={setShowPageDialog}
+                    content={selectedPage}
+                />
             </div>
         </div>
     );

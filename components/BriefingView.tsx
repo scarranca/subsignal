@@ -9,7 +9,7 @@ import { apiClient } from '@/client/api';
 import type { CompanyBriefing } from '@/types/api';
 import { queryKeys } from '@/lib/query-keys';
 import PagesViewSkeleton from './skeleton/skeleton-pages-view';
-import { BriefingContentDialog } from './BriefingContentDialog';
+import { PagePreviewDialog } from './PagePreviewDialog';
 import { showToast } from '@/lib/toast';
 
 interface CompanyWithBriefings extends CompanyBriefing {
@@ -44,8 +44,9 @@ export function BriefingView() {
     const [selectedBriefing, setSelectedBriefing] = useState<{
         id: string;
         companyName: string;
-        contentUrl: string;
+        url: string;
         createdAt: Date | string;
+        type: 'briefing';
     } | null>(null);
 
     // TanStack Query for briefings data
@@ -122,7 +123,13 @@ export function BriefingView() {
         contentUrl: string,
         createdAt: Date | string,
     ) => {
-        setSelectedBriefing({ id: String(briefingId), companyName, contentUrl, createdAt });
+        setSelectedBriefing({ 
+            id: String(briefingId), 
+            companyName, 
+            url: contentUrl, 
+            createdAt,
+            type: 'briefing'
+        });
         setDialogOpen(true);
     };
 
@@ -308,10 +315,10 @@ export function BriefingView() {
                 )}
             </div>
 
-            <BriefingContentDialog
+            <PagePreviewDialog
                 open={dialogOpen}
                 onOpenChange={setDialogOpen}
-                briefing={selectedBriefing}
+                content={selectedBriefing}
             />
         </div>
     );

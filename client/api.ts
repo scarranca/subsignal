@@ -26,6 +26,7 @@ import {
     ValidatePaymentStatusRequest,
     ValidatePaymentStatusResponse,
 } from '@/types/api';
+import { ResilientBatchResult, PartialSnapshot, SnapshotContent } from '@/types/snapshot';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api/v1';
 
@@ -424,6 +425,36 @@ class ApiClient {
         const endpoint = queryString ? `/briefings?${queryString}` : '/briefings';
 
         return this.request<BriefingResponse>(endpoint);
+    }
+
+    /**
+     * Snapshots API methods
+     */
+
+    /**
+     * List snapshots for a page with pagination
+     * @param pageId - The page ID to list snapshots for
+     * @param params - Optional pagination parameters
+     * @param content - Content type to retrieve (default: 'url')
+     * @returns Promise with paginated snapshots data
+     */
+    async listSnapshotsForPage(
+        pageId: string,
+        params: PaginationParams = {},
+        content: SnapshotContent = 'url',
+    ): Promise<ApiResponse<ResilientBatchResult<PartialSnapshot> & { total: number; hasMore: boolean }>> {
+        const searchParams = new URLSearchParams();
+
+        if (params.page) searchParams.set('page', params.page.toString());
+        if (params.pageSize) searchParams.set('pageSize', params.pageSize.toString());
+        if (params.sortBy) searchParams.set('sortBy', params.sortBy);
+        if (params.sortOrder) searchParams.set('sortOrder', params.sortOrder);
+        searchParams.set('content', content);
+
+        const queryString = searchParams.toString();
+        const endpoint = `/snapshots/page/${pageId}?${queryString}`;
+
+        return this.request<ResilientBatchResult<PartialSnapshot> & { total: number; hasMore: boolean }>(endpoint);
     }
 }
 

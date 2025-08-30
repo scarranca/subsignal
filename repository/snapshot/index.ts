@@ -118,12 +118,17 @@ export class SnapshotRepository {
         }
     }
 
+    private getSnapshotUrl(snapshotId: number): string {
+        const { screenshot } = this.getSnapshotPaths(snapshotId);
+        return `${process.env.SNAPSHOT_R2_BUCKET_BASE}/${screenshot}`;
+    }
+
     /**
      * Process a single snapshot and collect any errors
      */
     private async processSnapshotWithErrors(
         snapshot: Snapshot,
-        content: 'html' | 'screenshot' | 'all',
+        content: 'html' | 'screenshot' | 'url' | 'all',
     ): Promise<{
         snapshot: PartialSnapshot;
         errors: SnapshotError[];
@@ -154,11 +159,15 @@ export class SnapshotRepository {
                     error,
                 });
             }
+        } else if (content === 'url') {
+            const url = this.getSnapshotUrl(snapshot.id);
+            processedSnapshot.url = url;
         } else if (content === 'all') {
             // Process both HTML and screenshot
             const [htmlResult, screenshotResult] = await Promise.allSettled([
                 this.getSnapshotContentSafe(snapshot.id, 'html'),
                 this.getSnapshotContentSafe(snapshot.id, 'screenshot'),
+                this.getSnapshotUrl(snapshot.id),
             ]);
 
             // Handle HTML result
@@ -317,7 +326,7 @@ export class SnapshotRepository {
     async listSnapshotsForPage(
         pageId: string,
         pageURL: string,
-        content: 'html' | 'screenshot' | 'diff' | 'all' = 'all',
+        content: 'html' | 'screenshot' | 'diff' | 'url' | 'all' = 'all',
         options: PaginationOptions = {},
     ): Promise<
         ResilientBatchResult<PartialSnapshot> & {
@@ -442,7 +451,7 @@ export class SnapshotRepository {
      */
     async getLastSnapshotsForCompany(
         companyId: string,
-        content: 'html' | 'screenshot' | 'diff' | 'all' = 'all',
+        content: 'html' | 'screenshot' | 'diff' | 'url' | 'all' = 'all',
     ): Promise<ResilientBatchResult<PartialSnapshot>> {
         const snapshots = await snapshotQueries.getLastSnapshotsForCompany(companyId);
 

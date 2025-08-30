@@ -13,7 +13,7 @@ export const createSnapshotSchema = z.object({
  * Schema for fetching snapshots with content filter
  */
 export const fetchSnapshotQuerySchema = z.object({
-    content: z.enum(['html', 'screenshot', 'diff', 'all']).default('diff'),
+    content: z.enum(['html', 'screenshot', 'diff', 'url', 'all']).default('diff'),
 });
 
 /**
