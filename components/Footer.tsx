@@ -11,7 +11,7 @@ export default function Footer() {
                         <ul className="space-y-3">
                             <li>
                                 <Link
-                                    href="/#deal-intelligence"
+                                    href="/get-started"
                                     className="text-sm text-zinc-400 hover:text-white transition-colors"
                                 >
                                     Deal Intelligence
@@ -19,7 +19,7 @@ export default function Footer() {
                             </li>
                             <li>
                                 <Link
-                                    href="/#relationship-intelligence"
+                                    href="/get-started"
                                     className="text-sm text-zinc-400 hover:text-white transition-colors"
                                 >
                                     Relationship Intelligence
@@ -27,7 +27,7 @@ export default function Footer() {
                             </li>
                             <li>
                                 <Link
-                                    href="/#market-intelligence"
+                                    href="/get-started"
                                     className="text-sm text-zinc-400 hover:text-white transition-colors"
                                 >
                                     Market Intelligence
@@ -35,7 +35,7 @@ export default function Footer() {
                             </li>
                             <li>
                                 <Link
-                                    href="/#competitive-intelligence"
+                                    href="/get-started"
                                     className="text-sm text-zinc-400 hover:text-white transition-colors"
                                 >
                                     Competitive Intelligence
