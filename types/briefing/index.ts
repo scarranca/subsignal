@@ -16,7 +16,7 @@ export type BriefingWithContent = Briefing & {
  * @example 'text' - The text content of the briefing
  * @example 'all' - All content including metadata
  */
-export type BriefingContent = 'yaml' | 'html' | 'all';
+export type BriefingContent = 'yaml' | 'html' | 'url' | 'all';
 
 /**
  * The error type for a briefing

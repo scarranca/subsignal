@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Sidebar } from '@/components/sidebar';
-import { SettingsView } from '@/components/settings-view';
-import { PagesView } from '@/components/pages-view';
+import { SettingsView } from '@/components/SettingsView';
+import { PagesView } from '@/components/PagesView';
 import { ChevronDown } from 'lucide-react';
 import { MobileAvatar } from '@/components/avatar';
 import { apiClient } from '@/client/api';

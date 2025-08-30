@@ -18,9 +18,11 @@ export const briefingQueries = {
         return newBriefing;
     },
 
-    async listBriefings(
+    async getBriefings(
+        companyIds: string[],
         options: PaginationOptions = {},
-    ): Promise<PaginatedResult<typeof briefing.$inferSelect>> {
+    ): Promise<{ data: (typeof briefing.$inferSelect)[] }> {
+        // For each company get the briefings, pagination is applied at each company level not to the overall briefings
         const {
             page: currentPage = 1,
             pageSize = 10,
@@ -28,31 +30,44 @@ export const briefingQueries = {
             sortOrder = 'desc',
         } = options;
 
+        if (companyIds.length === 0) {
+            return {
+                data: [],
+            };
+        }
+
         const offset = (currentPage - 1) * pageSize;
         const orderByColumn = sortBy === 'updatedAt' ? briefing.updatedAt : briefing.createdAt;
         const orderDirection = sortOrder === 'asc' ? asc : desc;
 
-        const [{ count: totalItems }] = await db.select({ count: count() }).from(briefing);
+        // Get briefings for each company with per-company pagination
+        const briefingPromises = companyIds.map(async (companyId) => {
+            return await db
+                .select()
+                .from(briefing)
+                .where(eq(briefing.companyId, companyId))
+                .orderBy(orderDirection(orderByColumn))
+                .limit(pageSize)
+                .offset(offset);
+        });
 
-        const totalPages = Math.ceil(totalItems / pageSize);
+        const briefingResults = await Promise.all(briefingPromises);
+        const allBriefings = briefingResults.flat();
 
-        const briefings = await db
-            .select()
-            .from(briefing)
-            .orderBy(orderDirection(orderByColumn))
-            .limit(pageSize)
-            .offset(offset);
+        // Sort the combined results
+        allBriefings.sort((a, b) => {
+            const aValue = sortBy === 'updatedAt' ? a.updatedAt : a.createdAt;
+            const bValue = sortBy === 'updatedAt' ? b.updatedAt : b.createdAt;
+
+            if (sortOrder === 'asc') {
+                return new Date(aValue).getTime() - new Date(bValue).getTime();
+            } else {
+                return new Date(bValue).getTime() - new Date(aValue).getTime();
+            }
+        });
 
         return {
-            data: briefings,
-            pagination: {
-                page: currentPage,
-                pageSize,
-                totalItems,
-                totalPages,
-                hasNext: currentPage < totalPages,
-                hasPrevious: currentPage > 1,
-            },
+            data: allBriefings,
         };
     },
 

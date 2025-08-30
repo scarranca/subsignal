@@ -10,6 +10,7 @@ export const REFRESH_USAGE_CONTEXT_KEY = 'refresh_usage';
 export const PAGE_LIMIT_CONTEXT_KEY = 'page_limit';
 export const COMPANY_LIMIT_CONTEXT_KEY = 'company_limit';
 export const REFRESH_LIMIT_CONTEXT_KEY = 'refresh_limit';
+export const BRIEFING_LIMIT_CONTEXT_KEY = 'briefing_limit';
 
 // User has billing record
 export const BILLING_ENABLED_CONTEXT_KEY = 'billing_enabled';

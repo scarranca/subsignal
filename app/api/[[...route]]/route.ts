@@ -9,6 +9,7 @@ import preferences from '../routes/preference';
 import companies from '../routes/company';
 import pages from '../routes/page';
 import payments from '../routes/payments';
+import briefings from '../routes/briefing';
 import { rateLimit } from '../middleware/ratelimits';
 
 /**
@@ -67,6 +68,7 @@ v1.route('/preferences', preferences);
 v1.route('/companies', companies);
 v1.route('/pages', pages);
 v1.route('/payments', payments);
+v1.route('/briefings', briefings);
 // Add these once we have the archive feature in UI
 // v1.route('/snapshots', snapshots);
 // v1.route('/reports', reports);

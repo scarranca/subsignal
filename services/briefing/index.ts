@@ -2,6 +2,7 @@ import {
     Briefing,
     BriefingContent,
     BriefingEmailProps,
+    BriefingError,
     BriefingWithContent,
 } from '@/types/briefing';
 import { briefingRepository } from '@/repository/briefing';
@@ -12,6 +13,9 @@ import { snapshot } from '@/db/schema/snapshot';
 import { reportService } from '@/services/report';
 import * as yaml from 'js-yaml';
 import { Frequency, Properties } from '@/db/schema/preference';
+import { PaginationOptions } from '@/db/queries/types';
+import { companyQueries } from '@/db/queries/company';
+import { company } from '@/db/schema/company';
 
 export class BriefingService {
     private static instance: BriefingService;
@@ -274,6 +278,44 @@ export class BriefingService {
     ): Promise<BriefingWithContent | Briefing | null> {
         console.log('Getting latest briefing for company', companyId);
         return await briefingRepository.getLastBriefingForCompany(companyId, content);
+    }
+
+    async getBriefingsForUser(
+        userId: string, // This is the user ID
+        contentType: BriefingContent = 'url', // This is the content type of the briefing
+        companyListingOptions: PaginationOptions = {}, // These options would be used to paginate the companies
+        briefingListingOptions: PaginationOptions = {}, // These options would be used to paginate the briefings
+    ): Promise<{
+        data: { company: typeof company.$inferSelect; briefings: Briefing[] }[];
+        errors: BriefingError[];
+    }> {
+        // List the user's companies
+        const companies = await companyQueries.getActiveCompaniesByUser(
+            userId,
+            companyListingOptions,
+        );
+        if (companies.data.length === 0) {
+            return {
+                data: [],
+                errors: [],
+            };
+        }
+
+        // Fetch briefings for the companies
+        const briefings = await briefingRepository.listBriefings(
+            companies.data.map((company) => company.id),
+            contentType,
+            briefingListingOptions,
+        );
+
+        // Return the briefings
+        return {
+            data: companies.data.map((company) => ({
+                company,
+                briefings: briefings.data.filter((briefing) => briefing.companyId === company.id),
+            })),
+            errors: briefings.errors,
+        };
     }
 }
 

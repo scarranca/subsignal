@@ -76,7 +76,7 @@ export type BillingEntitlement = BillingSelect & {
     currentPlan: BillingPlan; // Current plan
     pageLimit: number; // Maximum number of pages
     companyLimit: number; // Maximum number of companies
-    recordLimit: number; // Maximum number of records
+    briefingLimit: number; // Maximum number of briefings
     refreshLimit: '3_day' | '7_day'; // Highest supported refresh frequency
     zapierEnabled: boolean; // Whether zapier is enabled
     emailEnabled: boolean; // Whether email is enabled

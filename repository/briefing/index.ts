@@ -114,6 +114,16 @@ export class BriefingRepository {
     }
 
     /**
+     * Get the URL for a briefing
+     * @param briefingId - The ID of the briefing to get the URL for
+     * @returns The URL for the briefing
+     */
+    private getBriefingUrl(briefingId: number): string {
+        const path = this.getBriefingPath(briefingId);
+        return `${process.env.BRIEFING_BUCKET_BASE}/${path}`;
+    }
+
+    /**
      * Process a single briefing and collect any errors
      */
     private async processBriefingWithErrors(
@@ -138,6 +148,9 @@ export class BriefingRepository {
                     error,
                 });
             }
+        } else if (content === 'url') {
+            const url = this.getBriefingUrl(briefing.id);
+            processedBriefing.content = url;
         }
 
         // Add content errors summary to the briefing for easy access
@@ -211,27 +224,11 @@ export class BriefingRepository {
      * @returns The briefings with error information
      */
     async listBriefings(
-        content: BriefingContent = 'all',
+        companyIds: string[],
+        content: BriefingContent = 'url',
         options: PaginationOptions = {},
-    ): Promise<
-        ResilientBatchResult<PartialBriefing> & {
-            total: number;
-            hasMore: boolean;
-        }
-    > {
-        const results = await briefingQueries.listBriefings(options);
-
-        // If only basic data is requested, no S3 operations needed
-        if (content !== 'html' && content !== 'all') {
-            return {
-                data: results.data,
-                errors: [],
-                totalRequested: results.data.length,
-                successfullyProcessed: results.data.length,
-                total: results.pagination.totalItems,
-                hasMore: results.pagination.hasNext,
-            };
-        }
+    ): Promise<{ data: PartialBriefing[]; errors: BriefingError[] }> {
+        const results = await briefingQueries.getBriefings(companyIds, options);
 
         // Process all briefings and collect errors
         const processResults = await Promise.allSettled(
@@ -265,10 +262,6 @@ export class BriefingRepository {
         return {
             data: processedBriefings,
             errors: allErrors,
-            totalRequested: results.data.length,
-            successfullyProcessed: processedBriefings.filter((b) => !b._contentErrors).length,
-            total: results.pagination.totalItems,
-            hasMore: results.pagination.hasNext,
         };
     }
 

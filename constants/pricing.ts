@@ -128,7 +128,7 @@ export function getCompanyLimit(plan: BillingPlan): number {
  * @param plan - The plan to get the record limit for
  * @returns
  */
-function getRecordLimit(plan: BillingPlan): number {
+export function getBriefingLimit(plan: BillingPlan): number {
     switch (plan) {
         case 'solo_plan':
             return 4;
@@ -205,7 +205,7 @@ export function getBillingEntitlement(record: BillingSelect): BillingEntitlement
         currentPlan: plan,
         pageLimit: getPageLimit(plan),
         companyLimit: getCompanyLimit(plan),
-        recordLimit: getRecordLimit(plan),
+        briefingLimit: getBriefingLimit(plan),
         refreshLimit: getRefreshLimit(plan),
         zapierEnabled: getZapierEnabled(plan),
         emailEnabled: getEmailEnabled(plan),

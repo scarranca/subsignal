@@ -9,8 +9,14 @@ import {
     PAGE_LIMIT_CONTEXT_KEY,
     REFRESH_USAGE_CONTEXT_KEY,
     BILLING_ENABLED_CONTEXT_KEY,
+    BRIEFING_LIMIT_CONTEXT_KEY,
 } from '@/constants/middleware';
-import { getCompanyLimit, getPageLimit, getRefreshLimit } from '@/constants/pricing';
+import {
+    getBriefingLimit,
+    getCompanyLimit,
+    getPageLimit,
+    getRefreshLimit,
+} from '@/constants/pricing';
 import { billingQueries, companyQueries, pageQueries, preferenceQueries } from '@/db/queries';
 
 // Skip rate limiting for webhooks
@@ -41,6 +47,7 @@ export async function injectLimits(c: Context, next: Next) {
     let pageLimit = getPageLimit('solo_plan'); // Assume solo plan as starters
     let companyLimit = getCompanyLimit('solo_plan'); // Assume solo plan as starters
     let refreshLimit = getRefreshLimit('solo_plan'); // Assume solo plan as starters
+    let briefingLimit = getBriefingLimit('solo_plan'); // Assume solo plan as starters
 
     // Get the user from context
     const user = getUser(c);
@@ -64,6 +71,7 @@ export async function injectLimits(c: Context, next: Next) {
         pageLimit = billingPlan.pageLimit;
         companyLimit = billingPlan.companyLimit;
         refreshLimit = billingPlan.refreshLimit;
+        briefingLimit = billingPlan.briefingLimit;
 
         // Set the billing enabled flag in context
         c.set(BILLING_ENABLED_CONTEXT_KEY, true);
@@ -75,6 +83,8 @@ export async function injectLimits(c: Context, next: Next) {
     c.set(COMPANY_LIMIT_CONTEXT_KEY, companyLimit);
     // Set the refresh limit in context
     c.set(REFRESH_LIMIT_CONTEXT_KEY, refreshLimit);
+    // Set the briefing limit in context
+    c.set(BRIEFING_LIMIT_CONTEXT_KEY, briefingLimit);
 
     // Head over to the next middleware
     await next();
