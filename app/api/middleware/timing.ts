@@ -99,9 +99,13 @@ export async function serverTiming(c: Context, next: Next) {
             }
         }
 
-        // Set Server-Timing header
+        // Set Server-Timing header (Vercel strips Server-Timing in production)
         if (timingEntries.length > 0) {
-            c.header('Server-Timing', timingEntries.join(', '));
+            const headerName =
+                process.env.NODE_ENV === 'production' && process.env.VERCEL === '1'
+                    ? 'X-Server-Timing'
+                    : 'Server-Timing';
+            c.header(headerName, timingEntries.join(', '));
         }
     } catch (error) {
         c.timing.end('request');
