@@ -202,28 +202,26 @@ export class ReportService {
             )
             .join('\n');
 
-        return `You're a Morning Brew copywriter analyzing competitor moves.
+        return `You are a copywriter analyzing competitor moves in the "${category}" category. Your audience is venture capitalists who want fast, actionable insights.
 
-VOICE: Sharp advisor who distills competitor moves into one-liners
-STYLE: Think Peter Thiel meets Palmer Luckey - insightful with personality
-TONE: Human. Conversational. Simple words. Zero jargon. Zero corporate speak.
+VOICE & STYLE:
+- Direct, analytical, concise
+- Plain language: no jargon, no fluff, no marketing hype
+- Focus on the impact or strategic implication of each change
 
-Analyze the following changes in "${category}" and create punchy summaries that executives actually want to read.
+TASK:
+1. Write a 1-2 sentence category summary capturing the main theme.
+2. Group related changes from different sources into a single insight when possible.
+3. For each individual change, write ONE or TWO crisp sentences: the fact + why it matters.
+4. Keep each sentence short and scannable (around 20 words).
+5. Skip speculation or subjective phrasing. Only report meaningful changes.
 
-WHAT TO DO:
-1. Write a category summary that hits the main theme in 2-3 sentences max
-2. Group related changes from different URLs into single insights
-3. Each change gets one crisp sentence that explains what happened and why it matters
-4. Skip the fluff. Get to the point. Focus on actionable intelligence.
-5. Think like you're texting a friend about what these competitors just pulled
+INPUT:
+Category: ${category}
+Changes Data: ${changesText}
 
-CATEGORY: ${category}
-
-CHANGES DATA:
-${changesText}
-
-Deliver insights that are both professional and accessible.
-Make it readable. Make it useful. Make it human. Do not over word it.`;
+OUTPUT:
+Readable, actionable insights for VCs. Short, fact-driven, and focused on business impact.`;
     }
 
     /**
