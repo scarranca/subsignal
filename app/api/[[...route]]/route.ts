@@ -11,6 +11,7 @@ import pages from '../routes/page';
 import payments from '../routes/payments';
 import briefings from '../routes/briefing';
 import { rateLimit } from '../middleware/ratelimits';
+import { serverTiming } from '../middleware/timing';
 import snapshots from '../routes/snapshot';
 
 /**
@@ -24,8 +25,10 @@ export const runtime = 'nodejs';
 const app = new Hono().basePath('/api');
 
 /**
- * Global middleware
+ * Global middleware - order matters for performance visibility
  */
+// Server timing must be first to capture everything
+app.use('*', serverTiming);
 app.use('*', logger());
 app.use(
     '*',

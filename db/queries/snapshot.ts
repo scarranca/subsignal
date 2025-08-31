@@ -4,27 +4,42 @@ import { company } from '../schema/company';
 import { page } from '../schema/page';
 import { snapshot } from '../schema/snapshot';
 import type { PaginationOptions, PaginatedResult } from './types';
+import { withDbTiming } from '@/lib/db-timing';
+import type { Context } from 'hono';
 
 export const snapshotQueries = {
-    async createSnapshot(pageId: string, pageURL: string, snapshotDiff: string) {
-        const [newSnapshot] = await db
-            .insert(snapshot)
-            .values({
-                pageId: pageId,
-                pageURL: pageURL,
-                diff: snapshotDiff,
-            })
-            .returning();
+    async createSnapshot(pageId: string, pageURL: string, snapshotDiff: string, context?: Context) {
+        const newSnapshots = await withDbTiming(
+            () =>
+                db
+                    .insert(snapshot)
+                    .values({
+                        pageId: pageId,
+                        pageURL: pageURL,
+                        diff: snapshotDiff,
+                    })
+                    .returning(),
+            'create-snapshot',
+            context,
+            'Create new snapshot record',
+        );
 
-        return newSnapshot;
+        return newSnapshots[0];
     },
 
-    async createArchiveSnapshotsForPage(pageId: string, pageURL: string, snapshotDiff: string) {
+    async createArchiveSnapshotsForPage(
+        pageId: string,
+        pageURL: string,
+        snapshotDiff: string,
+        context?: Context,
+    ) {
         // Check if there is an existing snapshot for the page id
-        const existingSnapshot = await db
-            .select()
-            .from(snapshot)
-            .where(eq(snapshot.pageId, pageId));
+        const existingSnapshot = await withDbTiming(
+            () => db.select().from(snapshot).where(eq(snapshot.pageId, pageId)),
+            'check-existing-snapshot',
+            context,
+            'Check for existing snapshots for page',
+        );
 
         let createdAt = new Date();
 

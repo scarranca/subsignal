@@ -5,20 +5,29 @@ import { preference } from '../schema/preference';
 import { company } from '../schema/company';
 import { page } from '../schema/page';
 import type { PaginationOptions, PaginatedResult } from './types';
+import { withDbTiming } from '@/lib/db-timing';
+import type { Context } from 'hono';
 
 export const userQueries = {
-    async getUserPreference(userId: string) {
-        return await db.query.user.findFirst({
-            where: eq(user.id, userId),
-            with: {
-                preference: true,
-            },
-        });
+    async getUserPreference(userId: string, context?: Context) {
+        return await withDbTiming(
+            () =>
+                db.query.user.findFirst({
+                    where: eq(user.id, userId),
+                    with: {
+                        preference: true,
+                    },
+                }),
+            'user-preference-query',
+            context,
+            'Get user with preferences join',
+        );
     },
 
     async getUserCompanies(
         userId: string,
         options: PaginationOptions = {},
+        context?: Context,
     ): Promise<PaginatedResult<typeof company.$inferSelect>> {
         const {
             page: currentPage = 1,
@@ -36,23 +45,35 @@ export const userQueries = {
                   : company.createdAt;
         const orderDirection = sortOrder === 'asc' ? asc : desc;
 
-        // Get total count
-        const [totalResult] = await db
-            .select({ count: count() })
-            .from(company)
-            .where(and(eq(company.userId, userId), eq(company.isActive, true)));
+        // Get total count with timing
+        const [totalResult] = await withDbTiming(
+            () =>
+                db
+                    .select({ count: count() })
+                    .from(company)
+                    .where(and(eq(company.userId, userId), eq(company.isActive, true))),
+            'user-companies-count',
+            context,
+            'Count total user companies',
+        );
 
         const totalItems = totalResult.count;
         const totalPages = Math.ceil(totalItems / pageSize);
 
-        // Get paginated data
-        const data = await db
-            .select()
-            .from(company)
-            .where(and(eq(company.userId, userId), eq(company.isActive, true)))
-            .orderBy(orderDirection(orderByColumn))
-            .limit(pageSize)
-            .offset(offset);
+        // Get paginated data with timing
+        const data = await withDbTiming(
+            () =>
+                db
+                    .select()
+                    .from(company)
+                    .where(and(eq(company.userId, userId), eq(company.isActive, true)))
+                    .orderBy(orderDirection(orderByColumn))
+                    .limit(pageSize)
+                    .offset(offset),
+            'user-companies-data',
+            context,
+            `Get paginated user companies (page ${currentPage}, size ${pageSize})`,
+        );
 
         return {
             data,
@@ -67,18 +88,30 @@ export const userQueries = {
         };
     },
 
-    async getUserEmailByUserId(userId: string) {
-        return await db.query.user.findFirst({
-            where: eq(user.id, userId),
-            columns: {
-                email: true,
-            },
-        });
+    async getUserEmailByUserId(userId: string, context?: Context) {
+        return await withDbTiming(
+            () =>
+                db.query.user.findFirst({
+                    where: eq(user.id, userId),
+                    columns: {
+                        email: true,
+                    },
+                }),
+            'user-email-by-id',
+            context,
+            'Get user email by ID',
+        );
     },
 
-    async getUserRecordByEmail(email: string) {
-        return await db.query.user.findFirst({
-            where: eq(user.email, email),
-        });
+    async getUserRecordByEmail(email: string, context?: Context) {
+        return await withDbTiming(
+            () =>
+                db.query.user.findFirst({
+                    where: eq(user.email, email),
+                }),
+            'user-record-by-email',
+            context,
+            'Get user record by email',
+        );
     },
 };

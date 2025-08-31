@@ -19,9 +19,9 @@ export const company = pgTable(
             .notNull(),
     },
     (table) => [
-        index('company_user_id_idx').on(table.userId),
-        index('company_active_idx').on(table.isActive, table.userId),
-        index('company_name_idx').on(table.name),
-        index('company_url_idx').on(table.url),
+        // Optimized indexes for actual query patterns
+        index('company_user_active_idx').on(table.userId, table.isActive), // Most common: user's active companies
+        index('company_user_active_id_idx').on(table.userId, table.isActive, table.id), // Company lookups with ownership
+        index('company_url_user_idx').on(table.url, table.userId), // Batch operations by URL
     ],
 );

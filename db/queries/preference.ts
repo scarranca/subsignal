@@ -3,12 +3,20 @@ import { db } from '../index';
 import { Frequency, preference, Properties } from '../schema/preference';
 import { user } from '../schema/auth';
 import { billing } from '../schema/billing';
+import { withDbTiming } from '@/lib/db-timing';
+import type { Context } from 'hono';
 
 export const preferenceQueries = {
-    async getUserPreference(userId: string) {
-        return await db.query.preference.findFirst({
-            where: and(eq(preference.userId, userId), eq(preference.isActive, true)),
-        });
+    async getUserPreference(userId: string, context?: Context) {
+        return await withDbTiming(
+            () =>
+                db.query.preference.findFirst({
+                    where: and(eq(preference.userId, userId), eq(preference.isActive, true)),
+                }),
+            'user-preference-query',
+            context,
+            'Get user preferences',
+        );
     },
 
     async upsertUserPreference(

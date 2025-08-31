@@ -34,135 +34,175 @@ export class LiveScreenshotService {
     async takeScreenshot(
         url: string,
         options?: Omit<ScreenshotOptions, 'url'>,
+        context?: any,
     ): Promise<LiveScreenshotResult> {
-        const screenshotOptions: ScreenshotOptions = {
-            // Inject the URL
-            url,
-            // Default options
-            format: 'png',
-            fullPage: true,
-            blockAds: true,
-            blockCookieBanners: true,
-            blockTrackers: true,
-            metadataContent: true,
-            waitUntil: ['networkidle2'],
-            cache: true,
-            cacheTtl: 12 * 60 * 60, // 12 hours
-            // Override default options with provided options
-            ...options,
-        };
+        const startTime = performance.now();
 
-        const screenshotUrl = this.createScreenshotUrl(screenshotOptions);
+        try {
+            const screenshotOptions: ScreenshotOptions = {
+                // Inject the URL
+                url,
+                // Default options
+                format: 'png',
+                fullPage: true,
+                blockAds: true,
+                blockCookieBanners: true,
+                blockTrackers: true,
+                metadataContent: true,
+                waitUntil: ['networkidle2'],
+                cache: true,
+                cacheTtl: 12 * 60 * 60, // 12 hours
+                // Override default options with provided options
+                ...options,
+            };
 
-        const response = await fetch(screenshotUrl);
+            const screenshotUrl = this.createScreenshotUrl(screenshotOptions);
 
-        if (!response.ok) {
-            const errorText = await response.text();
-
-            // Handle by HTTP status code first (faster and more reliable)
-            switch (response.status) {
-                // 4xx - Client errors (non-retriable)
-                case 400: // Bad Request - invalid parameters/options
-                case 401: // Unauthorized - auth issues
-                case 403: // Forbidden - access denied, invalid key
-                case 404: // Not Found - invalid endpoint
-                case 413: // Payload Too Large
-                case 422: // Unprocessable Entity - invalid request format
-                    throw new NonRetriableError(`Client error (${response.status}): ${errorText}`);
-
-                // 429 - Rate limiting (retriable with delay)
-                case 429: {
-                    // Check for Retry-After header
-                    const retryAfter = response.headers.get('Retry-After');
-                    if (retryAfter) {
-                        // If seconds number, convert to duration string
-                        const retryDelay = /^\d+$/.test(retryAfter) ? `${retryAfter}s` : retryAfter;
-                        throw new RetryAfterError(`Rate limited: ${errorText}`, retryDelay);
-                    }
-                    // Fallback if no Retry-After header
-                    throw new RetryAfterError(`Rate limited: ${errorText}`, '60s');
-                }
-
-                // 5xx - Server errors (retriable)
-                case 500: // Internal Server Error
-                case 502: // Bad Gateway
-                case 503: // Service Unavailable
-                case 504: // Gateway Timeout
-                    throw new Error(`Server error (${response.status}): ${errorText}`);
-
-                default:
-                    // Unknown status - retry with default backoff
-                    throw new Error(`Screenshot failed (${response.status}): ${errorText}`);
+            if (context?.timing) {
+                context.timing.start('screenshot-api-call', 'External screenshot API call');
             }
-        }
 
-        // Get screenshot image data
-        const imageData = await response.arrayBuffer();
-        const screenshot = Buffer.from(imageData);
+            const response = await fetch(screenshotUrl);
 
-        // Get content URL for HTML
-        const contentUrl = response.headers.get('X-ScreenshotOne-Content-URL');
+            if (context?.timing) {
+                context.timing.end('screenshot-api-call');
+            }
 
-        if (!contentUrl) {
-            throw new NonRetriableError('No content URL provided by screenshot service');
-        }
+            if (!response.ok) {
+                const errorText = await response.text();
 
-        // Get HTML content
-        const contentResponse = await fetch(contentUrl);
-        if (!contentResponse.ok) {
-            const contentErrorText = await contentResponse.text();
+                // Handle by HTTP status code first (faster and more reliable)
+                switch (response.status) {
+                    // 4xx - Client errors (non-retriable)
+                    case 400: // Bad Request - invalid parameters/options
+                    case 401: // Unauthorized - auth issues
+                    case 403: // Forbidden - access denied, invalid key
+                    case 404: // Not Found - invalid endpoint
+                    case 413: // Payload Too Large
+                    case 422: // Unprocessable Entity - invalid request format
+                        throw new NonRetriableError(
+                            `Client error (${response.status}): ${errorText}`,
+                        );
 
-            // Handle content fetch errors by status code
-            switch (contentResponse.status) {
-                // 4xx - Client errors (non-retriable)
-                case 400:
-                case 401:
-                case 403:
-                case 404:
-                case 413:
-                case 422:
-                    throw new NonRetriableError(
-                        `Content fetch client error (${contentResponse.status}): ${contentErrorText}`,
-                    );
+                    // 429 - Rate limiting (retriable with delay)
+                    case 429: {
+                        // Check for Retry-After header
+                        const retryAfter = response.headers.get('Retry-After');
+                        if (retryAfter) {
+                            // If seconds number, convert to duration string
+                            const retryDelay = /^\d+$/.test(retryAfter)
+                                ? `${retryAfter}s`
+                                : retryAfter;
+                            throw new RetryAfterError(`Rate limited: ${errorText}`, retryDelay);
+                        }
+                        // Fallback if no Retry-After header
+                        throw new RetryAfterError(`Rate limited: ${errorText}`, '60s');
+                    }
 
-                // 429 - Rate limiting (retriable with delay)
-                case 429: {
-                    const retryAfter = contentResponse.headers.get('Retry-After');
-                    if (retryAfter) {
-                        const retryDelay = /^\d+$/.test(retryAfter) ? `${retryAfter}s` : retryAfter;
+                    // 5xx - Server errors (retriable)
+                    case 500: // Internal Server Error
+                    case 502: // Bad Gateway
+                    case 503: // Service Unavailable
+                    case 504: // Gateway Timeout
+                        throw new Error(`Server error (${response.status}): ${errorText}`);
+
+                    default:
+                        // Unknown status - retry with default backoff
+                        throw new Error(`Screenshot failed (${response.status}): ${errorText}`);
+                }
+            }
+
+            if (context?.timing) {
+                context.timing.start(
+                    'screenshot-data-processing',
+                    'Process screenshot response data',
+                );
+            }
+
+            // Get screenshot image data
+            const imageData = await response.arrayBuffer();
+
+            if (context?.timing) {
+                context.timing.end('screenshot-data-processing');
+            }
+            const screenshot = Buffer.from(imageData);
+
+            // Get content URL for HTML
+            const contentUrl = response.headers.get('X-ScreenshotOne-Content-URL');
+
+            if (!contentUrl) {
+                throw new NonRetriableError('No content URL provided by screenshot service');
+            }
+
+            // Get HTML content
+            const contentResponse = await fetch(contentUrl);
+            if (!contentResponse.ok) {
+                const contentErrorText = await contentResponse.text();
+
+                // Handle content fetch errors by status code
+                switch (contentResponse.status) {
+                    // 4xx - Client errors (non-retriable)
+                    case 400:
+                    case 401:
+                    case 403:
+                    case 404:
+                    case 413:
+                    case 422:
+                        throw new NonRetriableError(
+                            `Content fetch client error (${contentResponse.status}): ${contentErrorText}`,
+                        );
+
+                    // 429 - Rate limiting (retriable with delay)
+                    case 429: {
+                        const retryAfter = contentResponse.headers.get('Retry-After');
+                        if (retryAfter) {
+                            const retryDelay = /^\d+$/.test(retryAfter)
+                                ? `${retryAfter}s`
+                                : retryAfter;
+                            throw new RetryAfterError(
+                                `Content fetch rate limited: ${contentErrorText}`,
+                                retryDelay,
+                            );
+                        }
                         throw new RetryAfterError(
                             `Content fetch rate limited: ${contentErrorText}`,
-                            retryDelay,
+                            '60s',
                         );
                     }
-                    throw new RetryAfterError(
-                        `Content fetch rate limited: ${contentErrorText}`,
-                        '60s',
-                    );
+
+                    // 5xx - Server errors (retriable)
+                    case 500:
+                    case 502:
+                    case 503:
+                    case 504:
+                        throw new Error(
+                            `Content fetch server error (${contentResponse.status}): ${contentErrorText}`,
+                        );
+
+                    default:
+                        throw new Error(
+                            `Content fetch failed (${contentResponse.status}): ${contentErrorText}`,
+                        );
                 }
-
-                // 5xx - Server errors (retriable)
-                case 500:
-                case 502:
-                case 503:
-                case 504:
-                    throw new Error(
-                        `Content fetch server error (${contentResponse.status}): ${contentErrorText}`,
-                    );
-
-                default:
-                    throw new Error(
-                        `Content fetch failed (${contentResponse.status}): ${contentErrorText}`,
-                    );
             }
+
+            const html = await contentResponse.text();
+
+            return {
+                htmlContent: html,
+                imageContent: screenshot,
+            };
+        } catch (error) {
+            const duration = performance.now() - startTime;
+            if (context?.timing) {
+                context.timing.addEntry(
+                    'screenshot-service-error',
+                    duration,
+                    'Screenshot service failed',
+                );
+            }
+            throw error;
         }
-
-        const html = await contentResponse.text();
-
-        return {
-            htmlContent: html,
-            imageContent: screenshot,
-        };
     }
 
     // createScreenshotUrl creates a screenshot URL based on the options.

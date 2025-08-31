@@ -3,6 +3,8 @@ import { db } from '../index';
 import { company } from '../schema/company';
 import { page } from '../schema/page';
 import type { PaginationOptions, PaginatedResult } from './types';
+import { withDbTiming } from '@/lib/db-timing';
+import type { Context } from 'hono';
 
 export const pageQueries = {
     async createPageWithExistingCompany(
@@ -12,29 +14,42 @@ export const pageQueries = {
             url: string;
             companyId: string;
         },
+        context?: Context,
     ) {
         // Verify company belongs to user
-        const companyExists = await db.query.company.findFirst({
-            where: and(
-                eq(company.id, data.companyId),
-                eq(company.userId, userId),
-                eq(company.isActive, true),
-            ),
-        });
+        const companyExists = await withDbTiming(
+            () =>
+                db.query.company.findFirst({
+                    where: and(
+                        eq(company.id, data.companyId),
+                        eq(company.userId, userId),
+                        eq(company.isActive, true),
+                    ),
+                }),
+            'verify-company-exists',
+            context,
+            'Verify company ownership for page creation',
+        );
 
         if (!companyExists) {
             throw new Error('Company not found');
         }
 
-        const [newPage] = await db
-            .insert(page)
-            .values({
-                id: crypto.randomUUID(),
-                companyId: data.companyId,
-                title: data.title,
-                url: data.url,
-            })
-            .returning();
+        const [newPage] = await withDbTiming(
+            () =>
+                db
+                    .insert(page)
+                    .values({
+                        id: crypto.randomUUID(),
+                        companyId: data.companyId,
+                        title: data.title,
+                        url: data.url,
+                    })
+                    .returning(),
+            'create-page',
+            context,
+            'Insert new page record',
+        );
 
         return newPage;
     },
@@ -49,35 +64,42 @@ export const pageQueries = {
                 url: string;
             };
         },
+        context?: Context,
     ) {
-        return await db.transaction(async (tx) => {
-            // Create the company
-            const [newCompany] = await tx
-                .insert(company)
-                .values({
-                    id: crypto.randomUUID(),
-                    userId: userId,
-                    name: data.newCompany.name,
-                    url: data.newCompany.url,
-                })
-                .returning();
+        return await withDbTiming(
+            () =>
+                db.transaction(async (tx) => {
+                    // Create the company
+                    const [newCompany] = await tx
+                        .insert(company)
+                        .values({
+                            id: crypto.randomUUID(),
+                            userId: userId,
+                            name: data.newCompany.name,
+                            url: data.newCompany.url,
+                        })
+                        .returning();
 
-            // Create the page
-            const [newPage] = await tx
-                .insert(page)
-                .values({
-                    id: crypto.randomUUID(),
-                    companyId: newCompany.id,
-                    title: data.title,
-                    url: data.url,
-                })
-                .returning();
+                    // Create the page
+                    const [newPage] = await tx
+                        .insert(page)
+                        .values({
+                            id: crypto.randomUUID(),
+                            companyId: newCompany.id,
+                            title: data.title,
+                            url: data.url,
+                        })
+                        .returning();
 
-            return {
-                page: newPage,
-                company: newCompany,
-            };
-        });
+                    return {
+                        page: newPage,
+                        company: newCompany,
+                    };
+                }),
+            'create-page-with-company-transaction',
+            context,
+            'Create new company and page in transaction',
+        );
     },
 
     async deletePageWithCompanyCleanup(pageId: string, userId: string) {
@@ -303,15 +325,22 @@ export const pageQueries = {
         companyId: string,
         userId: string,
         options: PaginationOptions = {},
+        context?: Context,
     ): Promise<PaginatedResult<typeof page.$inferSelect>> {
         // Verify company belongs to user
-        const companyExists = await db.query.company.findFirst({
-            where: and(
-                eq(company.id, companyId),
-                eq(company.userId, userId),
-                eq(company.isActive, true),
-            ),
-        });
+        const companyExists = await withDbTiming(
+            () =>
+                db.query.company.findFirst({
+                    where: and(
+                        eq(company.id, companyId),
+                        eq(company.userId, userId),
+                        eq(company.isActive, true),
+                    ),
+                }),
+            'verify-company-for-pages',
+            context,
+            'Verify company ownership for page listing',
+        );
 
         if (!companyExists) {
             throw new Error('Company not found');
@@ -334,21 +363,33 @@ export const pageQueries = {
         const orderDirection = sortOrder === 'asc' ? asc : desc;
 
         // Get total count
-        const [{ count: totalItems }] = await db
-            .select({ count: count() })
-            .from(page)
-            .where(and(eq(page.companyId, companyId), eq(page.isActive, true)));
+        const [{ count: totalItems }] = await withDbTiming(
+            () =>
+                db
+                    .select({ count: count() })
+                    .from(page)
+                    .where(and(eq(page.companyId, companyId), eq(page.isActive, true))),
+            'company-pages-count',
+            context,
+            'Count total pages for company',
+        );
 
         const totalPages = Math.ceil(totalItems / pageSize);
 
         // Get paginated pages
-        const pages = await db
-            .select()
-            .from(page)
-            .where(and(eq(page.companyId, companyId), eq(page.isActive, true)))
-            .orderBy(orderDirection(orderByColumn))
-            .limit(pageSize)
-            .offset(offset);
+        const pages = await withDbTiming(
+            () =>
+                db
+                    .select()
+                    .from(page)
+                    .where(and(eq(page.companyId, companyId), eq(page.isActive, true)))
+                    .orderBy(orderDirection(orderByColumn))
+                    .limit(pageSize)
+                    .offset(offset),
+            'company-pages-data',
+            context,
+            `Get paginated pages for company (page ${currentPage}, size ${pageSize})`,
+        );
 
         return {
             data: pages,

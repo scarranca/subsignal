@@ -19,9 +19,12 @@ export const page = pgTable(
             .notNull(),
     },
     (table) => [
-        index('page_company_id_idx').on(table.companyId),
-        index('page_active_idx').on(table.isActive, table.companyId),
-        index('page_title_idx').on(table.title),
-        index('page_url_idx').on(table.url),
+        // Optimized indexes for actual query patterns
+        index('page_company_active_idx').on(table.companyId, table.isActive), // Most common: company's active pages
+        index('page_company_active_created_idx').on(
+            table.companyId,
+            table.isActive,
+            table.createdAt,
+        ), // Paginated listings
     ],
 );

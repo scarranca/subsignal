@@ -18,6 +18,7 @@ import { exceededCompanyLimit, exceededPageLimit } from '../../middleware/entitl
  */
 export async function handleGetPagesByCompany(c: Context) {
     try {
+        c.timing.start('auth-validation', 'User authentication and validation');
         const user = getUser(c);
         const companyId = c.req.param('companyId');
         const query = c.req.query();
@@ -25,13 +26,28 @@ export async function handleGetPagesByCompany(c: Context) {
         if (!companyId) {
             return c.json({ error: 'Company ID is required' }, 400);
         }
+        c.timing.end('auth-validation');
 
+        c.timing.start('input-validation', 'Query parameter validation');
         const pagination = paginationSchema.parse(query);
+        c.timing.end('input-validation');
 
-        const result = await pageQueries.getPaginatedPagesByCompany(companyId, user.id, pagination);
+        c.timing.start('database-query', 'Fetch pages from database');
+        const result = await pageQueries.getPaginatedPagesByCompany(
+            companyId,
+            user.id,
+            pagination,
+            c,
+        );
+        c.timing.end('database-query');
 
-        return c.json(result);
+        c.timing.start('response-serialization', 'Serialize response data');
+        const response = c.json(result);
+        c.timing.end('response-serialization');
+
+        return response;
     } catch (error) {
+        c.timing.start('error-handling', 'Error processing and response');
         if (error instanceof z.ZodError) {
             return c.json({ error: 'Invalid query parameters', details: error.errors }, 400);
         }
@@ -39,6 +55,7 @@ export async function handleGetPagesByCompany(c: Context) {
             return c.json({ error: 'Company not found' }, 404);
         }
         console.error('Error fetching pages:', error);
+        c.timing.end('error-handling');
         return c.json({ error: 'Failed to fetch pages' }, 500);
     }
 }
@@ -94,11 +111,16 @@ export async function handleGetPage(c: Context) {
  */
 export async function handleCreatePage(c: Context) {
     try {
+        c.timing.start('auth-validation', 'User authentication and request parsing');
         const user = getUser(c);
         const body = await c.req.json();
+        c.timing.end('auth-validation');
 
+        c.timing.start('input-validation', 'Request body validation');
         const validatedData = createPageSchema.parse(body);
+        c.timing.end('input-validation');
 
+        c.timing.start('limit-checks', 'Check page and company limits');
         // Check if the user has reached the page limit
         const pageLimitExceeded = exceededPageLimit(c, 1);
         if (pageLimitExceeded) {
@@ -122,12 +144,14 @@ export async function handleCreatePage(c: Context) {
                 );
             }
         }
+        c.timing.end('limit-checks');
 
+        c.timing.start('title-fetching', 'Auto-fetch page title from URL');
         // Auto-fetch page title from URL if not provided
         let pageTitle = validatedData.page.title;
         if (!pageTitle || pageTitle.trim() === '') {
             try {
-                pageTitle = await fetchPageTitle(validatedData.page.url);
+                pageTitle = await fetchPageTitle(validatedData.page.url, c);
                 console.log('Auto-fetched page title:', pageTitle);
             } catch (error) {
                 console.error('Failed to fetch page title, using fallback:', error);
@@ -135,18 +159,28 @@ export async function handleCreatePage(c: Context) {
                 pageTitle = await generateFallbackTitle(validatedData.page.url);
             }
         }
+        c.timing.end('title-fetching');
 
+        c.timing.start('user-preferences', 'Fetch user preferences');
         // Fetch the user preference
-        const userPreference = await preferenceQueries.getUserPreference(user.id);
+        const userPreference = await preferenceQueries.getUserPreference(user.id, c);
+        c.timing.end('user-preferences');
 
         if (validatedData.company.id) {
+            c.timing.start('page-creation', 'Create page with existing company');
             // Create page with existing company
-            const newPage = await pageQueries.createPageWithExistingCompany(user.id, {
-                title: pageTitle,
-                url: validatedData.page.url,
-                companyId: validatedData.company.id,
-            });
+            const newPage = await pageQueries.createPageWithExistingCompany(
+                user.id,
+                {
+                    title: pageTitle,
+                    url: validatedData.page.url,
+                    companyId: validatedData.company.id,
+                },
+                c,
+            );
+            c.timing.end('page-creation');
 
+            c.timing.start('inngest-event', 'Send snapshot creation event');
             // Send event to ingest to create archive snapshot
             await inngest.send({
                 name: 'snapshot/archive.created',
@@ -157,19 +191,27 @@ export async function handleCreatePage(c: Context) {
                     pageURL: newPage.url,
                 },
             });
+            c.timing.end('inngest-event');
 
             return c.json(newPage, 201);
         } else {
+            c.timing.start('page-company-creation', 'Create page with new company');
             // Create page with new company
-            const result = await pageQueries.createPageWithNewCompany(user.id, {
-                title: pageTitle,
-                url: validatedData.page.url,
-                newCompany: {
-                    name: validatedData.company.name!,
-                    url: validatedData.company.url!,
+            const result = await pageQueries.createPageWithNewCompany(
+                user.id,
+                {
+                    title: pageTitle,
+                    url: validatedData.page.url,
+                    newCompany: {
+                        name: validatedData.company.name!,
+                        url: validatedData.company.url!,
+                    },
                 },
-            });
+                c,
+            );
+            c.timing.end('page-company-creation');
 
+            c.timing.start('inngest-event', 'Send snapshot creation event');
             // Send event to ingest to create archive snapshot
             await inngest.send({
                 name: 'snapshot/archive.created',
@@ -180,6 +222,7 @@ export async function handleCreatePage(c: Context) {
                     pageURL: result.page.url,
                 },
             });
+            c.timing.end('inngest-event');
 
             return c.json(
                 {

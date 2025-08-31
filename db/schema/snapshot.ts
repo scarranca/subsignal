@@ -18,9 +18,9 @@ export const snapshot = pgTable(
             .notNull(),
     },
     (table) => [
-        index('snapshot_page_id_idx').on(table.pageId),
-        index('snapshot_created_at_idx').on(table.createdAt),
-        index('snapshot_page_created_idx').on(table.pageId, table.createdAt),
-        index('snapshot_page_url_idx').on(table.pageURL),
+        // Optimized indexes for actual query patterns
+        index('snapshot_page_url_compound_idx').on(table.pageId, table.pageURL), // Most common lookup
+        index('snapshot_page_created_idx').on(table.pageId, table.createdAt), // Time-based queries
+        index('snapshot_created_at_idx').on(table.createdAt), // Time-based filtering
     ],
 );

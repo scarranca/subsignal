@@ -35,7 +35,7 @@ export async function handleGetCompanies(c: Context) {
 
         const result = excludePages
             ? await companyQueries.getUserCompaniesWithoutPages(user.id, pagination)
-            : await companyQueries.getUserCompaniesWithPages(user.id, pagination);
+            : await companyQueries.getUserCompaniesWithPages(user.id, pagination, c);
         return c.json(result);
     } catch (error) {
         if (error instanceof z.ZodError) {

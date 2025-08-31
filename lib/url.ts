@@ -264,8 +264,23 @@ export async function generateFallbackTitle(url: string): Promise<string> {
  * @param url - The URL to fetch title from
  * @returns Promise<string> - The page title or fallback
  */
-export async function fetchPageTitle(url: string): Promise<string> {
+export async function fetchPageTitle(
+    url: string,
+    context?: {
+        timing?: {
+            start: (name: string, description?: string) => void;
+            end: (name: string) => void;
+            addEntry: (name: string, duration: number, description?: string) => void;
+        };
+    },
+): Promise<string> {
+    const startTime = performance.now();
+
     try {
+        if (context?.timing) {
+            context.timing.start('page-title-fetch', 'Fetch page title from URL');
+        }
+
         const response = await fetch(url, {
             method: 'GET',
             headers: {
@@ -279,6 +294,11 @@ export async function fetchPageTitle(url: string): Promise<string> {
             throw new Error(`HTTP ${response.status}`);
         }
 
+        if (context?.timing) {
+            context.timing.end('page-title-fetch');
+            context.timing.start('page-title-parse', 'Parse title from HTML');
+        }
+
         const html = await response.text();
 
         // Extract title from HTML
@@ -286,12 +306,24 @@ export async function fetchPageTitle(url: string): Promise<string> {
 
         if (titleMatch && titleMatch[1]) {
             // Clean up the title (remove extra whitespace, decode HTML entities)
-            return titleMatch[1].trim().replace(/\s+/g, ' ');
+            const title = titleMatch[1].trim().replace(/\s+/g, ' ');
+            if (context?.timing) {
+                context.timing.end('page-title-parse');
+            }
+            return title;
+        }
+
+        if (context?.timing) {
+            context.timing.end('page-title-parse');
         }
 
         // Fallback to URL path or domain
         return generateFallbackTitle(url);
     } catch (error) {
+        const duration = performance.now() - startTime;
+        if (context?.timing) {
+            context.timing.addEntry('page-title-fetch-error', duration, 'Page title fetch failed');
+        }
         console.error(`Failed to fetch title for ${url}:`, error);
         // Use fallback title generation
         return generateFallbackTitle(url);

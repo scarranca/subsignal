@@ -59,8 +59,8 @@ export const billing = pgTable(
         uniqueIndex('billing_user_uidx').on(t.userId),
         uniqueIndex('billing_subscription_uidx').on(t.subscriptionId),
 
-        // Composite indexes
-        index('billing_status_plan_idx').on(t.status, t.currentPlan),
+        // Optimized composite indexes for actual query patterns
+        index('billing_user_status_idx').on(t.userId, t.status), // Most common: getUserRecord + status
         index('billing_provider_customer_idx').on(t.provider, t.customerId),
     ],
 );

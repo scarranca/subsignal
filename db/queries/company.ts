@@ -3,27 +3,40 @@ import { db } from '../index';
 import { company } from '../schema/company';
 import { page } from '../schema/page';
 import type { PaginationOptions, PaginatedResult } from './types';
+import { withDbTiming } from '@/lib/db-timing';
+import type { Context } from 'hono';
 
 export const companyQueries = {
-    async getCompaniesByUrls(userId: string, urls: string[], pageOrderBy: 'asc' | 'desc' = 'asc') {
+    async getCompaniesByUrls(
+        userId: string,
+        urls: string[],
+        pageOrderBy: 'asc' | 'desc' = 'asc',
+        context?: Context,
+    ) {
         if (urls.length === 0) return [];
 
         const pageOrder = pageOrderBy === 'asc' ? asc : desc;
 
-        const companiesWithPages = await db.query.company.findMany({
-            where: and(
-                eq(company.userId, userId),
-                inArray(company.url, urls),
-                eq(company.isActive, true),
-            ),
-            with: {
-                pages: {
-                    where: eq(page.isActive, true),
-                    orderBy: [pageOrder(page.createdAt)],
-                },
-            },
-            orderBy: [desc(company.createdAt)],
-        });
+        const companiesWithPages = await withDbTiming(
+            () =>
+                db.query.company.findMany({
+                    where: and(
+                        eq(company.userId, userId),
+                        inArray(company.url, urls),
+                        eq(company.isActive, true),
+                    ),
+                    with: {
+                        pages: {
+                            where: eq(page.isActive, true),
+                            orderBy: [pageOrder(page.createdAt)],
+                        },
+                    },
+                    orderBy: [desc(company.createdAt)],
+                }),
+            'companies-by-urls-with-pages',
+            context,
+            `Get companies by URLs with pages (${urls.length} URLs)`,
+        );
 
         return companiesWithPages;
     },
@@ -203,6 +216,7 @@ export const companyQueries = {
     async getUserCompaniesWithPages(
         userId: string,
         options: PaginationOptions = {},
+        context?: Context,
     ): Promise<PaginatedResult<any>> {
         const {
             page: currentPage = 1,
@@ -226,27 +240,39 @@ export const companyQueries = {
             }
         };
 
-        // Execute both queries in parallel
+        // Execute both queries in parallel with timing
         const [companiesWithPages, totalCountResult] = await Promise.all([
             // Main query with relations - this replaces your N+1 problem
-            db.query.company.findMany({
-                where: and(eq(company.userId, userId), eq(company.isActive, true)),
-                with: {
-                    pages: {
-                        where: eq(page.isActive, true),
-                        orderBy: [asc(page.createdAt)], // or whatever order you prefer for pages
-                    },
-                },
-                orderBy: [getOrderBy()],
-                limit: pageSize,
-                offset: offset,
-            }),
+            withDbTiming(
+                () =>
+                    db.query.company.findMany({
+                        where: and(eq(company.userId, userId), eq(company.isActive, true)),
+                        with: {
+                            pages: {
+                                where: eq(page.isActive, true),
+                                orderBy: [asc(page.createdAt)], // or whatever order you prefer for pages
+                            },
+                        },
+                        orderBy: [getOrderBy()],
+                        limit: pageSize,
+                        offset: offset,
+                    }),
+                'user-companies-with-pages-data',
+                context,
+                `Get user companies with pages (page ${currentPage}, size ${pageSize})`,
+            ),
 
             // Count query
-            db
-                .select({ count: count() })
-                .from(company)
-                .where(and(eq(company.userId, userId), eq(company.isActive, true))),
+            withDbTiming(
+                () =>
+                    db
+                        .select({ count: count() })
+                        .from(company)
+                        .where(and(eq(company.userId, userId), eq(company.isActive, true))),
+                'user-companies-with-pages-count',
+                context,
+                'Count total user companies with pages',
+            ),
         ]);
 
         const totalItems = totalCountResult[0].count;

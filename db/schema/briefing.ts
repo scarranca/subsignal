@@ -18,9 +18,8 @@ export const briefing = pgTable(
             .notNull(),
     },
     (table) => [
-        index('briefing_company_id_idx').on(table.companyId),
-        index('briefing_created_at_idx').on(table.createdAt),
-        index('briefing_company_created_idx').on(table.companyId, table.createdAt),
-        index('briefing_company_url_idx').on(table.companyUrl),
+        // Optimized indexes for actual query patterns
+        index('briefing_company_created_idx').on(table.companyId, table.createdAt), // Most common: time-ordered company briefings
+        index('briefing_created_at_idx').on(table.createdAt), // Global time-based queries
     ],
 );

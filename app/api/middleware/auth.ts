@@ -22,15 +22,21 @@ export async function getSession(c: { req: { raw: { headers: Headers } } }) {
  * @param next - The next middleware function
  */
 export async function requireAuth(c: Context, next: Next) {
+    c.timing.start('auth-middleware', 'Authentication middleware processing');
+
+    c.timing.start('auth-session-check', 'Validate user session');
     const session = await getSession(c);
+    c.timing.end('auth-session-check');
 
     if (!session) {
+        c.timing.end('auth-middleware');
         return c.json({ error: 'Unauthorized' }, 401);
     }
 
     // Set user in context for handlers to access
     c.set(USER_MIDDLEWARE_CONTEXT_KEY, session.user as User);
 
+    c.timing.end('auth-middleware');
     await next();
 }
 

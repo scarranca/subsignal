@@ -10,7 +10,7 @@ export async function handleGetPaymentStatus(c: Context) {
     try {
         const user = getUser(c);
 
-        const billingRecord = await billingQueries.getBillingRecordForUser(user.id);
+        const billingRecord = await billingQueries.getBillingRecordForUser(user.id, c);
 
         const paymentStatusResponse: PaymentStatus = {
             userName: user.name,
@@ -51,7 +51,7 @@ export async function handleValidatePaymentStatus(c: Context) {
         const { subscription_id } = c.req.query();
 
         // Get billing record
-        const billingRecord = await billingQueries.getBillingRecordForUser(user.id);
+        const billingRecord = await billingQueries.getBillingRecordForUser(user.id, c);
 
         if (!billingRecord) {
             return c.json({ isValid: false }, 404);

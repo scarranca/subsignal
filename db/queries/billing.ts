@@ -3,6 +3,8 @@ import { db } from '../index';
 import { billing } from '../schema/billing';
 import type { BillingEntitlement, BillingInsert, BillingSelect } from '../schema/billing';
 import { getBillingEntitlement } from '@/constants/pricing';
+import { withDbTiming } from '@/lib/db-timing';
+import type { Context } from 'hono';
 
 export const billingQueries = {
     /**
@@ -10,10 +12,20 @@ export const billingQueries = {
      * @param userId - The ID of the user to get the active billing record for
      * @returns The active billing record for the user, or undefined if no record is found
      */
-    async getBillingRecordForUser(userId: string): Promise<BillingEntitlement | undefined> {
-        const result = await db.query.billing.findFirst({
-            where: and(eq(billing.userId, userId), eq(billing.status, 'active')),
-        });
+    async getBillingRecordForUser(
+        userId: string,
+        context?: Context,
+    ): Promise<BillingEntitlement | undefined> {
+        const result = await withDbTiming(
+            () =>
+                db.query.billing.findFirst({
+                    where: and(eq(billing.userId, userId), eq(billing.status, 'active')),
+                }),
+            'billing-record-for-user',
+            context,
+            'Get active billing record for user',
+        );
+
         if (!result) {
             return undefined;
         }
