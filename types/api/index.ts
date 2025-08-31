@@ -173,5 +173,13 @@ export interface CompanyBriefing {
 
 export interface BriefingResponse {
     data: CompanyBriefing[];
+    pagination: {
+        page: number;
+        pageSize: number;
+        totalItems: number;
+        totalPages: number;
+        hasNext: boolean;
+        hasPrevious: boolean;
+    };
     errors: any[];
 }

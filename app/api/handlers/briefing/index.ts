@@ -12,7 +12,11 @@ export async function handleGetBriefingsForUser(c: Context) {
         const query = c.req.query();
 
         // Parse pagination parameters for company listing
-        const companyPagination = paginationSchema.parse(query);
+        const companyPagination = paginationSchema.parse({
+            ...query,
+            sortBy: 'createdAt',
+            sortOrder: 'asc',
+        });
 
         // Get billing plan from context
         const billingPlan = getBillingPlan(c);
@@ -28,7 +32,12 @@ export async function handleGetBriefingsForUser(c: Context) {
             },
         );
 
-        return c.json(briefings);
+        return c.json({
+            success: true,
+            data: briefings.data,
+            pagination: briefings.pagination,
+            errors: briefings.errors,
+        });
     } catch (error) {
         if (error instanceof z.ZodError) {
             return c.json({ error: 'Invalid query parameters', details: error.errors }, 400);

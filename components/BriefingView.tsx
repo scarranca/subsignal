@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { ImageWithFallback } from '@/components/ui/image-with-fallback';
-import { ChevronDown, ChevronRight, ChevronLeft, Archive, ArrowUpRight } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Archive, ArrowUpRight, ChevronDown, Clock } from 'lucide-react';
 import { apiClient } from '@/client/api';
 import type { CompanyBriefing } from '@/types/api';
 import { queryKeys } from '@/lib/query-keys';
@@ -37,7 +37,7 @@ const formatDate = (date: Date | string) => {
 
 export function BriefingView() {
     const [currentPage, setCurrentPage] = useState(1);
-    const companiesPerPage = 10;
+    const companiesPerPage = 4;
     const [dialogOpen, setDialogOpen] = useState(false);
     const [selectedBriefing, setSelectedBriefing] = useState<{
         id: string;
@@ -200,7 +200,7 @@ export function BriefingView() {
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
-                                                    className="h-8 w-8 p-0"
+                                                    className="text-xs text-gray-600 hover:text-gray-900 h-auto p-1"
                                                     onClick={() =>
                                                         toggleExpanded(
                                                             companyWithBriefings.company.id,
@@ -214,17 +214,18 @@ export function BriefingView() {
                                                     )}
                                                 </Button>
                                             ) : (
-                                                <div
-                                                    className="h-8 w-8 p-0 flex items-center justify-center cursor-pointer opacity-50 hover:opacity-70 transition-opacity"
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-xs text-gray-600 hover:text-gray-900 h-auto p-1"
                                                     onClick={() =>
                                                         showToast.info(
                                                             'No briefings yet, stay tuned',
                                                         )
                                                     }
-                                                    title="Nothing yet"
                                                 >
-                                                    <ChevronRight className="h-4 w-4 text-gray-400" />
-                                                </div>
+                                                    <Clock className="h-4 w-4" />
+                                                </Button>
                                             )}
                                         </div>
                                     </div>
@@ -266,47 +267,82 @@ export function BriefingView() {
                             ))}
                         </div>
 
-                        {/* Pagination - Note: This is simplified since the API doesn't return pagination info yet */}
-                        {companiesWithBriefings.length === companiesPerPage && (
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-8 pt-6 space-y-4 sm:space-y-0">
-                                <div className="text-sm text-gray-600 text-center sm:text-left">
-                                    Showing page {currentPage}
-                                </div>
-                                <div className="flex items-center justify-center space-x-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => handlePageChange(currentPage - 1)}
-                                        disabled={currentPage === 1}
-                                        className="flex items-center space-x-1"
-                                    >
-                                        <ChevronLeft className="h-4 w-4" />
-                                        <span className="hidden sm:inline">Previous</span>
-                                    </Button>
-
-                                    <div className="flex items-center space-x-1">
+                        {/* Pagination */}
+                        {briefingsResponse?.pagination &&
+                            briefingsResponse.pagination.totalPages > 1 && (
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-8 pt-6 space-y-4 sm:space-y-0">
+                                    <div className="text-sm text-gray-600 text-center sm:text-left">
+                                        Showing{' '}
+                                        {(briefingsResponse.pagination.page - 1) *
+                                            briefingsResponse.pagination.pageSize +
+                                            1}
+                                        -
+                                        {Math.min(
+                                            briefingsResponse.pagination.page *
+                                                briefingsResponse.pagination.pageSize,
+                                            briefingsResponse.pagination.totalItems,
+                                        )}{' '}
+                                        of {briefingsResponse.pagination.totalItems} companies
+                                    </div>
+                                    <div className="flex items-center justify-center space-x-2">
                                         <Button
-                                            variant="default"
+                                            variant="outline"
                                             size="sm"
-                                            className="w-8 h-8 p-0 bg-gray-900 hover:bg-gray-800 text-white"
+                                            onClick={() => handlePageChange(currentPage - 1)}
+                                            disabled={!briefingsResponse.pagination.hasPrevious}
+                                            className="flex items-center space-x-1"
                                         >
-                                            {currentPage}
+                                            <ChevronLeft className="h-4 w-4" />
+                                            <span className="hidden sm:inline">Previous</span>
+                                        </Button>
+
+                                        <div className="flex items-center space-x-1">
+                                            {Array.from(
+                                                { length: briefingsResponse.pagination.totalPages },
+                                                (_, i) => {
+                                                    const pageNum = i + 1;
+                                                    const isCurrentPage =
+                                                        pageNum ===
+                                                        briefingsResponse.pagination.page;
+
+                                                    return (
+                                                        <Button
+                                                            key={pageNum}
+                                                            variant={
+                                                                isCurrentPage
+                                                                    ? 'default'
+                                                                    : 'outline'
+                                                            }
+                                                            size="sm"
+                                                            className={`w-8 h-8 p-0 ${
+                                                                isCurrentPage
+                                                                    ? 'bg-gray-900 hover:bg-gray-800 text-white'
+                                                                    : 'hover:bg-gray-100'
+                                                            }`}
+                                                            onClick={() =>
+                                                                handlePageChange(pageNum)
+                                                            }
+                                                        >
+                                                            {pageNum}
+                                                        </Button>
+                                                    );
+                                                },
+                                            )}
+                                        </div>
+
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => handlePageChange(currentPage + 1)}
+                                            disabled={!briefingsResponse.pagination.hasNext}
+                                            className="flex items-center space-x-1"
+                                        >
+                                            <span className="hidden sm:inline">Next</span>
+                                            <ChevronRight className="h-4 w-4" />
                                         </Button>
                                     </div>
-
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => handlePageChange(currentPage + 1)}
-                                        disabled={companiesWithBriefings.length < companiesPerPage}
-                                        className="flex items-center space-x-1"
-                                    >
-                                        <span className="hidden sm:inline">Next</span>
-                                        <ChevronRight className="h-4 w-4" />
-                                    </Button>
                                 </div>
-                            </div>
-                        )}
+                            )}
                     </>
                 )}
             </div>

@@ -287,9 +287,17 @@ export class BriefingService {
         briefingListingOptions: PaginationOptions = {}, // These options would be used to paginate the briefings
     ): Promise<{
         data: { company: typeof company.$inferSelect; briefings: Briefing[] }[];
+        pagination: {
+            page: number;
+            pageSize: number;
+            totalItems: number;
+            totalPages: number;
+            hasNext: boolean;
+            hasPrevious: boolean;
+        };
         errors: BriefingError[];
     }> {
-        // List the user's companies
+        // List the user's companies with pagination
         const companies = await companyQueries.getActiveCompaniesByUser(
             userId,
             companyListingOptions,
@@ -297,6 +305,7 @@ export class BriefingService {
         if (companies.data.length === 0) {
             return {
                 data: [],
+                pagination: companies.pagination,
                 errors: [],
             };
         }
@@ -308,12 +317,13 @@ export class BriefingService {
             briefingListingOptions,
         );
 
-        // Return the briefings
+        // Return the briefings with pagination metadata
         return {
             data: companies.data.map((company) => ({
                 company,
                 briefings: briefings.data.filter((briefing) => briefing.companyId === company.id),
             })),
+            pagination: companies.pagination,
             errors: briefings.errors,
         };
     }
