@@ -6,7 +6,7 @@ import { AvailableBillingPlan, BillingPlan } from '@/db/schema/billing';
 import { SelectablePricingCard } from './onboarding/shared';
 import { apiClient } from '@/client/api';
 import { showToast } from '@/lib/toast';
-import { CAL_URL } from '@/constants/contact';
+import { CAL_BILLING_URL } from '@/constants/contact';
 import { DelayedLink } from './ui/delayed-link';
 import { PaymentStatus } from '@/types/api';
 
@@ -272,7 +272,7 @@ export const PaywallPricing = ({
             {/* Secondary Button */}
             <div className="mt-4 text-center">
                 <DelayedLink
-                    href={CAL_URL}
+                    href={CAL_BILLING_URL}
                     delay={3000}
                     className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >

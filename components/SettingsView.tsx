@@ -17,6 +17,7 @@ import { IntegrationCard } from '@/components/ui/integration-card';
 import { apiClient } from '@/client/api';
 import { toast } from 'sonner';
 import { queryKeys } from '@/lib/query-keys';
+import { CONTACT_EMAIL, CAL_SUPPORT_URL } from '@/constants/contact';
 import SettingsViewSkeleton from './skeleton/skeleton-settings-view';
 import { Frequency } from '@/db/schema/preference';
 
@@ -284,10 +285,16 @@ export function SettingsView() {
 
                     <div className="space-y-6">
                         <IntegrationCard
-                            title="Success Manager"
-                            description="Connect with success manager"
-                            buttonText="Connect"
-                            onButtonClick={() => window.open('mailto:nick@subsignal.vc', '_blank')}
+                            title="Email Support"
+                            description="Contact us via email for assistance"
+                            buttonText="Email"
+                            onButtonClick={() => window.open(`mailto:${CONTACT_EMAIL}`, '_blank')}
+                        />
+                        <IntegrationCard
+                            title="Schedule a Call"
+                            description="Book a call with our support team"
+                            buttonText="Schedule"
+                            onButtonClick={() => window.open(CAL_SUPPORT_URL, '_blank')}
                         />
                     </div>
                 </div>

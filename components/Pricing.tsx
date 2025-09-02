@@ -1,6 +1,6 @@
 'use client';
 
-import { CAL_URL } from '@/constants/contact';
+import { CAL_DISCOVERY_URL } from '@/constants/contact';
 import { PlanFeature, PRICING_PLANS, type PricingPlan, Period } from '@/constants/pricing';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -131,7 +131,7 @@ export default function Pricing() {
         if (ctaText === 'Start Tracking') {
             router.push('/get-started?step=1');
         } else if (ctaText === 'Contact Sales') {
-            window.open(CAL_URL, '_blank');
+            window.open(CAL_DISCOVERY_URL, '_blank');
         }
     };
 

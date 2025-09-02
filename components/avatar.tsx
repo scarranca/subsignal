@@ -12,12 +12,12 @@ import { authClient } from '@/client/auth';
 import { showToast } from '@/lib/toast';
 import { AVATAR_COLORS, AVATAR_VARIANT } from '@/constants/palette';
 import BoringAvatar from 'boring-avatars';
-import { CAL_URL } from '@/constants/contact';
+import { CAL_SUPPORT_URL } from '@/constants/contact';
 
 // Common dropdown menu content
 function UserDropdownMenu({ onSignOut }: { onSignOut: () => void }) {
     const handleSupportClick = () => {
-        window.open(CAL_URL, '_blank');
+        window.open(CAL_SUPPORT_URL, '_blank');
     };
 
     const handleBillingClick = () => {

@@ -23,7 +23,7 @@ export function IntegrationCard({
                     <p className="text-sm text-gray-600 mt-1">{description}</p>
                 </div>
                 <Button
-                    className="bg-gray-900 hover:bg-gray-800 text-white"
+                    className="bg-gray-900 hover:bg-gray-800 text-white w-30"
                     onClick={onButtonClick}
                 >
                     {buttonText}
