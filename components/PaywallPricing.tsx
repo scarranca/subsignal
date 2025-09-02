@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { PRICING_PLANS } from '@/constants/pricing';
+import { PRICING_PLANS, Period } from '@/constants/pricing';
 import { AvailableBillingPlan, BillingPlan } from '@/db/schema/billing';
 import { SelectablePricingCard } from './onboarding/shared';
 import { apiClient } from '@/client/api';
@@ -9,6 +9,41 @@ import { showToast } from '@/lib/toast';
 import { CAL_URL } from '@/constants/contact';
 import { DelayedLink } from './ui/delayed-link';
 import { PaymentStatus } from '@/types/api';
+
+function BillingToggle({
+    period,
+    onPeriodChange,
+}: {
+    period: Period;
+    onPeriodChange: (period: Period) => void;
+}) {
+    return (
+        <div className="flex items-center justify-center mb-8">
+            <div className="bg-gray-100 rounded-lg p-1 flex">
+                <button
+                    onClick={() => onPeriodChange('/month')}
+                    className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
+                        period === '/month'
+                            ? 'bg-white text-black shadow-sm'
+                            : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                >
+                    Monthly
+                </button>
+                <button
+                    onClick={() => onPeriodChange('/year')}
+                    className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
+                        period === '/year'
+                            ? 'bg-white text-black shadow-sm'
+                            : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                >
+                    Annual
+                </button>
+            </div>
+        </div>
+    );
+}
 
 interface PaywallPricingProps {
     /** Title for the pricing section */
@@ -38,15 +73,35 @@ export const PaywallPricing = ({
     userEmail,
     currentPaymentStatus,
 }: PaywallPricingProps) => {
-    const [selectedPlan, setSelectedPlan] = useState<BillingPlan>('solo_plan');
+    const [billingPeriod, setBillingPeriod] = useState<Period>('/month');
+    const [selectedPlan, setSelectedPlan] = useState<BillingPlan>('solo_plan_monthly');
     const [isProcessing, setIsProcessing] = useState(false);
 
     // Set initial selected plan based on current subscription
     useEffect(() => {
         if (currentPaymentStatus?.plan) {
             setSelectedPlan(currentPaymentStatus.plan as AvailableBillingPlan);
+            // Set billing period based on current plan
+            const currentPlan = PRICING_PLANS.find((p) => p.id === currentPaymentStatus.plan);
+            if (currentPlan) {
+                setBillingPeriod(currentPlan.period);
+            }
         }
     }, [currentPaymentStatus]);
+
+    // Update selected plan when billing period changes
+    useEffect(() => {
+        // Map current plan to new period
+        if (selectedPlan === 'solo_plan_monthly' && billingPeriod === '/year') {
+            setSelectedPlan('solo_plan_annually');
+        } else if (selectedPlan === 'solo_plan_annually' && billingPeriod === '/month') {
+            setSelectedPlan('solo_plan_monthly');
+        } else if (selectedPlan === 'team_plan_monthly' && billingPeriod === '/year') {
+            setSelectedPlan('team_plan_annually');
+        } else if (selectedPlan === 'team_plan_annually' && billingPeriod === '/month') {
+            setSelectedPlan('team_plan_monthly');
+        }
+    }, [billingPeriod, selectedPlan]);
 
     // Check if user is switching to a different plan
     const isSwitchingPlan =
@@ -127,10 +182,12 @@ export const PaywallPricing = ({
         }
     }, [selectedPlan, userEmail, hasActiveSubscription, isSwitchingPlan, currentPaymentStatus]);
 
-    const plans = PRICING_PLANS.filter((plan) => plan.id !== 'custom_plan').map((plan) => ({
+    const plans = PRICING_PLANS.filter(
+        (plan) => plan.id !== 'custom_plan' && plan.period === billingPeriod,
+    ).map((plan) => ({
         ...plan,
         // isCurrent: currentPaymentStatus?.plan === plan.id, // Mark current plan
-        isPopular: plan.id === 'team_plan', // Show team plan as popular
+        isPopular: plan.name === 'Fund', // Show Fund plan as popular
     }));
 
     // Determine button text based on current state
@@ -177,6 +234,9 @@ export const PaywallPricing = ({
                 </p>
             </div>
 
+            {/* Billing Toggle */}
+            <BillingToggle period={billingPeriod} onPeriodChange={setBillingPeriod} />
+
             {/* Pricing Cards */}
             <div className="mb-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -191,6 +251,7 @@ export const PaywallPricing = ({
                             isSelected={selectedPlan === plan.id}
                             onClick={() => setSelectedPlan(plan.id)}
                             isPopular={plan.isPopular}
+                            planId={plan.id}
                             // isCurrent={plan.isCurrent}
                         />
                     ))}

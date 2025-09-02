@@ -20,7 +20,7 @@ export async function handleGetBriefingsForUser(c: Context) {
 
         // Get billing plan from context
         const billingPlan = getBillingPlan(c);
-        const briefingLimit = billingPlan.briefingLimit ?? getBriefingLimit('solo_plan');
+        const briefingLimit = billingPlan.briefingLimit ?? getBriefingLimit('solo_plan_monthly');
 
         const briefings = await briefingService.getBriefingsForUser(
             user.id,

@@ -1,8 +1,44 @@
 'use client';
 
 import { CAL_URL } from '@/constants/contact';
-import { PlanFeature, PRICING_PLANS, type PricingPlan } from '@/constants/pricing';
+import { PlanFeature, PRICING_PLANS, type PricingPlan, Period } from '@/constants/pricing';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+
+function BillingToggle({
+    period,
+    onPeriodChange,
+}: {
+    period: Period;
+    onPeriodChange: (period: Period) => void;
+}) {
+    return (
+        <div className="flex items-center justify-center mb-12">
+            <div className="bg-gray-100 rounded-lg p-1 flex">
+                <button
+                    onClick={() => onPeriodChange('/month')}
+                    className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
+                        period === '/month'
+                            ? 'bg-white text-black shadow-sm'
+                            : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                >
+                    Monthly
+                </button>
+                <button
+                    onClick={() => onPeriodChange('/year')}
+                    className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
+                        period === '/year'
+                            ? 'bg-white text-black shadow-sm'
+                            : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                >
+                    Annual
+                </button>
+            </div>
+        </div>
+    );
+}
 
 function PricingFeature({ text, included }: PlanFeature) {
     return (
@@ -26,6 +62,7 @@ function PricingFeature({ text, included }: PlanFeature) {
 }
 
 function PricingPlan({
+    id,
     name,
     price,
     period,
@@ -54,6 +91,15 @@ function PricingPlan({
                         </span>
                     )}
                 </div>
+                {period === '/year' ? (
+                    <p className={`text-sm mt-1 ${isPopular ? 'text-gray-400' : 'text-gray-600'}`}>
+                        ${id === 'solo_plan_annually' ? '99' : '299'}/month if paid monthly
+                    </p>
+                ) : (
+                    <p className={`text-sm mt-1 ${isPopular ? 'text-gray-400' : 'text-gray-600'}`}>
+                        ${id === 'solo_plan_monthly' ? '999' : '2499'}/year if paid annually
+                    </p>
+                )}
                 <p className={`mt-4 text-sm ${isPopular ? 'text-gray-400' : 'text-gray-600'}`}>
                     {description}
                 </p>
@@ -79,6 +125,7 @@ function PricingPlan({
 
 export default function Pricing() {
     const router = useRouter();
+    const [billingPeriod, setBillingPeriod] = useState<Period>('/month');
 
     const handleCtaClick = (ctaText: string) => {
         if (ctaText === 'Start Tracking') {
@@ -88,7 +135,14 @@ export default function Pricing() {
         }
     };
 
-    const plans = PRICING_PLANS;
+    // Filter plans based on selected period and exclude enterprise
+    const filteredPlans = PRICING_PLANS.filter(
+        (plan) => plan.period === billingPeriod && !plan.isEnterprise,
+    );
+
+    // Always show enterprise plan
+    const enterprisePlan = PRICING_PLANS.find((plan) => plan.isEnterprise);
+    const plans = enterprisePlan ? [...filteredPlans, enterprisePlan] : filteredPlans;
 
     return (
         <section className="py-16 md:py-24 px-6 md:px-12 scroll-mt-20" id="pricing">
@@ -102,6 +156,8 @@ export default function Pricing() {
                     Keep your thesis current. Deliver more than just capital.
                 </p>
             </div>
+
+            <BillingToggle period={billingPeriod} onPeriodChange={setBillingPeriod} />
 
             <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
                 {plans.map((plan, index) => (

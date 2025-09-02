@@ -12,7 +12,13 @@ export const entitlementStatusEnum = pgEnum('entitlement_status', [
 /**
  * Plan types enum
  */
-export const planEnum = pgEnum('plan', ['solo_plan', 'team_plan', 'custom_plan']);
+export const planEnum = pgEnum('plan', [
+    'solo_plan_monthly',
+    'team_plan_monthly',
+    'solo_plan_annually',
+    'team_plan_annually',
+    'custom_plan',
+]);
 
 /**
  * Payment provider enum for future multi-provider support

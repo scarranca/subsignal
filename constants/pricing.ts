@@ -35,7 +35,7 @@ export interface PricingPlan {
  */
 export const PRICING_PLANS: PricingPlan[] = [
     {
-        id: 'solo_plan',
+        id: 'solo_plan_monthly',
         name: 'Solo',
         price: '$99',
         period: '/month',
@@ -50,10 +50,43 @@ export const PRICING_PLANS: PricingPlan[] = [
         ctaText: 'Start Tracking',
     },
     {
-        id: 'team_plan',
+        id: 'team_plan_monthly',
         name: 'Fund',
         price: '$299',
         period: '/month',
+        description: 'For investment teams and small funds',
+        features: [
+            { text: 'Track up to 50 companies', included: true },
+            { text: 'Monitor up to 100 pages', included: true },
+            { text: 'Refresh every 3 days', included: true },
+            { text: 'Email & Slack integrations', included: true },
+            { text: 'CRM integrations (Affinity, AngelList)', included: true },
+            // { text: 'Up to 10 seats', included: true },
+            { text: 'Dedicated success manager', included: true },
+        ],
+        ctaText: 'Contact Sales',
+        isPopular: true,
+    },
+    {
+        id: 'solo_plan_annually',
+        name: 'Solo',
+        price: '$999',
+        period: '/year',
+        description: 'For individual VCs tracking their deal flow',
+        features: [
+            { text: 'Track up to 10 companies', included: true },
+            { text: 'Monitor up to 50 pages', included: true },
+            { text: 'Refresh every 7 days', included: true },
+            { text: 'Email integration', included: true },
+            { text: 'CRM integration (Affinity, AngelList)', included: false },
+        ],
+        ctaText: 'Start Tracking',
+    },
+    {
+        id: 'team_plan_annually',
+        name: 'Fund',
+        price: '$2499',
+        period: '/year',
         description: 'For investment teams and small funds',
         features: [
             { text: 'Track up to 50 companies', included: true },
@@ -94,9 +127,11 @@ export const PRICING_PLANS: PricingPlan[] = [
  */
 export function getPageLimit(plan: BillingPlan): number {
     switch (plan) {
-        case 'solo_plan':
+        case 'solo_plan_monthly':
+        case 'solo_plan_annually':
             return 50;
-        case 'team_plan':
+        case 'team_plan_monthly':
+        case 'team_plan_annually':
             return 100;
         case 'custom_plan':
             return 1000; // Proxy for unlimited
@@ -112,9 +147,11 @@ export function getPageLimit(plan: BillingPlan): number {
  */
 export function getCompanyLimit(plan: BillingPlan): number {
     switch (plan) {
-        case 'solo_plan':
+        case 'solo_plan_monthly':
+        case 'solo_plan_annually':
             return 10;
-        case 'team_plan':
+        case 'team_plan_monthly':
+        case 'team_plan_annually':
             return 50;
         case 'custom_plan':
             return 250; // Proxy for unlimited
@@ -130,9 +167,11 @@ export function getCompanyLimit(plan: BillingPlan): number {
  */
 export function getBriefingLimit(plan: BillingPlan): number {
     switch (plan) {
-        case 'solo_plan':
+        case 'solo_plan_monthly':
+        case 'solo_plan_annually':
             return 4;
-        case 'team_plan':
+        case 'team_plan_monthly':
+        case 'team_plan_annually':
             return 8;
         case 'custom_plan':
             return 12;
@@ -148,9 +187,11 @@ export function getBriefingLimit(plan: BillingPlan): number {
  */
 export function getRefreshLimit(plan: BillingPlan): '3_day' | '7_day' {
     switch (plan) {
-        case 'solo_plan':
+        case 'solo_plan_monthly':
+        case 'solo_plan_annually':
             return '7_day';
-        case 'team_plan':
+        case 'team_plan_monthly':
+        case 'team_plan_annually':
             return '3_day';
         case 'custom_plan':
             return '3_day'; // Lowest refresh frequency
@@ -166,9 +207,11 @@ export function getRefreshLimit(plan: BillingPlan): '3_day' | '7_day' {
  */
 function getZapierEnabled(plan: BillingPlan): boolean {
     switch (plan) {
-        case 'solo_plan':
+        case 'solo_plan_monthly':
+        case 'solo_plan_annually':
             return false;
-        case 'team_plan':
+        case 'team_plan_monthly':
+        case 'team_plan_annually':
         case 'custom_plan':
             return true;
     }
@@ -183,8 +226,10 @@ function getZapierEnabled(plan: BillingPlan): boolean {
  */
 function getEmailEnabled(plan: BillingPlan): boolean {
     switch (plan) {
-        case 'solo_plan':
-        case 'team_plan':
+        case 'solo_plan_monthly':
+        case 'solo_plan_annually':
+        case 'team_plan_monthly':
+        case 'team_plan_annually':
         case 'custom_plan':
             return true;
     }
@@ -198,7 +243,7 @@ function getEmailEnabled(plan: BillingPlan): boolean {
  * @returns
  */
 export function getBillingEntitlement(record: BillingSelect): BillingEntitlement {
-    const plan = record.currentPlan || 'solo_plan';
+    const plan = record.currentPlan || 'solo_plan_monthly';
 
     return {
         ...record,
@@ -216,8 +261,10 @@ export function getBillingEntitlement(record: BillingSelect): BillingEntitlement
  * Plan ID mapping for API calls
  */
 export const PLAN_ID_MAPPING: Record<AvailableBillingPlan, AvailableBillingPlan> = {
-    solo_plan: 'solo_plan',
-    team_plan: 'team_plan',
+    solo_plan_monthly: 'solo_plan_monthly',
+    team_plan_monthly: 'team_plan_monthly',
+    solo_plan_annually: 'solo_plan_annually',
+    team_plan_annually: 'team_plan_annually',
 } as const;
 
 /**
@@ -225,8 +272,14 @@ export const PLAN_ID_MAPPING: Record<AvailableBillingPlan, AvailableBillingPlan>
  * Replace these with your actual product IDs from Dodo Payments dashboard
  */
 export const DODO_PRODUCT_ID_MAPPING: Record<AvailableBillingPlan, string> = {
-    solo_plan: process.env.NEXT_PUBLIC_DODO_SOLO_PRODUCT_ID || 'pdt_your_solo_product_id',
-    team_plan: process.env.NEXT_PUBLIC_DODO_TEAM_PRODUCT_ID || 'pdt_your_team_product_id',
+    solo_plan_monthly:
+        process.env.NEXT_PUBLIC_DODO_SOLO_PRODUCT_ID_MONTHLY || 'pdt_your_solo_product_id',
+    solo_plan_annually:
+        process.env.NEXT_PUBLIC_DODO_SOLO_PRODUCT_ID_ANNUALLY || 'pdt_your_solo_product_id',
+    team_plan_monthly:
+        process.env.NEXT_PUBLIC_DODO_TEAM_PRODUCT_ID_MONTHLY || 'pdt_your_team_product_id',
+    team_plan_annually:
+        process.env.NEXT_PUBLIC_DODO_TEAM_PRODUCT_ID_ANNUALLY || 'pdt_your_team_product_id',
 } as const;
 
 /**

@@ -119,10 +119,12 @@ export const getFormattedPlan = (plan?: BillingPlan | null): string => {
     if (!plan) return 'No Plan';
 
     switch (plan) {
-        case 'solo_plan':
+        case 'solo_plan_monthly':
+        case 'solo_plan_annually':
             return 'Subsignal Solo Plan';
-        case 'team_plan':
-            return 'Subsignal Team Plan';
+        case 'team_plan_monthly':
+        case 'team_plan_annually':
+            return 'Subsignal Fund Plan';
         case 'custom_plan':
             return 'Subsignal Custom Plan';
         default:

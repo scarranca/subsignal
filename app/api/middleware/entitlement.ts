@@ -44,10 +44,10 @@ export async function injectLimits(c: Context, next: Next) {
     }
 
     // Get the billing plan from context
-    let pageLimit = getPageLimit('solo_plan'); // Assume solo plan as starters
-    let companyLimit = getCompanyLimit('solo_plan'); // Assume solo plan as starters
-    let refreshLimit = getRefreshLimit('solo_plan'); // Assume solo plan as starters
-    let briefingLimit = getBriefingLimit('solo_plan'); // Assume solo plan as starters
+    let pageLimit = getPageLimit('solo_plan_monthly'); // Assume solo plan as starters
+    let companyLimit = getCompanyLimit('solo_plan_monthly'); // Assume solo plan as starters
+    let refreshLimit = getRefreshLimit('solo_plan_monthly'); // Assume solo plan as starters
+    let briefingLimit = getBriefingLimit('solo_plan_monthly'); // Assume solo plan as starters
 
     // Get the user from context
     const user = getUser(c);

@@ -15,6 +15,7 @@ interface SelectablePricingCardProps {
     onClick: () => void;
     isPopular?: boolean;
     isCurrent?: boolean;
+    planId?: string;
 }
 
 export const SelectablePricingCard = ({
@@ -27,6 +28,7 @@ export const SelectablePricingCard = ({
     onClick,
     isPopular = false,
     isCurrent = false,
+    planId,
 }: SelectablePricingCardProps) => {
     return (
         <div
@@ -59,6 +61,13 @@ export const SelectablePricingCard = ({
                         </span>
                     )}
                 </div>
+                {period && planId && (
+                    <p className={`text-xs mt-1 ${isSelected ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {period === '/year'
+                            ? `$${planId === 'solo_plan_annually' ? '99' : '299'}/month if paid monthly`
+                            : `$${planId === 'solo_plan_monthly' ? '999' : '2499'}/year if paid annually`}
+                    </p>
+                )}
                 <p className={`mt-2 text-xs ${isSelected ? 'text-gray-400' : 'text-gray-600'}`}>
                     {description}
                 </p>
