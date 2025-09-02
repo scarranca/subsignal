@@ -42,7 +42,7 @@ export function BriefingContentDialog({
                             src={briefing.contentUrl}
                             className="w-full h-full border-2 rounded-lg"
                             title={`Briefing content for ${briefing.companyName}`}
-                            sandbox="allow-same-origin allow-scripts"
+                            sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms allow-top-navigation-by-user-activation"
                         />
                     )}
                 </div>
