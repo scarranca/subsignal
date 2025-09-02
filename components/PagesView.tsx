@@ -98,6 +98,32 @@ export function PagesView() {
         },
     });
 
+    // Separate query for all companies (for dropdown selection)
+    const { data: allCompaniesResponse } = useQuery({
+        queryKey: ['companies', 'all'],
+        queryFn: async () => {
+            const result = await apiClient.getCompanies(
+                {
+                    pageSize: 50, // Max allowed page size
+                    sortBy: 'name',
+                    sortOrder: 'asc',
+                },
+                true, // excludePages = true for performance
+            );
+
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to load all companies');
+            }
+
+            return result.data;
+        },
+        staleTime: 60 * 1000, // 60 seconds (can be cached longer)
+        retry: (failureCount, error) => {
+            if (error?.message?.includes('4')) return false;
+            return failureCount < 2;
+        },
+    });
+
     // Local state for expanded companies
     const [expandedCompanies, setExpandedCompanies] = useState<Set<string>>(new Set());
 
@@ -686,7 +712,7 @@ export function PagesView() {
                                             <SelectValue placeholder="Choose a company" />
                                         </SelectTrigger>
                                         <SelectContent className="bg-white">
-                                            {companies.map((company) => (
+                                            {(allCompaniesResponse?.data || []).map((company) => (
                                                 <SelectItem key={company.id} value={company.id}>
                                                     {company.name}
                                                 </SelectItem>
