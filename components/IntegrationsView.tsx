@@ -22,6 +22,8 @@ export function IntegrationsView() {
                             onButtonClick={() =>
                                 toast.success('Rolling out Zapier access. Stay tuned!')
                             }
+                            icon="/images/integrations/zapier.svg"
+                            className="max-w-md"
                         />
                     </div>
                 </div>

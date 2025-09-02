@@ -288,13 +288,23 @@ export function SettingsView() {
                             title="Email Support"
                             description="Contact us via email for assistance"
                             buttonText="Email"
-                            onButtonClick={() => window.open(`mailto:${CONTACT_EMAIL}`, '_blank')}
+                            onButtonClick={() => {
+                                navigator.clipboard.writeText(CONTACT_EMAIL);
+                                toast.success('Email address copied to clipboard!');
+                                setTimeout(() => {
+                                    window.open(`mailto:${CONTACT_EMAIL}`, '_blank');
+                                }, 1000);
+                            }}
+                            icon="/images/contact/gmail.png"
+                            className="max-w-md"
                         />
                         <IntegrationCard
                             title="Schedule a Call"
                             description="Book a call with our support team"
                             buttonText="Schedule"
                             onButtonClick={() => window.open(CAL_SUPPORT_URL, '_blank')}
+                            icon="/images/contact/cal.png"
+                            className="max-w-md"
                         />
                     </div>
                 </div>
