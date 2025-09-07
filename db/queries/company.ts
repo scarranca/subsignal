@@ -5,8 +5,19 @@ import { page } from '../schema/page';
 import type { PaginationOptions, PaginatedResult } from './types';
 import { withDbTiming } from '@/lib/db-timing';
 import type { Context } from 'hono';
+import type { ScreenshotOptions } from '@/types/screenshot';
+import type { ScreenshotOptionsInput } from '@/schema/api/page';
+import { DEFAULT_PAGE_OPTIONS } from '@/constants/screenshot';
 
 export const companyQueries = {
+    /**
+     * Get companies by URLs
+     * @param userId - The user ID
+     * @param urls - The URLs to get companies for
+     * @param pageOrderBy - The order by column for the pages
+     * @param context - The context
+     * @returns The companies with pages
+     */
     async getCompaniesByUrls(
         userId: string,
         urls: string[],
@@ -41,6 +52,12 @@ export const companyQueries = {
         return companiesWithPages;
     },
 
+    /**
+     * Get companies by URLs without pages
+     * @param userId - The user ID
+     * @param urls - The URLs to get companies for
+     * @returns The companies without pages
+     */
     async getCompaniesByUrlsWithoutPages(userId: string, urls: string[]) {
         if (urls.length === 0) return [];
 
@@ -59,7 +76,16 @@ export const companyQueries = {
         return companies;
     },
 
-    async addPageToCompany(companyId: string, pageData: { title: string; url: string }) {
+    /**
+     * Add a page to a company
+     * @param companyId - The company ID
+     * @param pageData - The page data
+     * @returns The new page
+     */
+    async addPageToCompany(
+        companyId: string,
+        pageData: { title: string; url: string; options?: ScreenshotOptionsInput },
+    ) {
         const [newPage] = await db
             .insert(page)
             .values({
@@ -67,12 +93,22 @@ export const companyQueries = {
                 companyId: companyId,
                 title: pageData.title,
                 url: pageData.url,
+                options: (pageData.options || DEFAULT_PAGE_OPTIONS) as Omit<
+                    ScreenshotOptions,
+                    'url'
+                >,
             })
             .returning();
 
         return newPage;
     },
 
+    /**
+     * Create a company with an initial page
+     * @param userId - The user ID
+     * @param data - The company data
+     * @returns The company with the initial page
+     */
     async createCompanyWithInitialPage(
         userId: string,
         data: {
@@ -81,6 +117,7 @@ export const companyQueries = {
             initialPage: {
                 title: string;
                 url: string;
+                options?: ScreenshotOptionsInput;
             };
         },
     ) {
@@ -104,6 +141,10 @@ export const companyQueries = {
                     companyId: newCompany.id,
                     title: data.initialPage.title,
                     url: data.initialPage.url,
+                    options: (data.initialPage.options || DEFAULT_PAGE_OPTIONS) as Omit<
+                        ScreenshotOptions,
+                        'url'
+                    >,
                 })
                 .returning();
 
@@ -114,6 +155,13 @@ export const companyQueries = {
         });
     },
 
+    /**
+     * Get or create a company
+     * @param userId - The user ID
+     * @param url - The URL to get or create the company for
+     * @param name - The name of the company
+     * @returns The company
+     */
     async getOrCreateCompany(userId: string, url: string, name: string) {
         // First, try to find an existing company with the same URL for this user
         const existingCompany = await db.query.company.findFirst({
@@ -142,7 +190,16 @@ export const companyQueries = {
         return newCompany;
     },
 
-    async getOrAddPagesToCompany(companyId: string, pages: { title: string; url: string }[]) {
+    /**
+     * Get or add pages to a company
+     * @param companyId - The company ID
+     * @param pages - The pages to get or add to the company
+     * @returns The company with the pages
+     */
+    async getOrAddPagesToCompany(
+        companyId: string,
+        pages: { title: string; url: string; options?: ScreenshotOptionsInput }[],
+    ) {
         if (pages.length === 0) {
             const companyInfo = await db.query.company.findFirst({
                 where: and(eq(company.id, companyId), eq(company.isActive, true)),
@@ -194,6 +251,10 @@ export const companyQueries = {
                             companyId: companyId,
                             title: pageData.title,
                             url: pageData.url,
+                            options: (pageData.options || DEFAULT_PAGE_OPTIONS) as Omit<
+                                ScreenshotOptions,
+                                'url'
+                            >,
                         })
                         .returning();
 
@@ -213,6 +274,13 @@ export const companyQueries = {
         });
     },
 
+    /**
+     * Get user companies with pages
+     * @param userId - The user ID
+     * @param options - The pagination options
+     * @param context - The context
+     * @returns The user companies with pages
+     */
     async getUserCompaniesWithPages(
         userId: string,
         options: PaginationOptions = {},
@@ -291,6 +359,12 @@ export const companyQueries = {
         };
     },
 
+    /**
+     * Get user companies without pages
+     * @param userId - The user ID
+     * @param options - The pagination options
+     * @returns The user companies without pages
+     */
     async getUserCompaniesWithoutPages(
         userId: string,
         options: PaginationOptions = {},
@@ -349,6 +423,12 @@ export const companyQueries = {
         };
     },
 
+    /**
+     * Delete a company with pages
+     * @param companyId - The company ID
+     * @param userId - The user ID
+     * @returns The success status
+     */
     async deleteCompanyWithPages(companyId: string, userId: string) {
         // Verify ownership first
         const existingCompany = await db.query.company.findFirst({
@@ -383,6 +463,12 @@ export const companyQueries = {
         });
     },
 
+    /**
+     * Get a company by ID
+     * @param companyId - The company ID
+     * @param userId - The user ID
+     * @returns The company
+     */
     async getCompanyById(companyId: string, userId: string) {
         const result = await db.query.company.findFirst({
             where: and(
@@ -399,6 +485,13 @@ export const companyQueries = {
         return result;
     },
 
+    /**
+     * Update a company
+     * @param companyId - The company ID
+     * @param userId - The user ID
+     * @param data - The company data
+     * @returns The updated company
+     */
     async updateCompany(
         companyId: string,
         userId: string,
@@ -432,6 +525,12 @@ export const companyQueries = {
         return updatedCompany;
     },
 
+    /**
+     * Get company pages
+     * @param companyId - The company ID
+     * @param options - The pagination options
+     * @returns The company pages
+     */
     async getCompanyPages(
         companyId: string,
         options: PaginationOptions = {},
@@ -511,6 +610,12 @@ export const companyQueries = {
         };
     },
 
+    /**
+     * Get active companies by user
+     * @param userId - The user ID
+     * @param options - The pagination options
+     * @returns The active companies by user
+     */
     async getActiveCompaniesByUser(
         userId: string,
         options: PaginationOptions = {},
@@ -557,6 +662,11 @@ export const companyQueries = {
         };
     },
 
+    /**
+     * Soft delete a company
+     * @param companyId - The company ID
+     * @returns The success status
+     */
     async softDeleteCompany(companyId: string) {
         return await db
             .update(company)
@@ -567,6 +677,11 @@ export const companyQueries = {
             .where(eq(company.id, companyId));
     },
 
+    /**
+     * Get company count by user
+     * @param userId - The user ID
+     * @returns The company count by user
+     */
     async getCompanyCountByUser(userId: string) {
         const [totalResult] = await db
             .select({ count: count() })

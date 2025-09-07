@@ -5,14 +5,25 @@ import { page } from '../schema/page';
 import type { PaginationOptions, PaginatedResult } from './types';
 import { withDbTiming } from '@/lib/db-timing';
 import type { Context } from 'hono';
+import type { ScreenshotOptions } from '@/types/screenshot';
+import type { ScreenshotOptionsInput } from '@/schema/api/page';
+import { DEFAULT_PAGE_OPTIONS } from '@/constants/screenshot';
 
 export const pageQueries = {
+    /**
+     * Create a page with an existing company
+     * @param userId - The user ID
+     * @param data - The page data
+     * @param context - The context
+     * @returns The created page
+     */
     async createPageWithExistingCompany(
         userId: string,
         data: {
             title: string;
             url: string;
             companyId: string;
+            options?: ScreenshotOptionsInput;
         },
         context?: Context,
     ) {
@@ -44,6 +55,10 @@ export const pageQueries = {
                         companyId: data.companyId,
                         title: data.title,
                         url: data.url,
+                        options: (data.options || DEFAULT_PAGE_OPTIONS) as Omit<
+                            ScreenshotOptions,
+                            'url'
+                        >,
                     })
                     .returning(),
             'create-page',
@@ -54,11 +69,19 @@ export const pageQueries = {
         return newPage;
     },
 
+    /**
+     * Create a page with a new company
+     * @param userId - The user ID
+     * @param data - The page data
+     * @param context - The context
+     * @returns The created page
+     */
     async createPageWithNewCompany(
         userId: string,
         data: {
             title: string;
             url: string;
+            options?: ScreenshotOptionsInput;
             newCompany: {
                 name: string;
                 url: string;
@@ -88,6 +111,10 @@ export const pageQueries = {
                             companyId: newCompany.id,
                             title: data.title,
                             url: data.url,
+                            options: (data.options || DEFAULT_PAGE_OPTIONS) as Omit<
+                                ScreenshotOptions,
+                                'url'
+                            >,
                         })
                         .returning();
 
@@ -102,6 +129,12 @@ export const pageQueries = {
         );
     },
 
+    /**
+     * Delete a page with company cleanup
+     * @param pageId - The page ID
+     * @param userId - The user ID
+     * @returns The result of the deletion
+     */
     async deletePageWithCompanyCleanup(pageId: string, userId: string) {
         // Check if page exists and belongs to user
         const result = await db
@@ -170,6 +203,12 @@ export const pageQueries = {
         });
     },
 
+    /**
+     * Bulk delete pages with company cleanup
+     * @param pageIds - The page IDs
+     * @param userId - The user ID
+     * @returns The result of the deletion
+     */
     async bulkDeletePagesWithCompanyCleanup(pageIds: string[], userId: string) {
         // Get pages with their companies to verify ownership
         const pagesToDelete = await db
@@ -251,6 +290,12 @@ export const pageQueries = {
         });
     },
 
+    /**
+     * Get paginated pages by user
+     * @param userId - The user ID
+     * @param options - The pagination options
+     * @returns The paginated pages
+     */
     async getPaginatedPagesByUser(
         userId: string,
         options: PaginationOptions = {},
@@ -321,6 +366,13 @@ export const pageQueries = {
         };
     },
 
+    /**
+     * Get paginated pages by company
+     * @param companyId - The company ID
+     * @param userId - The user ID
+     * @param options - The pagination options
+     * @returns The paginated pages
+     */
     async getPaginatedPagesByCompany(
         companyId: string,
         userId: string,
@@ -404,6 +456,12 @@ export const pageQueries = {
         };
     },
 
+    /**
+     * Get a page by ID
+     * @param pageId - The page ID
+     * @param userId - The user ID
+     * @returns The page
+     */
     async getPageById(pageId: string, userId: string) {
         const result = await db
             .select({
@@ -437,12 +495,20 @@ export const pageQueries = {
         };
     },
 
+    /**
+     * Update a page
+     * @param pageId - The page ID
+     * @param userId - The user ID
+     * @param data - The page data
+     * @returns The updated page
+     */
     async updatePage(
         pageId: string,
         userId: string,
         data: {
             title?: string;
             url?: string;
+            options?: ScreenshotOptionsInput;
         },
     ) {
         // Check if page exists and belongs to user
@@ -474,6 +540,9 @@ export const pageQueries = {
             .update(page)
             .set({
                 ...data,
+                options: data.options
+                    ? (data.options as Omit<ScreenshotOptions, 'url'>)
+                    : undefined,
                 updatedAt: new Date(),
             })
             .where(eq(page.id, pageId))
@@ -482,6 +551,12 @@ export const pageQueries = {
         return updatedPage;
     },
 
+    /**
+     * Get active pages by company
+     * @param companyId - The company ID
+     * @param options - The pagination options
+     * @returns The active pages
+     */
     async getActivePagesByCompany(
         companyId: string,
         options: PaginationOptions = {},
@@ -533,6 +608,12 @@ export const pageQueries = {
         };
     },
 
+    /**
+     * Get active pages by user
+     * @param userId - The user ID
+     * @param options - The pagination options
+     * @returns The active pages
+     */
     async getActivePagesByUser(userId: string, options: PaginationOptions = {}) {
         const {
             page: currentPage = 1,
@@ -602,6 +683,11 @@ export const pageQueries = {
         };
     },
 
+    /**
+     * Soft delete a page
+     * @param pageId - The page ID
+     * @returns The result of the deletion
+     */
     async softDeletePage(pageId: string) {
         return await db
             .update(page)
@@ -612,6 +698,11 @@ export const pageQueries = {
             .where(eq(page.id, pageId));
     },
 
+    /**
+     * Get page count by user
+     * @param userId - The user ID
+     * @returns The page count
+     */
     async getPageCountByUser(userId: string) {
         const [totalResult] = await db
             .select({ count: count() })

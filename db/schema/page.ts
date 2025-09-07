@@ -1,5 +1,6 @@
-import { pgTable, text, timestamp, boolean, index } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, index, jsonb } from 'drizzle-orm/pg-core';
 import { company } from './company';
+import type { ScreenshotOptions } from '../../types/screenshot';
 
 export const page = pgTable(
     'page',
@@ -17,6 +18,7 @@ export const page = pgTable(
         updatedAt: timestamp('updated_at')
             .$defaultFn(() => new Date())
             .notNull(),
+        options: jsonb('options').$type<Omit<ScreenshotOptions, 'url'>>(),
     },
     (table) => [
         // Optimized indexes for actual query patterns
