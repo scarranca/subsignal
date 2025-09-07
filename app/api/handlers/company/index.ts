@@ -122,6 +122,7 @@ export async function handleCreateCompany(c: Context) {
             initialPage: {
                 title: pageTitle,
                 url: validatedData.page.url,
+                options: validatedData.page.options,
             },
         });
 
@@ -136,6 +137,7 @@ export async function handleCreateCompany(c: Context) {
                 pageId: result.initialPage.id,
                 pageProperties: userPreference?.properties || DEFAULT_PREFERENCES.properties,
                 pageURL: validatedData.page.url,
+                pageOptions: validatedData.page.options,
             },
         });
 

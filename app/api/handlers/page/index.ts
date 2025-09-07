@@ -175,6 +175,7 @@ export async function handleCreatePage(c: Context) {
                     title: pageTitle,
                     url: validatedData.page.url,
                     companyId: validatedData.company.id,
+                    options: validatedData.page.options,
                 },
                 c,
             );
@@ -189,6 +190,7 @@ export async function handleCreatePage(c: Context) {
                     userId: user.id,
                     pageProperties: userPreference?.properties || DEFAULT_PREFERENCES.properties,
                     pageURL: newPage.url,
+                    pageOptions: newPage.options,
                 },
             });
             c.timing.end('inngest-event');
@@ -202,6 +204,7 @@ export async function handleCreatePage(c: Context) {
                 {
                     title: pageTitle,
                     url: validatedData.page.url,
+                    options: validatedData.page.options,
                     newCompany: {
                         name: validatedData.company.name!,
                         url: validatedData.company.url!,
@@ -220,6 +223,7 @@ export async function handleCreatePage(c: Context) {
                     userId: user.id,
                     pageProperties: userPreference?.properties || DEFAULT_PREFERENCES.properties,
                     pageURL: result.page.url,
+                    pageOptions: result.page.options,
                 },
             });
             c.timing.end('inngest-event');
@@ -273,6 +277,7 @@ export async function handleUpdatePage(c: Context) {
                     userId: user.id,
                     pageProperties: userPreference?.properties || DEFAULT_PREFERENCES.properties,
                     pageURL: updatedPage.url,
+                    pageOptions: updatedPage.options,
                 },
             });
         }

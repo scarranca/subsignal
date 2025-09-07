@@ -1,10 +1,12 @@
 import { z } from 'zod';
 import { tolerantUrlSchema } from './common';
+import { screenshotOptionsSchema } from './screenshot';
 
 export const createPageSchema = z.object({
     page: z.object({
         title: z.string().min(1).optional(), // Optional since we auto-fetch it
         url: tolerantUrlSchema,
+        options: screenshotOptionsSchema,
     }),
     company: z
         .object({
@@ -29,6 +31,7 @@ export const createPageSchema = z.object({
 export const updatePageSchema = z.object({
     title: z.string().min(1).optional(),
     url: tolerantUrlSchema.optional(),
+    options: screenshotOptionsSchema,
 });
 
 export const bulkDeletePagesSchema = z.object({
@@ -38,3 +41,4 @@ export const bulkDeletePagesSchema = z.object({
 export type CreatePageInput = z.infer<typeof createPageSchema>;
 export type UpdatePageInput = z.infer<typeof updatePageSchema>;
 export type BulkDeletePagesInput = z.infer<typeof bulkDeletePagesSchema>;
+export type ScreenshotOptionsInput = z.infer<typeof screenshotOptionsSchema>;

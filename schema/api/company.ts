@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { tolerantUrlSchema } from './common';
+import { screenshotOptionsSchema } from './screenshot';
 
 export const createCompanySchema = z.object({
     company: z.object({
@@ -9,6 +10,7 @@ export const createCompanySchema = z.object({
     page: z.object({
         title: z.string().min(1).optional(), // Optional since we auto-fetch it
         url: tolerantUrlSchema,
+        options: screenshotOptionsSchema,
     }),
 });
 

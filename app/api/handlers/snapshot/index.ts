@@ -39,6 +39,7 @@ export async function handleCreateSnapshot(c: Context) {
                     userId: user.id,
                     pageProperties: userPreferences.properties,
                     pageURL: page.url,
+                    pageOptions: page.options,
                 },
             });
         } else if (validatedData.type === 'live') {
@@ -49,6 +50,7 @@ export async function handleCreateSnapshot(c: Context) {
                     userId: user.id,
                     pageProperties: userPreferences.properties,
                     pageURL: page.url,
+                    pageOptions: page.options,
                 },
             });
         } else {
