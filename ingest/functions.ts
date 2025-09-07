@@ -12,7 +12,11 @@ import {
     refreshSnapshot3Month,
     refreshSnapshot6Month,
 } from './functions/snapshot';
-import { createBriefingForUser, sendBriefingToUser } from './functions/briefing';
+import {
+    createArchiveBriefingForUser,
+    createBriefingForUser,
+    sendBriefingToUser,
+} from './functions/briefing';
 import { refreshOnboardingSnapshot, sendOnboardingEmail } from './functions/onboarding';
 import {
     sendPlanChangeAcknowledgementEmail,
@@ -43,6 +47,7 @@ export const functions = [
     // Briefing functions
     createBriefingForUser,
     sendBriefingToUser,
+    createArchiveBriefingForUser,
 
     // Onboarding functions
     sendOnboardingEmail,

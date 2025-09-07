@@ -43,6 +43,7 @@ export const refreshOnboardingSnapshot = inngest.createFunction(
         // Fetch the current user's preference
         const userPreference = await preferenceQueries.getUserPreference(userId);
         const properties = userPreference?.properties || DEFAULT_PREFERENCES;
+        const frequency = userPreference?.frequency || '7_day';
 
         // Cycle through all the pages for the user
         let hasMore = true;
@@ -84,5 +85,30 @@ export const refreshOnboardingSnapshot = inngest.createFunction(
 
         // Send the snapshot events to the snapshot service
         await step.sendEvent('snapshot/archive.created', snapshotEvents);
+
+        const onboardingSnapshotDelay = getOnboardingSnapshotDelay();
+
+        // Wait for the onboarding snapshot delay before creating the archive briefing
+        await step.sleep('wait-for-snapshot-completion', onboardingSnapshotDelay);
+
+        // Send the archive briefing event to the briefing service
+        await step.sendEvent('briefing/archive.created', {
+            name: 'briefing/archive.created',
+            data: {
+                userId,
+                properties,
+                frequency,
+            },
+            // Add a unique id to the event to avoid duplicates processing
+            id: `create-archive-briefing-${userId}`,
+        });
     },
 );
+
+/**
+ * Get the onboarding snapshot delay based on the environment
+ * @returns The onboarding snapshot delay
+ */
+function getOnboardingSnapshotDelay(): string {
+    return process.env.NODE_ENV === 'production' ? '30m' : '60s';
+}
