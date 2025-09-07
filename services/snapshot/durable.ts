@@ -7,6 +7,7 @@ import { inngest } from '@/ingest/client';
 import { RetryAfterError, type GetStepTools } from 'inngest';
 import { DiffProperty } from '@/types/diff/content';
 import { ALL_DIFF_PROPERTIES } from '@/constants/preferences';
+import { ScreenshotOptions } from '@/types/screenshot';
 
 /**
  * Durable service for creating snapshots of company pages using Inngest steps
@@ -43,11 +44,12 @@ export class DurableSnapshotService {
         pageId: string,
         pageProperties: string[],
         pageURL: string,
+        pageOptions: Omit<ScreenshotOptions, 'url'>,
     ) {
         // Step 1: Take live screenshot
         // Live screenshot is cached for 12 hours on first request
         // It's alright to not be strictly  durable here
-        const liveContent = await this.screenshotService.takeLiveScreenshot(pageURL);
+        const liveContent = await this.screenshotService.takeLiveScreenshot(pageURL, pageOptions);
 
         // Step 2: Get the last snapshot
         // The call is already durable and deterministic, so we can use it directly
@@ -118,6 +120,7 @@ export class DurableSnapshotService {
         pageId: string,
         pageProperties: string[],
         pageURL: string,
+        pageOptions: Omit<ScreenshotOptions, 'url'>,
     ) {
         // Step 1: Take archive screenshot
         const { htmlContent: archiveHTMLContent } =
@@ -133,7 +136,13 @@ export class DurableSnapshotService {
         });
 
         // Step 3: Create live snapshot
-        return await this.createLiveSnapshotForPage(step, pageId, pageProperties, pageURL);
+        return await this.createLiveSnapshotForPage(
+            step,
+            pageId,
+            pageProperties,
+            pageURL,
+            pageOptions,
+        );
     }
 
     /**
@@ -191,6 +200,7 @@ export class DurableSnapshotService {
                     userId: user.userId,
                     pageProperties: user.properties,
                     pageURL: pageWithCompany.page.url,
+                    pageOptions: pageWithCompany.page.options,
                 },
             }));
 

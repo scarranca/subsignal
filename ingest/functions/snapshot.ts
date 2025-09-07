@@ -15,12 +15,14 @@ export const createArchiveSnapshot = inngest.createFunction(
     { id: 'create-archive-snapshot' }, // A unique identifier for the function. This should not change between deploys.
     { event: 'snapshot/archive.created' }, // A name for the function. If defined, this will be shown in the UI as a friendly display name instead of the ID. namespace/object.action
     async ({ event, step }) => {
-        const { pageId, userId, pageProperties, pageURL } = event.data;
+        const { pageId, userId, pageProperties, pageURL, pageOptions } = event.data;
+        console.log('createArchiveSnapshot', event.data);
         const snapshot = await durableSnapshotService.createArchiveSnapshotForPage(
             step,
             pageId,
             pageProperties,
             pageURL,
+            pageOptions,
         );
         return {
             message: `Created archive snapshot for page ${pageId}`,
@@ -29,6 +31,7 @@ export const createArchiveSnapshot = inngest.createFunction(
                 pageProperties,
                 userId,
                 pageId,
+                pageOptions,
             },
         };
     },
@@ -52,12 +55,14 @@ export const createLiveSnapshot = inngest.createFunction(
     },
     { event: 'snapshot/live.created' }, // A name for the function. If defined, this will be shown in the UI as a friendly display name instead of the ID. namespace/object.action
     async ({ event, step }) => {
-        const { pageId, userId, pageProperties, pageURL } = event.data;
+        const { pageId, userId, pageProperties, pageURL, pageOptions } = event.data;
+        console.log('createLiveSnapshot', event.data);
         const snapshot = await durableSnapshotService.createLiveSnapshotForPage(
             step,
             pageId,
             pageProperties,
             pageURL,
+            pageOptions,
         );
         return {
             message: `Created live snapshot for page ${pageId}`,
@@ -66,6 +71,7 @@ export const createLiveSnapshot = inngest.createFunction(
                 pageProperties,
                 userId,
                 pageId,
+                pageOptions,
             },
         };
     },

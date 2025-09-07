@@ -60,7 +60,7 @@ export const refreshOnboardingSnapshot = inngest.createFunction(
             snapshotEvents = snapshotEvents.concat(
                 pageResults.data.map((pageResult) => {
                     const {
-                        page: { id: pageId, url: pageURL },
+                        page: { id: pageId, url: pageURL, options: pageOptions },
                     } = pageResult;
 
                     return {
@@ -70,6 +70,7 @@ export const refreshOnboardingSnapshot = inngest.createFunction(
                             userId,
                             pageProperties: properties,
                             pageURL,
+                            pageOptions,
                         },
                         // Add a unique id to the event to avoid duplicates processing
                         id: `refresh-onboarding-snapshot-${pageId}`,
