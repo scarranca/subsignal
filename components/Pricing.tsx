@@ -62,7 +62,6 @@ function PricingFeature({ text, included }: PlanFeature) {
 }
 
 function PricingPlan({
-    id,
     name,
     price,
     period,
@@ -91,7 +90,7 @@ function PricingPlan({
                         </span>
                     )}
                 </div>
-                {period === '/year' ? (
+                {/* {period === '/year' ? (
                     <p className={`text-sm mt-1 ${isPopular ? 'text-gray-400' : 'text-gray-600'}`}>
                         ${id === 'solo_plan_annually' ? '99' : '299'}/month if paid monthly
                     </p>
@@ -99,7 +98,7 @@ function PricingPlan({
                     <p className={`text-sm mt-1 ${isPopular ? 'text-gray-400' : 'text-gray-600'}`}>
                         ${id === 'solo_plan_monthly' ? '999' : '2499'}/year if paid annually
                     </p>
-                )}
+                )} */}
                 <p className={`mt-4 text-sm ${isPopular ? 'text-gray-400' : 'text-gray-600'}`}>
                     {description}
                 </p>

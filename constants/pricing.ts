@@ -37,7 +37,7 @@ export const PRICING_PLANS: PricingPlan[] = [
     {
         id: 'solo_plan_monthly',
         name: 'Solo',
-        price: '$99',
+        price: '$129',
         period: '/month',
         description: 'For individual VCs tracking their deal flow',
         features: [
@@ -52,7 +52,7 @@ export const PRICING_PLANS: PricingPlan[] = [
     {
         id: 'team_plan_monthly',
         name: 'Fund',
-        price: '$299',
+        price: '$399',
         period: '/month',
         description: 'For investment teams and small funds',
         features: [
@@ -70,7 +70,7 @@ export const PRICING_PLANS: PricingPlan[] = [
     {
         id: 'solo_plan_annually',
         name: 'Solo',
-        price: '$999',
+        price: '$1299',
         period: '/year',
         description: 'For individual VCs tracking their deal flow',
         features: [
@@ -85,7 +85,7 @@ export const PRICING_PLANS: PricingPlan[] = [
     {
         id: 'team_plan_annually',
         name: 'Fund',
-        price: '$2499',
+        price: '$3999',
         period: '/year',
         description: 'For investment teams and small funds',
         features: [
