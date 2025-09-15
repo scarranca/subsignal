@@ -189,7 +189,7 @@ export function getRefreshLimit(plan: BillingPlan): '3_day' | '7_day' {
     switch (plan) {
         case 'solo_plan_monthly':
         case 'solo_plan_annually':
-            return '7_day';
+            return '3_day';
         case 'team_plan_monthly':
         case 'team_plan_annually':
             return '3_day';
