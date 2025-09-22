@@ -1,487 +1,359 @@
-import { CONTACT_EMAIL } from '@/constants/contact';
-
-export default function PrivacyPolicy() {
+export default function Privacy() {
     return (
-        <div className="min-h-screen bg-white">
-            <div className="max-w-4xl mx-auto px-6 py-16">
-                <h1 className="text-4xl font-bold mb-8">Privacy Policy</h1>
+        <article className="legal flex flex-col gap-12">
+            <section className="flex flex-col gap-4">
+                <h1 className="text-center font-dm-sans font-medium text-4xl leading-tight tracking-[-2px] md:text-6xl">
+                    <span className="relative">
+                        <span className="relative z-10 text-black">Privacy</span>
+                        <span className="-translate-y-1/2 -rotate-1 -z-10 absolute inset-0 top-1/2 transform rounded-md bg-blue-200 py-6 md:py-8" />
+                    </span>{' '}
+                    Policy
+                </h1>
+                <div className="text-center text-muted-foreground text-sm mt-4">
+                    Last updated: January 1, 2025
+                </div>
+            </section>
 
-                <div className="prose prose-lg max-w-none">
-                    <p className="text-xl mb-8">
-                        Subsignal Labs implements commercially reasonable privacy and data
-                        protection measures designed to safeguard personal information, subject to
-                        operational requirements and applicable legal frameworks.
-                    </p>
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">1. Introduction</h2>
+                <p>
+                    Welcome to Subsignal (&ldquo;us&rdquo;, &ldquo;we&rdquo;, or &ldquo;our&rdquo;)
+                    which operates the Subsignal competitive intelligence and market monitoring
+                    platform (hereinafter referred to as &ldquo;Service&rdquo;). Our Privacy Policy
+                    governs your use of Subsignal, and explains how we collect, safeguard and
+                    disclose information that results from your use of our Service. We use your data
+                    to provide and improve our competitive intelligence services. By using our
+                    Service, you agree to the collection and use of information in accordance with
+                    this policy.
+                </p>
+                <p>
+                    This Policy applies to personal information that we collect, process, store, or
+                    otherwise handle in connection with providing market monitoring, competitive
+                    intelligence, and deal flow tracking services.
+                </p>
+            </section>
 
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">
-                        Introduction and Policy Framework
-                    </h2>
-                    <p>
-                        Subsignal Labs, a company organized under applicable law
-                        (&ldquo;Company,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo; or
-                        &ldquo;our&rdquo;), has established this Privacy Policy
-                        (&ldquo;Policy&rdquo;) to inform users, customers, and other data subjects
-                        (&ldquo;you&rdquo; or &ldquo;your&rdquo;) about our data processing
-                        practices in connection with the Subsignal Platform, associated services,
-                        and related digital properties (collectively, the &ldquo;Services&rdquo;).
-                        This Policy describes the categories of personal information we may collect,
-                        the purposes for which such information may be processed, and the rights
-                        that may be available to you under applicable data protection laws
-                        (&ldquo;Privacy Laws&rdquo;).
-                    </p>
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">2. Information We Collect</h2>
+                <p>
+                    We collect several different types of information for various purposes to
+                    provide and improve our competitive intelligence platform.
+                </p>
 
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">Scope and Applicability</h2>
-                    <p>
-                        This Policy applies to personal information that Company collects,
-                        processes, stores, or otherwise handles in connection with the provision of
-                        Services, including information obtained through our website, platform
-                        interfaces, customer communications, and related business interactions. This
-                        Policy does not apply to information that has been de-identified,
-                        aggregated, or otherwise rendered anonymous such that it cannot reasonably
-                        be used to identify a specific individual. Additionally, this Policy does
-                        not govern the privacy practices of third-party services, websites, or
-                        applications that may be accessed through or integrated with our Services,
-                        even if such third-party services are referenced or linked within our
-                        platform.
-                    </p>
+                <div className="flex flex-col gap-4">
+                    <div>
+                        <h3 className="font-semibold text-lg">Personal Information</h3>
+                        <p>
+                            While using our Service, we may ask you to provide us with certain
+                            personally identifiable information that can be used to contact or
+                            identify you. This may include:
+                        </p>
+                        <ul className="flex list-disc flex-col gap-1 pl-6">
+                            <li>Email address</li>
+                            <li>First name and last name</li>
+                            <li>Company name and professional information</li>
+                            <li>Account preferences and monitoring settings</li>
+                            <li>Usage data and platform interactions</li>
+                        </ul>
+                    </div>
 
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">
-                        Definitions and Interpretive Guidelines
-                    </h2>
-                    <p>
-                        For purposes of this Policy, the following terms shall have the meanings set
-                        forth below, unless the context clearly requires otherwise:
-                    </p>
-                    <ul className="list-disc pl-6 mb-4">
-                        <li>
-                            &ldquo;Personal Information&rdquo; means any information that
-                            identifies, relates to, describes, references, is reasonably capable of
-                            being associated with, or could reasonably be linked, directly or
-                            indirectly, with a particular individual or household, including but not
-                            limited to identifiers, commercial information, biometric information,
-                            internet activity, geolocation data, professional information, and
-                            inferences drawn from such information.
-                        </li>
-                        <li>
-                            &ldquo;Processing&rdquo; means any operation or set of operations
-                            performed on personal information, whether or not by automated means,
-                            including collection, recording, organization, structuring, storage,
-                            adaptation, alteration, retrieval, consultation, use, disclosure,
-                            dissemination, alignment, combination, restriction, erasure, or
-                            destruction.
-                        </li>
-                        <li>
-                            &ldquo;Data Controller&rdquo; means the entity that determines the
-                            purposes and means of processing personal information.
-                        </li>
-                        <li>
-                            &ldquo;Data Processor&rdquo; means an entity that processes personal
-                            information on behalf of a Data Controller.
-                        </li>
-                        <li>
-                            &ldquo;Third Party&rdquo; means any individual or entity other than you,
-                            Company, or Company&apos;s service providers acting on Company&apos;s
-                            behalf.
-                        </li>
-                    </ul>
+                    <div>
+                        <h3 className="font-semibold text-lg">Market Intelligence Data</h3>
+                        <p>
+                            As part of our competitive intelligence services, we collect and process
+                            information from publicly available sources, including:
+                        </p>
+                        <ul className="flex list-disc flex-col gap-1 pl-6">
+                            <li>Company websites and public business information</li>
+                            <li>Government and regulatory filings</li>
+                            <li>Press releases and news publications</li>
+                            <li>Professional networking platforms and business directories</li>
+                            <li>Social media platforms and public online profiles</li>
+                            <li>Industry reports and market research publications</li>
+                        </ul>
+                    </div>
 
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">
-                        Categories of Personal Information Collected
-                    </h2>
-                    <p>
-                        Company may collect, either directly from you or from third-party sources
-                        (including publicly available sources, data aggregators, and web-accessible
-                        information), the following categories of personal information, subject to
-                        applicable legal limitations and business requirements:
-                    </p>
-                    <ul className="list-disc pl-6 mb-4">
-                        <li>
-                            <strong>Identifiers:</strong> Real name, alias, postal address, unique
-                            personal identifier, online identifier, Internet Protocol address, email
-                            address, account name, or other similar identifiers;
-                        </li>
-                        <li>
-                            <strong>Commercial Information:</strong> Records of services purchased,
-                            obtained, or considered, purchasing histories, business relationships,
-                            competitive positioning data, and market intelligence;
-                        </li>
-                        <li>
-                            <strong>Internet Activity:</strong> Browsing history, search history,
-                            website interactions, digital footprint analysis, and publicly available
-                            online activities;
-                        </li>
-                        <li>
-                            <strong>Professional Information:</strong> Employment history, business
-                            affiliations, professional credentials, corporate roles, industry
-                            expertise, and publicly disclosed business activities;
-                        </li>
-                        <li>
-                            <strong>Business Intelligence Data:</strong> Company financials, market
-                            positioning, competitive analysis, industry trends, corporate structure
-                            information, and related business metrics derived from public sources;
-                        </li>
-                        <li>
-                            <strong>Publicly Available Information:</strong> Information lawfully
-                            made available through government records, professional networks,
-                            published materials, press releases, and other public sources;
-                        </li>
-                        <li>
-                            <strong>Inferences:</strong> Profiles reflecting market trends, business
-                            behaviors, competitive positioning, risk assessments, and analytical
-                            insights derived from collected data;
-                        </li>
-                        <li>
-                            <strong>Communication Data:</strong> Records of communications with
-                            Company, including customer service interactions, support requests, and
-                            feedback.
-                        </li>
-                    </ul>
+                    <div>
+                        <h3 className="font-semibold text-lg">Usage Data</h3>
+                        <p>
+                            We collect information about how you use our competitive intelligence
+                            platform, including dashboard interactions, monitoring preferences,
+                            report generation, and feature usage to improve our service.
+                        </p>
+                    </div>
 
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">
-                        Lawful Bases and Purposes for Processing
-                    </h2>
-                    <p>
-                        Company processes personal information only where we have a lawful basis to
-                        do so under applicable Privacy Laws. Our lawful bases and corresponding
-                        processing purposes include:
-                    </p>
-                    <ul className="list-disc pl-6 mb-4">
-                        <li>
-                            <strong>Contract Performance:</strong> To perform our contractual
-                            obligations to you, including service provision, competitive
-                            intelligence delivery, account management, and transaction processing;
-                        </li>
-                        <li>
-                            <strong>Legitimate Interests:</strong> To pursue our legitimate business
-                            interests, including but not limited to: competitive intelligence
-                            research, market analysis, business monitoring services, publicly
-                            available information aggregation, service improvement, security
-                            monitoring, fraud prevention, and direct marketing, where such interests
-                            are not overridden by fundamental rights and freedoms;
-                        </li>
-                        <li>
-                            <strong>Legal Compliance:</strong> To comply with applicable laws,
-                            regulations, legal processes, governmental requests, and industry
-                            standards;
-                        </li>
-                        <li>
-                            <strong>Consent:</strong> Where you have provided specific, informed,
-                            and freely given consent to specific processing activities;
-                        </li>
-                        <li>
-                            <strong>Vital Interests:</strong> To protect the vital interests of any
-                            natural person;
-                        </li>
-                        <li>
-                            <strong>Public Interest:</strong> For the performance of tasks carried
-                            out in the public interest, including transparency and market
-                            intelligence activities that serve broader economic interests.
-                        </li>
-                    </ul>
-
-                    <h3 className="text-lg font-semibold mt-6 mb-3">
-                        Data Sources and Collection Methods
-                    </h3>
-                    <p>
-                        Company may collect information through various lawful means, including but
-                        not limited to:
-                    </p>
-                    <ul className="list-disc pl-6 mb-4">
-                        <li>Publicly available websites and databases;</li>
-                        <li>Government and regulatory filings;</li>
-                        <li>Professional networking platforms and business directories;</li>
-                        <li>News publications, press releases, and media reports;</li>
-                        <li>Third-party data providers and information brokers;</li>
-                        <li>Social media platforms and public online profiles;</li>
-                        <li>Industry reports and market research publications;</li>
-                        <li>
-                            Web scraping and automated data collection of publicly accessible
-                            information;
-                        </li>
-                        <li>User-generated content and voluntary submissions.</li>
-                    </ul>
-
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">
-                        Data Security and Protection Measures
-                    </h2>
-                    <p>
-                        Company has implemented and maintains commercially reasonable technical,
-                        organizational, and administrative safeguards designed to protect personal
-                        information against unauthorized access, acquisition, destruction, use,
-                        modification, or disclosure. These measures include, without limitation:
-                    </p>
-                    <ul className="list-disc pl-6 mb-4">
-                        <li>
-                            Industry-standard encryption protocols for data transmission and
-                            storage;
-                        </li>
-                        <li>Multi-factor authentication and access control mechanisms;</li>
-                        <li>
-                            Regular security audits, vulnerability assessments, and penetration
-                            testing;
-                        </li>
-                        <li>Secure data backup and disaster recovery procedures;</li>
-                        <li>
-                            Comprehensive employee training programs on data protection and
-                            security;
-                        </li>
-                        <li>Incident response protocols and breach notification procedures.</li>
-                    </ul>
-                    <p>
-                        <strong>SECURITY DISCLAIMER:</strong> Notwithstanding the foregoing
-                        measures, Company cannot guarantee absolute security of personal
-                        information. No method of transmission over the internet or method of
-                        electronic storage is completely secure, and Company cannot ensure or
-                        warrant the security of any information transmitted to or stored by Company.
-                        You acknowledge and agree that any transmission of personal information is
-                        at your own risk.
-                    </p>
-
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">
-                        Data Subject Rights and Requests
-                    </h2>
-                    <p>
-                        Subject to applicable Privacy Laws and their limitations, you may have the
-                        following rights regarding your personal information:
-                    </p>
-                    <ul className="list-disc pl-6 mb-4">
-                        <li>
-                            <strong>Right of Access:</strong> To request confirmation of whether we
-                            process your personal information and to obtain copies of such
-                            information;
-                        </li>
-                        <li>
-                            <strong>Right of Rectification:</strong> To request correction of
-                            inaccurate or incomplete personal information;
-                        </li>
-                        <li>
-                            <strong>Right of Erasure:</strong> To request deletion of personal
-                            information under certain circumstances;
-                        </li>
-                        <li>
-                            <strong>Right to Restrict Processing:</strong> To request limitation of
-                            processing under certain circumstances;
-                        </li>
-                        <li>
-                            <strong>Right to Data Portability:</strong> To request transfer of
-                            personal information in a structured, commonly used format;
-                        </li>
-                        <li>
-                            <strong>Right to Object:</strong> To object to processing based on
-                            legitimate interests or for direct marketing purposes;
-                        </li>
-                        <li>
-                            <strong>Right to Withdraw Consent:</strong> Where processing is based on
-                            consent, to withdraw such consent at any time.
-                        </li>
-                    </ul>
-                    <p>
-                        Company will respond to verified requests in accordance with applicable law.
-                        We may require additional information to verify your identity before
-                        processing certain requests. Some rights may be subject to exceptions or
-                        limitations under applicable law.
-                    </p>
-
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">
-                        Data Retention and Disposal
-                    </h2>
-                    <p>
-                        Company retains personal information for as long as necessary to fulfill the
-                        purposes for which it was collected, comply with legal obligations, resolve
-                        disputes, and enforce agreements. Retention periods are determined based on
-                        the nature of the information, applicable legal requirements, and legitimate
-                        business needs. Upon expiration of the applicable retention period, Company
-                        will securely delete or anonymize personal information in accordance with
-                        industry standards, unless longer retention is required or permitted by law.
-                    </p>
-
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">
-                        International Transfers and Cross-Border Processing
-                    </h2>
-                    <p>
-                        Personal information collected by Company may be transferred to, processed,
-                        or stored in countries other than your country of residence, including
-                        countries that may not provide the same level of data protection as your
-                        jurisdiction. Where such transfers occur, Company will implement appropriate
-                        safeguards to protect personal information in accordance with applicable
-                        Privacy Laws, which may include standard contractual clauses, adequacy
-                        decisions, or other approved transfer mechanisms.
-                    </p>
-
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">
-                        Third-Party Disclosure and Sharing
-                    </h2>
-                    <p>
-                        Company may disclose personal information to third parties under the
-                        following circumstances and subject to appropriate contractual protections:
-                    </p>
-                    <ul className="list-disc pl-6 mb-4">
-                        <li>
-                            To service providers and vendors who perform functions on our behalf,
-                            including data collection, processing, and analytics services;
-                        </li>
-                        <li>
-                            To customers and subscribers as part of competitive intelligence
-                            reports, market analysis, and monitoring services, subject to our data
-                            processing agreements;
-                        </li>
-                        <li>
-                            To comply with legal obligations, court orders, governmental requests,
-                            or regulatory inquiries;
-                        </li>
-                        <li>
-                            To protect Company&apos;s rights, property, or safety, or that of users,
-                            customers, or the public;
-                        </li>
-                        <li>
-                            In connection with business transactions such as mergers, acquisitions,
-                            or asset sales;
-                        </li>
-                        <li>
-                            To third-party data aggregators and business intelligence platforms as
-                            part of industry standard practices;
-                        </li>
-                        <li>With your explicit consent or as otherwise permitted by law.</li>
-                    </ul>
-
-                    <h3 className="text-lg font-semibold mt-6 mb-3">Customer Data Usage</h3>
-                    <p>
-                        Information processed through our competitive intelligence and monitoring
-                        services may be shared with our customers as part of the contracted
-                        services. Such sharing is conducted under appropriate data processing
-                        agreements and in accordance with applicable legal frameworks governing
-                        business intelligence activities.
-                    </p>
-
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">
-                        Cookies and Tracking Technologies
-                    </h2>
-                    <p>
-                        Company may use cookies, web beacons, pixels, and other tracking
-                        technologies to collect information about your use of our Services. These
-                        technologies may be used for various purposes, including authentication,
-                        security, preference storage, analytics, and advertising. You may control
-                        cookie settings through your browser preferences, though disabling certain
-                        cookies may affect Service functionality.
-                    </p>
-
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">
-                        Competitive Intelligence and Public Information Processing
-                    </h2>
-                    <p>
-                        As part of our core business operations, Company engages in the collection,
-                        analysis, and dissemination of competitive intelligence and market
-                        information. This includes processing information that may be publicly
-                        available but could contain personal information of business executives,
-                        employees, and other individuals associated with monitored entities.
-                    </p>
-
-                    <h3 className="text-lg font-semibold mt-6 mb-3">
-                        Public Information Processing
-                    </h3>
-                    <p>
-                        Company processes information that is lawfully made publicly available,
-                        including but not limited to executive profiles, company filings, press
-                        releases, news articles, social media posts, professional networking
-                        profiles, and other publicly accessible business information. Such
-                        processing is conducted in accordance with applicable legal frameworks and
-                        industry standards for competitive intelligence activities.
-                    </p>
-
-                    <h3 className="text-lg font-semibold mt-6 mb-3">
-                        Data Subject Rights Limitations
-                    </h3>
-                    <p>
-                        While Company respects individual privacy rights, certain rights may be
-                        limited when personal information is processed for legitimate competitive
-                        intelligence purposes based on publicly available information. Such
-                        limitations may include restrictions on deletion requests where information
-                        serves legitimate business intelligence needs, or where removal would
-                        compromise the integrity of market analysis and competitive monitoring
-                        services provided to our customers.
-                    </p>
-
-                    <h3 className="text-lg font-semibold mt-6 mb-3">
-                        Automated Decision Making and Profiling
-                    </h3>
-                    <p>
-                        Company may employ automated processing techniques, including algorithmic
-                        analysis and profiling, to analyze market trends, competitive positioning,
-                        and business intelligence patterns. Such automated processing is designed to
-                        serve legitimate business interests in providing comprehensive market
-                        analysis and competitive intelligence services to our customers.
-                    </p>
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">Children&apos;s Privacy</h2>
-                    <p>
-                        Our Services are not directed to individuals under the age of 13 (or the
-                        applicable minimum age in your jurisdiction). Company does not knowingly
-                        collect personal information from children under such age. If you believe we
-                        have inadvertently collected information from a child, please contact us
-                        immediately so we can delete such information. However, publicly available
-                        information that may incidentally include references to minors in business
-                        contexts (such as family business ownership structures publicly disclosed in
-                        corporate filings) may be processed as part of legitimate competitive
-                        intelligence activities.
-                    </p>
-
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">Accuracy and Data Quality</h2>
-                    <p>
-                        While Company endeavors to maintain reasonable accuracy in the information
-                        processed through our Services, we cannot guarantee the accuracy,
-                        completeness, or currency of all information collected from public sources
-                        or third-party data providers. Information is provided for business
-                        intelligence purposes and users should independently verify critical
-                        information before making business decisions based on our analysis.
-                    </p>
-
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">
-                        Industry-Specific Considerations
-                    </h2>
-                    <p>
-                        Our competitive intelligence services may involve processing information
-                        related to various industries and sectors. Where such processing involves
-                        regulated industries (such as financial services, healthcare, or government
-                        contracting), additional compliance measures may be implemented in
-                        accordance with applicable sectoral regulations and industry standards.
-                    </p>
-
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">
-                        Policy Updates and Modifications
-                    </h2>
-                    <p>
-                        Company reserves the right to modify this Policy at any time in its sole
-                        discretion. Material changes will be communicated through appropriate means,
-                        which may include posting updated terms on our website or sending
-                        notifications through our Services. Non-material changes may be implemented
-                        without specific notice. Your continued use of our Services following any
-                        modification constitutes acceptance of the updated Policy.
-                    </p>
-
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">
-                        Contact Information and Data Protection Officer
-                    </h2>
-                    <p>
-                        For questions, concerns, or requests regarding this Policy or our data
-                        processing practices, including exercising your data subject rights, please
-                        contact our privacy team at {CONTACT_EMAIL}. We will respond to verified
-                        inquiries in accordance with applicable legal requirements.
-                    </p>
-
-                    <p>
-                        If you are located in a jurisdiction that requires the appointment of a Data
-                        Protection Officer, you may contact our designated representative through
-                        the same contact information provided above.
-                    </p>
-
-                    <div className="mt-8 pt-8 border-t">
-                        <p className="text-sm text-gray-600">Last updated: January 1, 2025</p>
-                        <p className="text-sm text-gray-600 mt-2">
-                            This Privacy Policy is effective as of the date indicated above and
-                            supersedes all prior versions.
+                    <div>
+                        <h3 className="font-semibold text-lg">Cookies and Tracking Technologies</h3>
+                        <p>
+                            We use cookies, web beacons, and other tracking technologies to collect
+                            information about your use of our Services for authentication, security,
+                            preference storage, and analytics purposes.
                         </p>
                     </div>
                 </div>
-            </div>
-        </div>
+            </section>
+
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">3. How We Use Your Data</h2>
+                <p>Subsignal uses the collected data for the following purposes:</p>
+
+                <div className="flex flex-col gap-4">
+                    <div>
+                        <h3 className="font-semibold text-lg">Service Provision</h3>
+                        <ul className="flex list-disc flex-col gap-1 pl-6">
+                            <li>To provide and maintain our competitive intelligence platform</li>
+                            <li>To deliver market monitoring and deal flow tracking services</li>
+                            <li>To generate business intelligence reports and insights</li>
+                            <li>To provide customer support and technical assistance</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h3 className="font-semibold text-lg">Platform Improvement</h3>
+                        <ul className="flex list-disc flex-col gap-1 pl-6">
+                            <li>To analyze usage patterns and improve our Service</li>
+                            <li>
+                                To develop new features and competitive intelligence capabilities
+                            </li>
+                            <li>To monitor service performance and detect technical issues</li>
+                            <li>To enhance security and prevent fraud</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h3 className="font-semibold text-lg">Legal Compliance</h3>
+                        <ul className="flex list-disc flex-col gap-1 pl-6">
+                            <li>To comply with applicable laws and regulations</li>
+                            <li>To respond to legal processes and governmental requests</li>
+                            <li>To protect our rights, property, and safety</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">4. Legal Basis for Processing</h2>
+                <p>We process your personal information based on the following legal grounds:</p>
+                <ul className="flex list-disc flex-col gap-1 pl-6">
+                    <li>
+                        <strong>Contract Performance:</strong> To fulfill our service obligations
+                        and provide competitive intelligence services
+                    </li>
+                    <li>
+                        <strong>Legitimate Interests:</strong> For business intelligence research,
+                        market analysis, service improvement, and security
+                    </li>
+                    <li>
+                        <strong>Legal Compliance:</strong> To comply with applicable laws and
+                        regulatory requirements
+                    </li>
+                    <li>
+                        <strong>Consent:</strong> Where you have provided specific consent for
+                        certain processing activities
+                    </li>
+                </ul>
+            </section>
+
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">5. Data Sharing and Disclosure</h2>
+                <p>We may share your information in the following circumstances:</p>
+
+                <div className="flex flex-col gap-4">
+                    <div>
+                        <h3 className="font-semibold text-lg">Service Providers</h3>
+                        <p>
+                            We share data with trusted third-party service providers who assist us
+                            in operating our platform, including cloud infrastructure, analytics,
+                            and customer support services. These providers are contractually bound
+                            to protect your information.
+                        </p>
+                    </div>
+
+                    <div>
+                        <h3 className="font-semibold text-lg">Competitive Intelligence Reports</h3>
+                        <p>
+                            Information processed through our market monitoring services may be
+                            included in competitive intelligence reports provided to our customers,
+                            subject to appropriate data processing agreements and legal frameworks.
+                        </p>
+                    </div>
+
+                    <div>
+                        <h3 className="font-semibold text-lg">Legal Requirements</h3>
+                        <p>
+                            We may disclose information to comply with legal obligations, court
+                            orders, or governmental requests, or to protect our rights and the
+                            safety of our users.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">6. Data Security</h2>
+                <p>
+                    The security of your data is important to us. We implement comprehensive
+                    technical, organizational, and administrative safeguards including:
+                </p>
+                <ul className="flex list-disc flex-col gap-1 pl-6">
+                    <li>Industry-standard encryption for data transmission and storage</li>
+                    <li>Multi-factor authentication and access control mechanisms</li>
+                    <li>Regular security audits and vulnerability assessments</li>
+                    <li>Secure data backup and disaster recovery procedures</li>
+                    <li>Employee training on data protection and security</li>
+                    <li>Incident response and breach notification procedures</li>
+                </ul>
+                <p className="mt-4 text-sm text-gray-600">
+                    <strong>Security Disclaimer:</strong> While we implement robust security
+                    measures, no method of transmission over the internet is completely secure. We
+                    cannot guarantee absolute security of personal information.
+                </p>
+            </section>
+
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">7. Data Retention</h2>
+                <p>
+                    We retain personal information for as long as necessary to fulfill the purposes
+                    for which it was collected, comply with legal obligations, resolve disputes, and
+                    enforce agreements. Specific retention periods include:
+                </p>
+                <ul className="flex list-disc flex-col gap-1 pl-6">
+                    <li>Account data is retained while your account remains active</li>
+                    <li>
+                        Usage data is typically retained for analytical purposes for up to 3 years
+                    </li>
+                    <li>
+                        Market intelligence data may be retained longer for historical analysis but
+                        is anonymized
+                    </li>
+                    <li>Legal compliance data is retained as required by applicable laws</li>
+                </ul>
+            </section>
+
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">8. International Data Transfers</h2>
+                <p>
+                    Your information may be transferred to, processed, or stored in countries other
+                    than your country of residence. When we transfer data internationally, we
+                    implement appropriate safeguards such as Standard Contractual Clauses (SCCs) or
+                    other legally recognized transfer mechanisms to protect your information.
+                </p>
+            </section>
+
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">9. Your Privacy Rights</h2>
+                <p>
+                    Depending on your location and applicable privacy laws, you may have the
+                    following rights regarding your personal data:
+                </p>
+                <ul className="flex list-disc flex-col gap-1 pl-6">
+                    <li>
+                        <strong>Access:</strong> Request confirmation of whether we process your
+                        data and obtain copies
+                    </li>
+                    <li>
+                        <strong>Rectification:</strong> Request correction of inaccurate or
+                        incomplete information
+                    </li>
+                    <li>
+                        <strong>Erasure:</strong> Request deletion of your personal information
+                        under certain circumstances
+                    </li>
+                    <li>
+                        <strong>Restrict Processing:</strong> Request limitation of processing under
+                        certain conditions
+                    </li>
+                    <li>
+                        <strong>Data Portability:</strong> Request transfer of your data in a
+                        structured format
+                    </li>
+                    <li>
+                        <strong>Object:</strong> Object to processing based on legitimate interests
+                        or for direct marketing
+                    </li>
+                    <li>
+                        <strong>Withdraw Consent:</strong> Withdraw consent where processing is
+                        based on consent
+                    </li>
+                </ul>
+                <p className="mt-4">
+                    To exercise these rights, please contact us at privacy@subsignal.vc. We will
+                    respond to verified requests in accordance with applicable law.
+                </p>
+            </section>
+
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">
+                    10. Competitive Intelligence and Public Information
+                </h2>
+                <p>
+                    As part of our core business operations, we collect and analyze publicly
+                    available business information to provide competitive intelligence services.
+                    This includes processing information that may contain personal information of
+                    business executives and employees associated with monitored companies.
+                </p>
+                <p>
+                    Such processing is conducted in accordance with applicable legal frameworks for
+                    competitive intelligence activities and is based on our legitimate interest in
+                    providing business intelligence services to our customers.
+                </p>
+            </section>
+
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">11. Automated Decision Making</h2>
+                <p>
+                    We may use automated processing techniques, including algorithmic analysis, to
+                    analyze market trends, competitive positioning, and business intelligence
+                    patterns. This automated processing helps us provide comprehensive market
+                    analysis and competitive intelligence services to our customers.
+                </p>
+            </section>
+
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">12. Children&apos;s Privacy</h2>
+                <p>
+                    Our Services are not directed to individuals under the age of 13. We do not
+                    knowingly collect personal information from children under 13. If you believe we
+                    have inadvertently collected information from a child, please contact us
+                    immediately so we can delete such information.
+                </p>
+            </section>
+
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">13. Changes to This Policy</h2>
+                <p>
+                    We may update our Privacy Policy from time to time to reflect changes in our
+                    practices, technology, legal requirements, or other factors. We will notify you
+                    of any material changes by posting the new Privacy Policy on this page and
+                    updating the &ldquo;Last updated&rdquo; date. For significant changes, we may
+                    provide additional notice through our Services or via email.
+                </p>
+            </section>
+
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">14. Contact Us</h2>
+                <p>
+                    If you have any questions about this Privacy Policy or our data practices,
+                    please contact us:
+                </p>
+                <div className="bg-gray-50 p-4 rounded-lg mt-2">
+                    <div className="flex flex-col gap-1">
+                        <div>
+                            <strong>Privacy Team:</strong> privacy@subsignal.vc
+                        </div>
+                        <div>
+                            <strong>Data Protection Officer:</strong> dpo@subsignal.vc
+                        </div>
+                        <div>
+                            <strong>General Contact:</strong> nick@subsignal.vc
+                        </div>
+                    </div>
+                </div>
+                <p className="mt-4">
+                    We will respond to privacy inquiries and data subject rights requests in
+                    accordance with applicable legal requirements, typically within 30 days.
+                </p>
+            </section>
+        </article>
     );
 }

@@ -1,351 +1,341 @@
-import { CONTACT_EMAIL, WEBSITE_URL } from '@/constants/contact';
+import Link from 'next/link';
 
-export default function TermsAndConditions() {
+export default function Terms() {
     return (
-        <div className="min-h-screen bg-white">
-            <div className="max-w-4xl mx-auto px-6 py-16">
-                <h1 className="text-4xl font-bold mb-8">Terms and Conditions</h1>
+        <article className="legal flex flex-col gap-12">
+            <section className="flex flex-col gap-4">
+                <h1 className="text-center font-dm-sans font-medium text-4xl leading-tight tracking-[-2px] md:text-6xl">
+                    <span className="relative">
+                        <span className="relative z-10 text-black">Terms</span>
+                        <span className="-translate-y-1/2 -rotate-1 -z-10 absolute inset-0 top-1/2 transform rounded-md bg-green-200 py-6 md:py-8" />
+                    </span>{' '}
+                    of Service
+                </h1>
+                <div className="text-center text-muted-foreground text-sm mt-4">
+                    Last updated: January 1, 2025
+                </div>
+            </section>
 
-                <div className="prose prose-lg max-w-none">
-                    <p className="text-xl mb-8">
-                        Subsignal Labs endeavors to implement commercially reasonable measures
-                        designed to maintain appropriate standards of privacy and security, subject
-                        to operational constraints and technical limitations inherent in digital
-                        services.
-                    </p>
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">1. Acceptance of Terms</h2>
+                <p>
+                    By accessing and using Subsignal&apos;s competitive intelligence and market
+                    monitoring platform, you agree to be bound by these terms of service and all
+                    applicable laws and regulations. If you do not agree with any of these terms,
+                    you are prohibited from using or accessing this service.
+                </p>
+                <p>
+                    These terms constitute a legally binding contract between you and Subsignal
+                    Labs. By using our services, you represent that you have the legal authority to
+                    enter into this agreement on behalf of yourself or your organization.
+                </p>
+            </section>
 
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">Terms of Service</h2>
-                    <p>
-                        These Terms of Service (collectively, the &ldquo;Agreement&rdquo;)
-                        constitute a legally binding contract governing your access to and use of
-                        the website and the Subsignal Platform (as defined herein) operated by
-                        Subsignal Labs, a company organized under applicable law
-                        (&ldquo;Company,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo; or
-                        &ldquo;our&rdquo;). By accessing, browsing, or otherwise using any portion
-                        of our services, whether as an individual (&ldquo;User&rdquo;) or on behalf
-                        of any entity (&ldquo;Customer&rdquo;), you acknowledge that you have read,
-                        understood, and agree to be bound by this Agreement in its entirety, and you
-                        represent and warrant that you have the legal authority to enter into this
-                        Agreement on behalf of yourself and, if applicable, such entity.
-                    </p>
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">2. Description of Service</h2>
+                <p>
+                    Subsignal is a competitive intelligence and market monitoring platform that
+                    provides:
+                </p>
+                <ul className="flex list-disc flex-col gap-1 pl-6">
+                    <li>Market intelligence and competitive analysis</li>
+                    <li>Deal flow monitoring and tracking</li>
+                    <li>Company and industry monitoring services</li>
+                    <li>Business intelligence reports and insights</li>
+                    <li>Automated data collection from publicly available sources</li>
+                </ul>
+                <p>
+                    We reserve the right to modify, enhance, or discontinue any aspect of the
+                    service at any time with reasonable advance notice for material changes.
+                </p>
+            </section>
 
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">Definitions</h2>
-                    <p>
-                        For purposes of this Agreement, the following terms shall have the meanings
-                        set forth below. Capitalized terms not otherwise defined herein shall have
-                        their commonly understood meaning in the relevant industry context.
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">3. License and Access Rights</h2>
+                <p>
+                    Subject to your compliance with these terms and payment of applicable fees, we
+                    grant you a limited, non-exclusive, non-transferable license to access and use
+                    our competitive intelligence platform for your internal business purposes.
+                </p>
+                <p>
+                    This license includes access to competitive intelligence reports, market
+                    analysis, and business monitoring data. All rights not expressly granted are
+                    reserved by Subsignal.
+                </p>
+            </section>
+
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">4. User Responsibilities</h2>
+                <p>As a user of Subsignal, you agree to:</p>
+                <ul className="flex list-disc flex-col gap-1 pl-6">
+                    <li>
+                        Use the service in compliance with all applicable laws and regulations,
+                        including data protection and competition laws
+                    </li>
+                    <li>Use competitive intelligence data for legitimate business purposes only</li>
+                    <li>
+                        Independently verify critical information before making business decisions
+                    </li>
+                    <li>Maintain the security and confidentiality of your account credentials</li>
+                    <li>Respect intellectual property rights and third-party rights</li>
+                    <li>
+                        Ensure your use of our services complies with applicable legal requirements
+                        in your jurisdiction
+                    </li>
+                </ul>
+            </section>
+
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">5. Prohibited Uses</h2>
+                <p>You may not use Subsignal for:</p>
+                <ul className="flex list-disc flex-col gap-1 pl-6">
+                    <li>
+                        Reverse engineering, decompiling, or attempting to derive our source code or
+                        algorithms
+                    </li>
+                    <li>
+                        Gaining unauthorized access to our systems, networks, or other users&apos;
+                        accounts
+                    </li>
+                    <li>Introducing malware, viruses, or other harmful technological material</li>
+                    <li>
+                        Using automated means to access our services without express written
+                        permission
+                    </li>
+                    <li>Violating any applicable laws, regulations, or third-party rights</li>
+                    <li>
+                        Harassing, threatening, or causing harm to individuals referenced in
+                        intelligence reports
+                    </li>
+                    <li>Circumventing rate limiting, access controls, or usage restrictions</li>
+                    <li>
+                        Distributing non-public features or information to unauthorized third
+                        parties
+                    </li>
+                </ul>
+                <p>
+                    We reserve the right to suspend or terminate access for any suspected violation
+                    of these prohibited conduct provisions.
+                </p>
+            </section>
+
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">6. Competitive Intelligence Services</h2>
+                <p>
+                    Our services include competitive intelligence, market monitoring, and business
+                    analysis capabilities that process information from publicly available sources
+                    and third-party data providers.
+                </p>
+                <div className="bg-amber-50 border-l-4 border-amber-400 p-4 mt-4">
+                    <p className="text-sm">
+                        <strong>Important:</strong> Information provided through our platform is for
+                        business intelligence purposes and should be independently verified before
+                        making critical business decisions. We do not guarantee the accuracy,
+                        completeness, or currency of all third-party information.
                     </p>
-                    <ul className="list-disc pl-6 mb-4">
+                </div>
+            </section>
+
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">7. Subscription and Payment Terms</h2>
+                <p>
+                    In consideration for our services, you agree to pay the subscription fees
+                    specified on our website or in your order form. Key payment terms include:
+                </p>
+                <ul className="flex list-disc flex-col gap-1 pl-6">
+                    <li>
+                        All fees are exclusive of applicable taxes, which are your responsibility
+                    </li>
+                    <li>Subscriptions automatically renew for successive terms unless cancelled</li>
+                    <li>
+                        You may cancel auto-renewal by providing written notice before the renewal
+                        date
+                    </li>
+                    <li>We may modify pricing with thirty (30) days&apos; advance notice</li>
+                    <li>
+                        All fees are non-refundable except as expressly provided or required by law
+                    </li>
+                    <li>Payment is due within fifteen (15) days of invoice date</li>
+                </ul>
+            </section>
+
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">8. Privacy and Data Protection</h2>
+                <p>
+                    Your privacy is important to us. Please review our{' '}
+                    <Link className="text-blue-500 underline" href="/privacy">
+                        Privacy Policy
+                    </Link>{' '}
+                    and{' '}
+                    <Link className="text-blue-500 underline" href="/dpa">
+                        Data Processing Agreement
+                    </Link>{' '}
+                    to understand how we collect, use, and protect your information.
+                </p>
+                <p>
+                    We implement commercially reasonable technical and organizational safeguards to
+                    protect your data, though no method of transmission or storage is completely
+                    secure.
+                </p>
+            </section>
+
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">9. Service Availability and Support</h2>
+                <p>
+                    While we strive to maintain high availability, Subsignal is provided on an
+                    &ldquo;as is&rdquo; and &ldquo;as available&rdquo; basis. We do not guarantee
+                    uninterrupted service and may perform maintenance that temporarily affects
+                    availability.
+                </p>
+                <p>
+                    We will use commercially reasonable efforts to provide advance notice of
+                    material changes that may adversely affect your use of our services.
+                </p>
+            </section>
+
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">10. Intellectual Property</h2>
+                <p>
+                    All intellectual property rights in the Subsignal platform, including software,
+                    algorithms, reports, and analyses, are owned by Subsignal Labs or our licensors.
+                    You retain ownership of any data you provide to us, subject to our rights to
+                    process such data as described in our Privacy Policy.
+                </p>
+            </section>
+
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">11. Disclaimers and Warranties</h2>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                    <p className="font-semibold mb-2">IMPORTANT DISCLAIMERS:</p>
+                    <ul className="flex list-disc flex-col gap-1 pl-6 text-sm">
                         <li>
-                            &ldquo;Customer Data&rdquo; means any and all data, content, materials,
-                            or information, including without limitation Personal Information, that
-                            Customer or its Users transmit, upload, post, or otherwise make
-                            available to or through the Services, regardless of format or medium.
+                            <strong>Services &ldquo;As Is&rdquo;:</strong> Our services, including
+                            all competitive intelligence reports and market analysis, are provided
+                            &ldquo;as is&rdquo; without warranties of any kind.
                         </li>
                         <li>
-                            &ldquo;Effective Date&rdquo; means the earlier of (i) the date of first
-                            access to the Website or Services by User, or (ii) the date of execution
-                            of any order form or subscription agreement referencing this Agreement.
+                            <strong>No Accuracy Guarantee:</strong> We do not warrant the accuracy,
+                            reliability, or completeness of competitive intelligence data or
+                            third-party information.
                         </li>
                         <li>
-                            &ldquo;Subsignal Platform&rdquo; or &ldquo;Platform&rdquo; means the
-                            proprietary software-as-a-service platform and related technologies
-                            operated by Company, as may be modified, updated, or enhanced from time
-                            to time in Company&apos;s sole discretion.
+                            <strong>Third-Party Data:</strong> Information from third-party sources
+                            and automated collection processes may contain inherent limitations and
+                            uncertainties.
                         </li>
                         <li>
-                            &ldquo;Personal Information&rdquo; means information that identifies,
-                            relates to, describes, or is reasonably capable of being associated with
-                            a particular individual, as such term may be defined under applicable
-                            Privacy Laws.
-                        </li>
-                        <li>
-                            &ldquo;Privacy Laws&rdquo; means all applicable federal, state,
-                            provincial, local, and international laws, regulations, and regulatory
-                            guidance relating to data protection, privacy, and security, as may be
-                            amended, modified, or superseded from time to time.
-                        </li>
-                        <li>
-                            &ldquo;Services&rdquo; means the Platform, Website, and any related
-                            services, features, content, or applications offered by Company,
-                            including any updates, enhancements, or modifications thereto.
-                        </li>
-                        <li>
-                            &ldquo;User&rdquo; means any individual authorized by Customer to access
-                            and use the Services, or any individual accessing the Services with
-                            Customer&apos;s knowledge or consent.
-                        </li>
-                        <li>
-                            &ldquo;Website&rdquo; means the website located at {WEBSITE_URL} and any
-                            associated subdomains, mobile applications, or other digital properties
-                            operated by Company.
+                            <strong>Business Decisions:</strong> You acknowledge that competitive
+                            intelligence involves inherent limitations and should not be the sole
+                            basis for business decisions.
                         </li>
                     </ul>
+                </div>
+            </section>
 
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">
-                        Grant of Access and License Restrictions
-                    </h2>
-                    <p>
-                        Subject to the terms and conditions of this Agreement and Customer&apos;s
-                        compliance with all applicable payment obligations, Company hereby grants to
-                        Customer during the Term a limited, non-exclusive, non-transferable,
-                        non-sublicensable, revocable license to access and use the Services,
-                        including competitive intelligence reports, market analysis, and business
-                        monitoring data, solely for Customer&apos;s internal business purposes and
-                        in accordance with the documentation provided by Company. This license is
-                        contingent upon system availability and may be subject to usage limitations
-                        as determined by Company in its sole discretion. Company reserves all rights
-                        not expressly granted herein.
-                    </p>
-
-                    <h3 className="text-lg font-semibold mt-6 mb-3">
-                        Competitive Intelligence Services
-                    </h3>
-                    <p>
-                        The Services include competitive intelligence, market monitoring, and
-                        business analysis capabilities that process information from publicly
-                        available sources and third-party data providers. Customer acknowledges that
-                        such information is provided for business intelligence purposes and should
-                        be independently verified before making critical business decisions.
-                    </p>
-
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">Prohibited Conduct</h2>
-                    <p>
-                        Customer acknowledges and agrees that Customer and its Users shall not, and
-                        shall not attempt to or permit any third party to, engage in any of the
-                        following activities (the &ldquo;Prohibited Conduct&rdquo;):
-                    </p>
-                    <ul className="list-disc pl-6 mb-4">
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">12. Limitation of Liability</h2>
+                <div className="bg-red-50 border-l-4 border-red-400 p-4">
+                    <p className="font-semibold mb-2">LIABILITY LIMITATIONS:</p>
+                    <ul className="flex list-disc flex-col gap-1 pl-6 text-sm">
                         <li>
-                            Access, disclose, or distribute any non-public features, content, or
-                            information to unauthorized third parties;
+                            We shall not be liable for indirect, incidental, consequential, special,
+                            or punitive damages, including lost profits, business interruption, or
+                            competitive disadvantage.
                         </li>
                         <li>
-                            Reverse engineer, decompile, disassemble, or otherwise attempt to derive
-                            the source code, algorithms, or structure of the Services;
+                            Our total liability shall not exceed the amount paid by you during the
+                            twelve (12) months immediately preceding the event giving rise to the
+                            claim.
                         </li>
                         <li>
-                            Introduce any viruses, malware, trojans, worms, logic bombs, or other
-                            malicious or technologically harmful material;
-                        </li>
-                        <li>
-                            Gain or attempt to gain unauthorized access to the Services, other
-                            users&apos; accounts, or Company&apos;s computer systems or networks;
-                        </li>
-                        <li>
-                            Use the Services in any manner that could damage, disable, overburden,
-                            or impair Company&apos;s servers or networks, or interfere with any
-                            other party&apos;s use of the Services;
-                        </li>
-                        <li>
-                            Violate any applicable laws, regulations, or third-party rights, or
-                            engage in any unlawful, harmful, or objectionable conduct;
-                        </li>
-                        <li>
-                            Use any automated means to access the Services without Company&apos;s
-                            express written permission;
-                        </li>
-                        <li>
-                            Use the Services for any purpose other than legitimate competitive
-                            intelligence, market research, and business analysis activities;
-                        </li>
-                        <li>
-                            Attempt to circumvent any rate limiting, access controls, or usage
-                            restrictions implemented by Company;
-                        </li>
-                        <li>
-                            Use the Services to harass, threaten, or cause harm to any individual or
-                            entity referenced in competitive intelligence reports.
+                            We disclaim liability for business decisions made based on competitive
+                            intelligence data provided through our platform.
                         </li>
                     </ul>
-                    <p>
-                        Company reserves the right, in its sole discretion and without prior notice,
-                        to suspend or terminate access to the Services for any suspected violation
-                        of the Prohibited Conduct provisions.
-                    </p>
+                </div>
+            </section>
 
-                    <h3 className="text-lg font-semibold mt-6 mb-3">Customer Responsibilities</h3>
-                    <p>
-                        Customer shall use the Services in compliance with all applicable laws and
-                        regulations, including but not limited to data protection laws, competition
-                        laws, and regulations governing the collection and use of business
-                        intelligence. Customer acknowledges that it is solely responsible for
-                        ensuring that its use of competitive intelligence data complies with
-                        applicable legal requirements in its jurisdiction and industry.
-                    </p>
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">13. Indemnification</h2>
+                <p>
+                    You agree to defend, indemnify, and hold us harmless from claims arising from:
+                </p>
+                <ul className="flex list-disc flex-col gap-1 pl-6">
+                    <li>Your use of our services in violation of these terms</li>
+                    <li>Your violation of applicable laws or regulations</li>
+                    <li>
+                        Any negligent acts, omissions, or willful misconduct by you or your users
+                    </li>
+                    <li>Claims that your data infringes third-party rights</li>
+                </ul>
+            </section>
 
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">
-                        Service Fees, Payment Terms, and Subscription
-                    </h2>
-                    <p>
-                        In consideration for the provision of Services, Customer shall pay Company
-                        the fees specified on the Website or in the applicable order form for the
-                        subscription term selected by Customer (&ldquo;Subscription Fees&rdquo;).
-                        All fees are exclusive of applicable taxes, duties, and governmental
-                        assessments, which shall be Customer&apos;s sole responsibility. Unless
-                        terminated in accordance with this Agreement, Customer&apos;s subscription
-                        shall automatically renew for successive renewal terms of equal duration
-                        upon expiration, subject to Company&apos;s then-current fee structure.
-                        Customer may cancel auto-renewal by providing written notice prior to the
-                        applicable renewal date. Company reserves the right to modify pricing upon
-                        thirty (30) days&apos; advance notice. All fees are non-refundable except as
-                        expressly provided herein or required by law.
-                    </p>
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">14. Term and Termination</h2>
+                <p>This agreement continues until terminated. Either party may terminate:</p>
+                <ul className="flex list-disc flex-col gap-1 pl-6">
+                    <li>
+                        Immediately upon material breach that remains uncured after 30 days&apos;
+                        notice
+                    </li>
+                    <li>Immediately upon insolvency or similar financial distress</li>
+                    <li>You may terminate for convenience with 30 days&apos; written notice</li>
+                    <li>
+                        We may suspend access immediately for non-payment after 15 days&apos; notice
+                    </li>
+                </ul>
+                <p>
+                    Upon termination, all rights and licenses cease, and you must discontinue use of
+                    our services. Payment obligations and limitation of liability provisions survive
+                    termination.
+                </p>
+            </section>
 
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">
-                        Data Handling and Privacy Compliance
-                    </h2>
-                    <p>
-                        Company shall implement and maintain commercially reasonable technical,
-                        organizational, and administrative safeguards designed to protect Customer
-                        Data against unauthorized access, acquisition, destruction, use,
-                        modification, or disclosure. Notwithstanding the foregoing, Customer
-                        acknowledges that no method of transmission over the internet or electronic
-                        storage is completely secure, and Company cannot guarantee absolute security
-                        of Customer Data. Company&apos;s data handling practices shall be governed
-                        by its Privacy Policy, as updated from time to time, which is incorporated
-                        herein by reference. Customer represents and warrants that it has obtained
-                        all necessary consents and authorizations required for Company&apos;s
-                        processing of Customer Data in accordance with this Agreement.
-                    </p>
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">15. Changes to Terms</h2>
+                <p>
+                    We may modify these terms at any time. Material modifications will be effective
+                    thirty (30) days after notice, while non-material modifications are effective
+                    immediately upon posting. Your continued use constitutes acceptance of modified
+                    terms.
+                </p>
+            </section>
 
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">
-                        Term, Termination, and Effect of Termination
-                    </h2>
-                    <p>
-                        This Agreement shall commence on the Effective Date and continue until
-                        terminated in accordance with its terms (&ldquo;Term&rdquo;). Either party
-                        may terminate this Agreement: (i) immediately upon written notice if the
-                        other party materially breaches this Agreement and fails to cure such breach
-                        within thirty (30) days after receiving written notice thereof; (ii)
-                        immediately upon written notice if the other party becomes insolvent, makes
-                        an assignment for the benefit of creditors, or has a receiver appointed; or
-                        (iii) Customer may terminate for convenience with thirty (30) days&apos;
-                        written notice. Additionally, Company may suspend or terminate
-                        Customer&apos;s access immediately if Customer fails to pay any undisputed
-                        fees within fifteen (15) days after written notice of delinquency. Upon
-                        termination, all rights and licenses granted hereunder shall immediately
-                        cease, and Customer shall discontinue all use of the Services. Sections
-                        relating to payment obligations, limitation of liability, indemnification,
-                        and general provisions shall survive termination.
-                    </p>
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">16. General Provisions</h2>
+                <ul className="flex list-disc flex-col gap-1 pl-6">
+                    <li>This agreement constitutes the entire agreement between the parties</li>
+                    <li>No amendment is effective unless in writing and signed by both parties</li>
+                    <li>If any provision is invalid, the remainder remains in full force</li>
+                    <li>You may not assign this agreement without our written consent</li>
+                    <li>We may assign this agreement in connection with business transactions</li>
+                </ul>
+            </section>
 
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">
-                        Disclaimer of Warranties and Limitation of Liability
-                    </h2>
-                    <p>
-                        <strong>DISCLAIMER:</strong> THE SERVICES, INCLUDING ALL COMPETITIVE
-                        INTELLIGENCE REPORTS, MARKET ANALYSIS, AND BUSINESS DATA, ARE PROVIDED ON AN
-                        &ldquo;AS IS&rdquo; AND &ldquo;AS AVAILABLE&rdquo; BASIS. TO THE FULLEST
-                        EXTENT PERMITTED BY APPLICABLE LAW, COMPANY DISCLAIMS ALL WARRANTIES,
-                        EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF
-                        MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, TITLE,
-                        QUIET ENJOYMENT, ACCURACY, COMPLETENESS, CURRENCY, AND ANY WARRANTIES
-                        ARISING OUT OF COURSE OF DEALING OR USAGE OF TRADE. COMPANY DOES NOT WARRANT
-                        THAT THE SERVICES WILL BE UNINTERRUPTED, ERROR-FREE, OR COMPLETELY SECURE,
-                        OR THAT ANY DEFECTS WILL BE CORRECTED. COMPANY MAKES NO REPRESENTATIONS OR
-                        WARRANTIES REGARDING THE ACCURACY, RELIABILITY, OR COMPLETENESS OF ANY
-                        COMPETITIVE INTELLIGENCE DATA, MARKET ANALYSIS, OR THIRD-PARTY INFORMATION
-                        PROVIDED THROUGH THE SERVICES.
-                    </p>
-                    <p>
-                        <strong>LIMITATION OF LIABILITY:</strong> IN NO EVENT SHALL COMPANY BE
-                        LIABLE FOR ANY INDIRECT, INCIDENTAL, CONSEQUENTIAL, SPECIAL, EXEMPLARY, OR
-                        PUNITIVE DAMAGES, INCLUDING WITHOUT LIMITATION DAMAGES FOR LOST PROFITS,
-                        LOST REVENUES, LOST DATA, BUSINESS INTERRUPTION, LOSS OF GOODWILL,
-                        COMPETITIVE DISADVANTAGE, OR BUSINESS DECISIONS BASED ON COMPETITIVE
-                        INTELLIGENCE DATA, WHETHER BASED ON CONTRACT, TORT, NEGLIGENCE, STRICT
-                        LIABILITY, OR OTHERWISE, EVEN IF COMPANY HAS BEEN ADVISED OF THE POSSIBILITY
-                        OF SUCH DAMAGES. COMPANY&apos;S TOTAL LIABILITY ARISING OUT OF OR RELATING
-                        TO THIS AGREEMENT SHALL NOT EXCEED THE TOTAL AMOUNT PAID BY CUSTOMER TO
-                        COMPANY DURING THE TWELVE (12) MONTHS IMMEDIATELY PRECEDING THE EVENT GIVING
-                        RISE TO THE CLAIM. SOME JURISDICTIONS DO NOT ALLOW CERTAIN LIMITATIONS OR
-                        EXCLUSIONS OF LIABILITY, SO THE ABOVE LIMITATIONS MAY NOT APPLY TO YOU.
-                    </p>
-
-                    <h3 className="text-lg font-semibold mt-6 mb-3">
-                        Third-Party Data Disclaimers
-                    </h3>
-                    <p>
-                        The Services may include information obtained from third-party sources,
-                        publicly available data, and automated data collection processes. Company
-                        does not warrant the accuracy, completeness, or currency of such third-party
-                        information and expressly disclaims any liability for decisions made based
-                        on such data. Customer acknowledges that competitive intelligence involves
-                        inherent limitations and uncertainties.
-                    </p>
-
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">Mutual Indemnification</h2>
-                    <p>
-                        Customer agrees to defend, indemnify, and hold harmless Company and its
-                        officers, directors, employees, agents, and affiliates from and against any
-                        and all claims, liabilities, damages, losses, costs, and expenses (including
-                        reasonable attorneys&apos; fees) arising out of or relating to: (i)
-                        Customer&apos;s use of the Services in violation of this Agreement; (ii)
-                        Customer Data or any claim that Customer Data infringes, violates, or
-                        misappropriates any third-party rights; (iii) Customer&apos;s violation of
-                        applicable laws or regulations; or (iv) any negligent acts or omissions or
-                        willful misconduct by Customer or its Users. Company agrees to defend,
-                        indemnify, and hold harmless Customer from and against any third-party claim
-                        that the Services, when used in accordance with this Agreement, infringe any
-                        valid U.S. patent, copyright, or trademark, provided that Customer promptly
-                        notifies Company of such claim and grants Company sole control over the
-                        defense and settlement thereof.
-                    </p>
-
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">
-                        Modification of Terms and Services
-                    </h2>
-                    <p>
-                        Company reserves the right to modify, update, or revise this Agreement at
-                        any time in its sole discretion by posting the modified terms on the Website
-                        or providing notice through the Services. Material modifications shall be
-                        effective thirty (30) days after posting or notice, while non-material
-                        modifications shall be effective immediately upon posting. Customer&apos;s
-                        continued use of the Services following any modification constitutes
-                        acceptance of the modified Agreement. Company may also modify, suspend, or
-                        discontinue any aspect of the Services at any time without prior notice,
-                        provided that Company shall use commercially reasonable efforts to provide
-                        advance notice of material changes that adversely affect Customer&apos;s use
-                        of the Services.
-                    </p>
-
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">General Provisions</h2>
-                    <p>
-                        This Agreement constitutes the entire agreement between the parties with
-                        respect to the subject matter hereof and supersedes all prior or
-                        contemporaneous communications, agreements, and understandings, whether
-                        written or oral. No amendment, modification, or waiver of any provision
-                        shall be effective unless in writing and signed by both parties. If any
-                        provision is deemed invalid or unenforceable, the remainder shall remain in
-                        full force and effect. This Agreement shall be governed by and construed in
-                        accordance with the laws of [Jurisdiction], without regard to conflict of
-                        law principles. Any disputes arising hereunder shall be resolved exclusively
-                        in the courts of [Jurisdiction], and each party consents to the personal
-                        jurisdiction of such courts. Customer may not assign this Agreement without
-                        Company&apos;s prior written consent, while Company may assign this
-                        Agreement in its sole discretion, including in connection with any merger,
-                        acquisition, or sale of assets.
-                    </p>
-
-                    <h2 className="text-2xl font-semibold mt-8 mb-4">
-                        Contact Information and Legal Notices
-                    </h2>
-                    <p>
-                        All notices, requests, consents, claims, demands, waivers, and other
-                        communications hereunder shall be in writing and addressed to the receiving
-                        party at the address set forth below or such other address as the receiving
-                        party may specify in writing. Questions, concerns, or notices regarding this
-                        Agreement may be sent to Company at {CONTACT_EMAIL}. Legal notices to
-                        Customer shall be sent to the email address associated with Customer&apos;s
-                        account.
-                    </p>
-
-                    <div className="mt-8 pt-8 border-t">
-                        <p className="text-sm text-gray-600">Last updated: January 1, 2025</p>
+            <section className="flex flex-col gap-4">
+                <h2 className="font-semibold text-2xl">17. Contact Information</h2>
+                <p>
+                    If you have any questions about these Terms of Service or need to provide legal
+                    notices, please contact us:
+                </p>
+                <div className="bg-gray-50 p-4 rounded-lg mt-2">
+                    <div className="flex flex-col gap-1">
+                        <div>
+                            <strong>General Contact:</strong> nick@subsignal.vc
+                        </div>
+                        <div>
+                            <strong>Legal Notices:</strong> nick@subsignal.vc
+                        </div>
+                        <div>
+                            <strong>Website:</strong> https://subsignal.app
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
+                <p className="mt-4">
+                    All notices must be in writing and sent to the email address associated with
+                    your account or the contact information provided above.
+                </p>
+            </section>
+        </article>
     );
 }
