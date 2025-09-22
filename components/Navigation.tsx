@@ -8,7 +8,7 @@ import { authClient } from '@/client/auth';
 /**
  * Signup route
  */
-const signupRoute = '/signup';
+const signupRoute = '/get-started';
 
 /**
  * Navigation component

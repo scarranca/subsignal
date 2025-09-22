@@ -1,9 +1,9 @@
 'use client';
 
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { CAL_URL } from '@/constants/contact';
 import { PlanFeature, PRICING_PLANS, type PricingPlan, Period } from '@/constants/pricing';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 
 function BillingToggle({
     period,
@@ -61,7 +61,7 @@ function PricingFeature({ text, included }: PlanFeature) {
     );
 }
 
-function PricingPlan({
+function PricingPlanCard({
     name,
     price,
     period,
@@ -73,7 +73,11 @@ function PricingPlan({
 }: PricingPlan & { onCtaClick: () => void }) {
     return (
         <div
-            className={`flex flex-col ${isPopular ? 'bg-black text-white shadow-xl' : 'bg-white border border-zinc-200 shadow-sm'} rounded-xl p-8 relative`}
+            className={`flex flex-col ${
+                isPopular
+                    ? 'bg-black text-white shadow-xl'
+                    : 'bg-white border border-zinc-200 shadow-sm'
+            } rounded-xl p-8 relative`}
         >
             {isPopular && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
@@ -90,15 +94,6 @@ function PricingPlan({
                         </span>
                     )}
                 </div>
-                {/* {period === '/year' ? (
-                    <p className={`text-sm mt-1 ${isPopular ? 'text-gray-400' : 'text-gray-600'}`}>
-                        ${id === 'solo_plan_annually' ? '99' : '299'}/month if paid monthly
-                    </p>
-                ) : (
-                    <p className={`text-sm mt-1 ${isPopular ? 'text-gray-400' : 'text-gray-600'}`}>
-                        ${id === 'solo_plan_monthly' ? '999' : '2499'}/year if paid annually
-                    </p>
-                )} */}
                 <p className={`mt-4 text-sm ${isPopular ? 'text-gray-400' : 'text-gray-600'}`}>
                     {description}
                 </p>
@@ -146,21 +141,21 @@ export default function Pricing() {
     return (
         <section className="py-16 md:py-24 px-6 md:px-12 scroll-mt-20" id="pricing">
             <div className="max-w-4xl mx-auto text-center mb-16">
-                <h2 className="text-3xl md:text-5xl font-bold mb-4">
-                    Simple, transparent
-                    <br />
-                    <span className="text-gray-500">pricing for all</span>
-                </h2>
-                <p className="text-lg text-gray-600">
-                    Keep your thesis current. Deliver more than just capital.
-                </p>
+                <div className="flex flex-col gap-8">
+                    <p className="text-center text-base text-muted-foreground md:text-lg">
+                        Pricing
+                    </p>
+                    <h2 className="mx-auto max-w-2xl text-center font-dm-sans font-medium text-2xl text-foreground leading-normal tracking-tight md:text-3xl lg:text-4xl">
+                        Pricing that works for you
+                    </h2>
+                </div>
             </div>
 
             <BillingToggle period={billingPeriod} onPeriodChange={setBillingPeriod} />
 
             <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
                 {plans.map((plan, index) => (
-                    <PricingPlan
+                    <PricingPlanCard
                         key={index}
                         {...plan}
                         onCtaClick={() => handleCtaClick(plan.ctaText)}
