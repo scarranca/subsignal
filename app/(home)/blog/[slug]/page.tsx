@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 
     const title = `${post.title} | Subsignal Blog`;
     const description = post.excerpt;
-    const image = post.coverImage || '/og-image.png';
+    const image = '/og-image.png';
 
     return {
         title,
