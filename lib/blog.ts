@@ -2,7 +2,16 @@ import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
 import { serialize } from 'next-mdx-remote/serialize';
-import { BlogPost } from '@/types/blog';
+
+export interface BlogPost {
+    slug: string;
+    title: string;
+    date: string;
+    excerpt: string;
+    author: string;
+    content: string;
+    category: string;
+}
 
 const POSTS_PER_PAGE = 6;
 
@@ -37,9 +46,9 @@ export async function getAllPosts(
                 title: data.title,
                 date: data.date,
                 excerpt: data.excerpt,
-                author: data.author || 'Admin',
+                author: data.author || 'Subsignal Team',
                 content,
-                coverImage: data.coverImage,
+                category: data.category || 'General',
             };
         })
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -64,9 +73,9 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
             title: data.title,
             date: data.date,
             excerpt: data.excerpt,
-            author: data.author || 'Admin',
+            author: data.author || 'Subsignal Team',
             content,
-            coverImage: data.coverImage,
+            category: data.category || 'General',
         };
     } catch {
         return null;
