@@ -123,7 +123,7 @@ export default function Header() {
                     >
                         <Link
                             className="flex items-center gap-2 px-5 py-5 font-medium"
-                            href={`${baseUrl}/get-started`}
+                            href={`${baseUrl}/signup`}
                         >
                             Get Started
                         </Link>
@@ -168,7 +168,7 @@ export default function Header() {
                                     </DrawerNavLink>
                                 ) : (
                                     <DrawerNavLink
-                                        href={`${baseUrl}/get-started`}
+                                        href={`${baseUrl}/signup`}
                                         icon={<LogIn className="h-4 w-4" />}
                                         isButton
                                     >
