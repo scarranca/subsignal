@@ -11,6 +11,11 @@ import { authClient } from '@/client/auth';
 const signupRoute = '/get-started';
 
 /**
+ * Feature flag to show GitHub link instead of Dashboard/Get Started
+ */
+const SHOW_GITHUB_LINK = true;
+
+/**
  * Navigation component
  * @returns The navigation component
  */
@@ -18,15 +23,19 @@ export default function Navigation() {
     const router = useRouter();
     const { data: session, isPending: isLoading } = authClient.useSession();
 
-    // Handle Cmd/Ctrl + Enter shortcut for Get Started/Dashboard
+    // Handle Cmd/Ctrl + Enter shortcut
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
                 e.preventDefault();
-                if (session?.user) {
-                    router.push('/dashboard');
+                if (SHOW_GITHUB_LINK) {
+                    window.open('https://github.com/wizenheimer/subsignal', '_blank');
                 } else {
-                    router.push(signupRoute);
+                    if (session?.user) {
+                        router.push('/dashboard');
+                    } else {
+                        router.push(signupRoute);
+                    }
                 }
             }
         };
@@ -46,13 +55,25 @@ export default function Navigation() {
                     Subsignal
                 </Link>
                 <nav className="hidden md:flex space-x-8"></nav>
-                <button
-                    onClick={() => router.push(signupRoute)}
-                    className="bg-black text-white px-4 py-2 rounded-md font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
-                >
-                    <span>Get Started</span>
-                    <span className="text-xs opacity-60">⌘↵</span>
-                </button>
+                {SHOW_GITHUB_LINK ? (
+                    <a
+                        href="https://github.com/wizenheimer/subsignal"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-black text-white px-4 py-2 rounded-md font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
+                    >
+                        <span>GitHub</span>
+                        <span className="text-xs opacity-60">⌘↵</span>
+                    </a>
+                ) : (
+                    <button
+                        onClick={() => router.push(signupRoute)}
+                        className="bg-black text-white px-4 py-2 rounded-md font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
+                    >
+                        <span>Get Started</span>
+                        <span className="text-xs opacity-60">⌘↵</span>
+                    </button>
+                )}
             </header>
         );
     }
@@ -67,7 +88,18 @@ export default function Navigation() {
             </Link>
             <nav className="hidden md:flex space-x-8"></nav>
 
-            {session?.user ? (
+            {SHOW_GITHUB_LINK ? (
+                // Show GitHub link
+                <a
+                    href="https://github.com/wizenheimer/subsignal"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-black text-white px-4 py-2 rounded-md font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
+                >
+                    <span>GitHub</span>
+                    <span className="text-xs opacity-60">⌘↵</span>
+                </a>
+            ) : session?.user ? (
                 // Logged in: Show Dashboard button
                 <button
                     onClick={() => router.push('/dashboard')}

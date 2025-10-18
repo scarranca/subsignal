@@ -14,6 +14,11 @@ import {
 } from '@/components/ui/drawer';
 import { useEffect, useState } from 'react';
 
+/**
+ * Feature flag to show GitHub link instead of Dashboard/Get Started
+ */
+const SHOW_GITHUB_LINK = true;
+
 function DrawerNavLink({
     href,
     children,
@@ -101,7 +106,23 @@ export default function Header() {
             </div>
 
             <div className="hidden flex-1 justify-end gap-1 md:flex">
-                {mounted && !isPending && user ? (
+                {SHOW_GITHUB_LINK ? (
+                    <Button
+                        asChild
+                        className="rounded-full border-[0.5px] hover:brightness-99"
+                        variant="secondary"
+                    >
+                        <a
+                            className="flex items-center gap-2 px-5 py-5 font-medium"
+                            href="https://github.com/wizenheimer/subsignal"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            GitHub
+                            <ChevronRight />
+                        </a>
+                    </Button>
+                ) : mounted && !isPending && user ? (
                     <Button
                         asChild
                         className="rounded-full border-[0.5px] hover:brightness-99"
@@ -158,7 +179,23 @@ export default function Header() {
                                 <DrawerNavLink href={`${baseUrl}/roadmap`}>Roadmap</DrawerNavLink>
                             </nav>
                             <div className="flex w-full flex-col">
-                                {mounted && !isPending && user ? (
+                                {SHOW_GITHUB_LINK ? (
+                                    <Button
+                                        asChild
+                                        className="rounded-full border-[0.5px] hover:brightness-99"
+                                        variant="secondary"
+                                    >
+                                        <a
+                                            className="flex items-center gap-2 px-5 py-5 font-medium"
+                                            href="https://github.com/wizenheimer/subsignal"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            <LogIn className="h-4 w-4" />
+                                            GitHub
+                                        </a>
+                                    </Button>
+                                ) : mounted && !isPending && user ? (
                                     <DrawerNavLink
                                         href={`${baseUrl}/dashboard`}
                                         icon={<User className="h-4 w-4" />}
