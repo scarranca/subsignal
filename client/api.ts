@@ -37,6 +37,70 @@ class ApiClient {
         this.baseURL = baseURL;
     }
 
+    /**
+     * Generic HTTP methods for CRM components
+     * These return raw Response objects for flexibility
+     */
+    async get(path: string, options: RequestInit = {}): Promise<Response> {
+        return fetch(path, {
+            ...options,
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers,
+            },
+        });
+    }
+
+    async post(path: string, options: RequestInit = {}): Promise<Response> {
+        return fetch(path, {
+            ...options,
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers,
+            },
+        });
+    }
+
+    async put(path: string, options: RequestInit = {}): Promise<Response> {
+        return fetch(path, {
+            ...options,
+            method: 'PUT',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers,
+            },
+        });
+    }
+
+    async patch(path: string, options: RequestInit = {}): Promise<Response> {
+        return fetch(path, {
+            ...options,
+            method: 'PATCH',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers,
+            },
+        });
+    }
+
+    async delete(path: string, options: RequestInit = {}): Promise<Response> {
+        return fetch(path, {
+            ...options,
+            method: 'DELETE',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers,
+            },
+        });
+    }
+
     private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
         try {
             const url = `${this.baseURL}${endpoint}`;

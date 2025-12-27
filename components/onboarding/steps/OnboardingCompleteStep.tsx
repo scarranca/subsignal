@@ -30,8 +30,25 @@ export const OnboardingCompleteStep = () => {
     // Validate payment status when component mounts
     useEffect(() => {
         const validatePayment = async () => {
+            const billingEnabled = process.env.NEXT_PUBLIC_BILLING_ENABLED === 'true';
+
             if (!subscriptionId) {
-                // No payment validation needed, show confetti immediately
+                // If billing is disabled, skip payment validation and go to dashboard
+                if (!billingEnabled) {
+                    // Trigger confetti inline since function is defined below
+                    confetti({
+                        particleCount: 100,
+                        spread: 70,
+                        origin: { y: 0.6 },
+                    });
+                    setButtonConfig({
+                        text: 'Dashboard',
+                        destination: '/dashboard',
+                    });
+                    return;
+                }
+
+                // Billing enabled but no subscription - redirect to checkout
                 showToast.error('Payment validation failed. Please try again.');
                 setButtonConfig({
                     text: 'Checkout',

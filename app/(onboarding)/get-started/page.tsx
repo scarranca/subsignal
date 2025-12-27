@@ -51,6 +51,14 @@ const OnboardingContent = () => {
             return;
         }
 
+        // Skip payment step (4) if billing is not configured
+        const billingEnabled = process.env.NEXT_PUBLIC_BILLING_ENABLED === 'true';
+        if (currentStep === 3 && !billingEnabled) {
+            // Skip from step 3 directly to step 5 (complete)
+            setCurrentStep(5);
+            return;
+        }
+
         // Advance to the next sequential step
         if (currentStep < 5) {
             setCurrentStep(currentStep + 1);

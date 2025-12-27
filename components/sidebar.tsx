@@ -6,12 +6,13 @@ import {
     Users,
     Building2,
     Target,
-    MessageSquare,
     CheckSquare,
     Activity,
     Settings,
     Sparkles,
     FileText,
+    Plug,
+    UsersRound,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -31,6 +32,8 @@ const navItems = [
 const secondaryNavItems = [
     { id: 'insights', label: 'AI Insights', icon: Sparkles },
     { id: 'briefings', label: 'Briefings', icon: FileText },
+    { id: 'team', label: 'Team', icon: UsersRound },
+    { id: 'integrations', label: 'Integrations', icon: Plug },
     { id: 'settings', label: 'Settings', icon: Settings },
 ];
 

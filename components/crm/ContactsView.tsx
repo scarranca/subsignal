@@ -5,7 +5,15 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import {
     Dialog,
     DialogContent,
@@ -20,12 +28,13 @@ import {
     Phone,
     Building2,
     Linkedin,
-    MoreHorizontal,
     User,
     Sparkles,
+    Loader2,
 } from 'lucide-react';
 import { apiClient } from '@/client';
 import { toast } from 'sonner';
+import { OrganizationOnboarding } from './OrganizationOnboarding';
 
 interface ContactsViewProps {
     onNavigate?: (view: string, params?: any) => void;
@@ -36,6 +45,25 @@ export function ContactsView({ onNavigate }: ContactsViewProps) {
     const [selectedContact, setSelectedContact] = useState<any>(null);
     const [showCreateDialog, setShowCreateDialog] = useState(false);
     const queryClient = useQueryClient();
+
+    // Create contact form state
+    const [newFirstName, setNewFirstName] = useState('');
+    const [newLastName, setNewLastName] = useState('');
+    const [newEmail, setNewEmail] = useState('');
+    const [newPhone, setNewPhone] = useState('');
+    const [newTitle, setNewTitle] = useState('');
+    const [newDepartment, setNewDepartment] = useState('');
+    const [newSource, setNewSource] = useState<'manual' | 'import' | 'linkedin' | 'referral' | 'website'>('manual');
+
+    // Check for organization
+    const { data: orgData, isLoading: orgLoading } = useQuery({
+        queryKey: ['current-organization'],
+        queryFn: async () => {
+            const res = await apiClient.get('/api/v1/organizations/current');
+            if (!res.ok) return null;
+            return res.json();
+        },
+    });
 
     // Fetch contacts
     const { data: contactsData, isLoading } = useQuery({
@@ -64,7 +92,63 @@ export function ContactsView({ onNavigate }: ContactsViewProps) {
         },
     });
 
+    // Create contact mutation
+    const createContactMutation = useMutation({
+        mutationFn: async () => {
+            const res = await apiClient.post('/api/v1/contacts', {
+                body: JSON.stringify({
+                    firstName: newFirstName,
+                    lastName: newLastName,
+                    email: newEmail || null,
+                    phone: newPhone || null,
+                    title: newTitle || null,
+                    department: newDepartment || null,
+                    source: newSource,
+                }),
+                headers: { 'Content-Type': 'application/json' },
+            });
+            if (!res.ok) {
+                const error = await res.json();
+                throw new Error(error.error || 'Failed to create contact');
+            }
+            return res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['contacts'] });
+            setShowCreateDialog(false);
+            resetCreateForm();
+            toast.success('Contact created successfully');
+        },
+        onError: (error) => {
+            toast.error(error instanceof Error ? error.message : 'Failed to create contact');
+        },
+    });
+
+    const resetCreateForm = () => {
+        setNewFirstName('');
+        setNewLastName('');
+        setNewEmail('');
+        setNewPhone('');
+        setNewTitle('');
+        setNewDepartment('');
+        setNewSource('manual');
+    };
+
     const contacts = contactsData?.data || [];
+
+    // Show loading state while checking organization
+    if (orgLoading) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+            </div>
+        );
+    }
+
+    // Show onboarding if no organization
+    if (!orgData) {
+        return <OrganizationOnboarding />;
+    }
 
     if (isLoading) {
         return (
@@ -204,6 +288,121 @@ export function ContactsView({ onNavigate }: ContactsViewProps) {
                     </div>
                 )}
             </div>
+
+            {/* Create Contact Dialog */}
+            <Dialog open={showCreateDialog} onOpenChange={(open) => {
+                setShowCreateDialog(open);
+                if (!open) resetCreateForm();
+            }}>
+                <DialogContent className="bg-white shadow-lg max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="text-lg font-semibold text-gray-900">Create New Contact</DialogTitle>
+                        <DialogDescription className="text-gray-600">
+                            Add a new contact to your CRM
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">First Name *</Label>
+                                <Input
+                                    id="firstName"
+                                    placeholder="John"
+                                    value={newFirstName}
+                                    onChange={(e) => setNewFirstName(e.target.value)}
+                                    className="mt-1"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">Last Name *</Label>
+                                <Input
+                                    id="lastName"
+                                    placeholder="Doe"
+                                    value={newLastName}
+                                    onChange={(e) => setNewLastName(e.target.value)}
+                                    className="mt-1"
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email</Label>
+                            <Input
+                                id="email"
+                                type="email"
+                                placeholder="john@example.com"
+                                value={newEmail}
+                                onChange={(e) => setNewEmail(e.target.value)}
+                                className="mt-1"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="phone" className="text-sm font-medium text-gray-700">Phone</Label>
+                            <Input
+                                id="phone"
+                                type="tel"
+                                placeholder="+1 (555) 123-4567"
+                                value={newPhone}
+                                onChange={(e) => setNewPhone(e.target.value)}
+                                className="mt-1"
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="title" className="text-sm font-medium text-gray-700">Title</Label>
+                                <Input
+                                    id="title"
+                                    placeholder="CEO"
+                                    value={newTitle}
+                                    onChange={(e) => setNewTitle(e.target.value)}
+                                    className="mt-1"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="department" className="text-sm font-medium text-gray-700">Department</Label>
+                                <Input
+                                    id="department"
+                                    placeholder="Sales"
+                                    value={newDepartment}
+                                    onChange={(e) => setNewDepartment(e.target.value)}
+                                    className="mt-1"
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-sm font-medium text-gray-700">Source</Label>
+                            <Select value={newSource} onValueChange={(v) => setNewSource(v as typeof newSource)}>
+                                <SelectTrigger className="mt-1">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-white">
+                                    <SelectItem value="manual">Manual Entry</SelectItem>
+                                    <SelectItem value="import">Import</SelectItem>
+                                    <SelectItem value="linkedin">LinkedIn</SelectItem>
+                                    <SelectItem value="referral">Referral</SelectItem>
+                                    <SelectItem value="website">Website</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
+                        <Button variant="outline" onClick={() => setShowCreateDialog(false)} className="hover:bg-gray-50 w-full sm:w-auto">
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={() => createContactMutation.mutate()}
+                            disabled={!newFirstName || !newLastName || createContactMutation.isPending}
+                            className="bg-gray-900 hover:bg-gray-800 text-white w-full sm:w-auto"
+                        >
+                            {createContactMutation.isPending ? (
+                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                            ) : (
+                                <Plus className="w-4 h-4 mr-2" />
+                            )}
+                            Create Contact
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             {/* Contact Detail Dialog */}
             <Dialog open={!!selectedContact} onOpenChange={() => setSelectedContact(null)}>

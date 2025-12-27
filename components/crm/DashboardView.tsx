@@ -14,8 +14,11 @@ import {
     ArrowUpRight,
     Plus,
     DollarSign,
+    Activity,
+    Loader2,
 } from 'lucide-react';
 import { apiClient } from '@/client';
+import { OrganizationOnboarding } from './OrganizationOnboarding';
 
 interface DashboardStats {
     deals: {
@@ -43,6 +46,16 @@ interface DashboardViewProps {
 }
 
 export function DashboardView({ onNavigate }: DashboardViewProps) {
+    // Check for organization
+    const { data: orgData, isLoading: orgLoading } = useQuery({
+        queryKey: ['current-organization'],
+        queryFn: async () => {
+            const res = await apiClient.get('/api/v1/organizations/current');
+            if (!res.ok) return null;
+            return res.json();
+        },
+    });
+
     // Fetch dashboard stats
     const { data: dealStats } = useQuery({
         queryKey: ['deals', 'stats'],
@@ -82,6 +95,20 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
             maximumFractionDigits: 0,
         }).format(value);
     };
+
+    // Show loading state while checking organization
+    if (orgLoading) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+            </div>
+        );
+    }
+
+    // Show onboarding if no organization
+    if (!orgData) {
+        return <OrganizationOnboarding />;
+    }
 
     return (
         <div className="p-6 space-y-6">

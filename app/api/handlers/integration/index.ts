@@ -5,12 +5,13 @@ import { eq, and, desc } from 'drizzle-orm';
 import { googleService } from '@/services/google';
 import { inngest } from '@/ingest/client';
 import { GOOGLE_CRM_SCOPES } from '@/lib/auth';
+import { getUser } from '@/app/api/middleware/auth';
 
 /**
  * Get all integrations for current user
  */
 export async function handleGetIntegrations(c: Context) {
-    const userId = c.get('userId');
+    const userId = getUser(c).id;
 
     const integrations = await db
         .select()
@@ -25,7 +26,7 @@ export async function handleGetIntegrations(c: Context) {
  * Get specific integration
  */
 export async function handleGetIntegration(c: Context) {
-    const userId = c.get('userId');
+    const userId = getUser(c).id;
     const integrationId = c.req.param('id');
 
     const [record] = await db
@@ -44,7 +45,7 @@ export async function handleGetIntegration(c: Context) {
  * Get Google OAuth URL for connecting Gmail/Calendar
  */
 export async function handleGetGoogleAuthUrl(c: Context) {
-    const userId = c.get('userId');
+    const userId = getUser(c).id;
 
     // Create a state parameter with user info
     const state = Buffer.from(JSON.stringify({ userId, timestamp: Date.now() })).toString('base64url');
@@ -156,7 +157,7 @@ export async function handleGoogleCallback(c: Context) {
  * Update integration settings
  */
 export async function handleUpdateIntegration(c: Context) {
-    const userId = c.get('userId');
+    const userId = getUser(c).id;
     const integrationId = c.req.param('id');
     const body = await c.req.json();
 
@@ -196,7 +197,7 @@ export async function handleUpdateIntegration(c: Context) {
  * Disconnect integration
  */
 export async function handleDisconnectIntegration(c: Context) {
-    const userId = c.get('userId');
+    const userId = getUser(c).id;
     const integrationId = c.req.param('id');
 
     const [existing] = await db
@@ -222,7 +223,7 @@ export async function handleDisconnectIntegration(c: Context) {
  * Trigger manual sync
  */
 export async function handleTriggerSync(c: Context) {
-    const userId = c.get('userId');
+    const userId = getUser(c).id;
     const integrationId = c.req.param('id');
     const body = await c.req.json();
 
@@ -266,7 +267,7 @@ export async function handleTriggerSync(c: Context) {
  * Get sync status and stats
  */
 export async function handleGetSyncStatus(c: Context) {
-    const userId = c.get('userId');
+    const userId = getUser(c).id;
     const integrationId = c.req.param('id');
 
     const [record] = await db
@@ -316,7 +317,7 @@ export async function handleGetSyncStatus(c: Context) {
  * Send email via Gmail integration
  */
 export async function handleSendEmail(c: Context) {
-    const userId = c.get('userId');
+    const userId = getUser(c).id;
     const integrationId = c.req.param('id');
     const body = await c.req.json();
 
@@ -358,7 +359,7 @@ export async function handleSendEmail(c: Context) {
  * Create calendar event via Google Calendar integration
  */
 export async function handleCreateCalendarEvent(c: Context) {
-    const userId = c.get('userId');
+    const userId = getUser(c).id;
     const integrationId = c.req.param('id');
     const body = await c.req.json();
 

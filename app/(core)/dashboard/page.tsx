@@ -6,16 +6,23 @@ import { Sidebar } from '@/components/sidebar';
 import { SettingsView } from '@/components/SettingsView';
 import { PagesView } from '@/components/PagesView';
 import { BriefingView } from '@/components/BriefingView';
-import { IntegrationsView } from '@/components/IntegrationsView';
 import { ChevronDown } from 'lucide-react';
 import { MobileAvatar } from '@/components/avatar';
 import { apiClient } from '@/client/api';
 import { queryKeys } from '@/lib/query-keys';
 import { DashboardPaywallView } from '@/components/DashboardPaywallView';
 import PagesViewSkeleton from '@/components/skeleton/skeleton-pages-view';
+import {
+    DashboardView,
+    DealsView,
+    ContactsView,
+    TasksView,
+    IntegrationsView,
+    TeamView,
+} from '@/components/crm';
 
 export default function Dashboard() {
-    const [activeView, setActiveView] = useState('pages');
+    const [activeView, setActiveView] = useState('dashboard');
     const [dropdownOpen, setDropdownOpen] = useState(false);
 
     // Fetch payment status
@@ -36,12 +43,16 @@ export default function Dashboard() {
         }
     }, [error]);
 
-    // Check if user has active subscription
+    // Check if billing is enabled
+    const billingEnabled = process.env.NEXT_PUBLIC_BILLING_ENABLED === 'true';
+
+    // Check if user has active subscription (or bypass if billing is disabled)
     const hasActiveSubscription =
-        paymentStatus?.success &&
-        paymentStatus.data?.subscriptionId &&
-        paymentStatus.data?.plan &&
-        paymentStatus.data?.status === 'active';
+        !billingEnabled ||
+        (paymentStatus?.success &&
+            paymentStatus.data?.subscriptionId &&
+            paymentStatus.data?.plan &&
+            paymentStatus.data?.status === 'active');
 
     const renderContent = () => {
         // Show skeleton loading state
@@ -61,16 +72,30 @@ export default function Dashboard() {
 
         // Show dashboard content for users with active subscription
         switch (activeView) {
-            case 'settings':
-                return <SettingsView />;
+            case 'dashboard':
+                return <DashboardView onNavigate={setActiveView} />;
+            case 'deals':
+                return <DealsView />;
+            case 'companies':
+                return <PagesView />;
+            case 'contacts':
+                return <ContactsView />;
+            case 'tasks':
+                return <TasksView />;
+            case 'activities':
+                return <DashboardView onNavigate={setActiveView} />; // TODO: Create ActivitiesView
+            case 'insights':
+                return <DashboardView onNavigate={setActiveView} />; // TODO: Create InsightsView
             case 'briefings':
                 return <BriefingView />;
+            case 'settings':
+                return <SettingsView />;
             case 'integrations':
                 return <IntegrationsView />;
-            case 'pages':
-                return <PagesView />;
+            case 'team':
+                return <TeamView />;
             default:
-                return <PagesView />;
+                return <DashboardView onNavigate={setActiveView} />;
         }
     };
 
@@ -95,58 +120,32 @@ export default function Dashboard() {
                                 onClick={() => setDropdownOpen(false)}
                             />
                             <div className="absolute top-full left-0 mt-1 w-48 bg-white shadow-lg rounded-md py-1 z-20">
-                                <button
-                                    onClick={() => {
-                                        setActiveView('pages');
-                                        setDropdownOpen(false);
-                                    }}
-                                    className={`w-full text-left px-4 py-2 text-sm font-medium transition-colors ${
-                                        activeView === 'pages'
-                                            ? 'text-gray-900 bg-gray-50'
-                                            : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
-                                    }`}
-                                >
-                                    Companies
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setActiveView('briefings');
-                                        setDropdownOpen(false);
-                                    }}
-                                    className={`w-full text-left px-4 py-2 text-sm font-medium transition-colors ${
-                                        activeView === 'briefings'
-                                            ? 'text-gray-900 bg-gray-50'
-                                            : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
-                                    }`}
-                                >
-                                    Briefings
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setActiveView('settings');
-                                        setDropdownOpen(false);
-                                    }}
-                                    className={`w-full text-left px-4 py-2 text-sm font-medium transition-colors ${
-                                        activeView === 'settings'
-                                            ? 'text-gray-900 bg-gray-50'
-                                            : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
-                                    }`}
-                                >
-                                    Settings
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setActiveView('integrations');
-                                        setDropdownOpen(false);
-                                    }}
-                                    className={`w-full text-left px-4 py-2 text-sm font-medium transition-colors ${
-                                        activeView === 'integrations'
-                                            ? 'text-gray-900 bg-gray-50'
-                                            : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
-                                    }`}
-                                >
-                                    Integrations
-                                </button>
+                                {[
+                                    { id: 'dashboard', label: 'Dashboard' },
+                                    { id: 'deals', label: 'Deals' },
+                                    { id: 'companies', label: 'Companies' },
+                                    { id: 'contacts', label: 'Contacts' },
+                                    { id: 'tasks', label: 'Tasks' },
+                                    { id: 'briefings', label: 'Briefings' },
+                                    { id: 'team', label: 'Team' },
+                                    { id: 'integrations', label: 'Integrations' },
+                                    { id: 'settings', label: 'Settings' },
+                                ].map((item) => (
+                                    <button
+                                        key={item.id}
+                                        onClick={() => {
+                                            setActiveView(item.id);
+                                            setDropdownOpen(false);
+                                        }}
+                                        className={`w-full text-left px-4 py-2 text-sm font-medium transition-colors ${
+                                            activeView === item.id
+                                                ? 'text-gray-900 bg-gray-50'
+                                                : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        {item.label}
+                                    </button>
+                                ))}
                             </div>
                         </>
                     )}

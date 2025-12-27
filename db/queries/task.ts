@@ -613,15 +613,21 @@ export const taskQueries = {
         const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
         const weekEnd = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
 
+        // Convert to ISO strings for SQL compatibility
+        const nowStr = now.toISOString();
+        const todayStr = today.toISOString();
+        const tomorrowStr = tomorrow.toISOString();
+        const weekEndStr = weekEnd.toISOString();
+
         const stats = await db
             .select({
                 total: sql<number>`count(*)::int`,
                 pending: sql<number>`count(*) filter (where ${task.status} = 'pending')::int`,
                 inProgress: sql<number>`count(*) filter (where ${task.status} = 'in_progress')::int`,
                 completed: sql<number>`count(*) filter (where ${task.status} = 'completed')::int`,
-                overdue: sql<number>`count(*) filter (where ${task.dueDate} < ${now} and ${task.status} in ('pending', 'in_progress'))::int`,
-                dueToday: sql<number>`count(*) filter (where ${task.dueDate} >= ${today} and ${task.dueDate} < ${tomorrow} and ${task.status} in ('pending', 'in_progress'))::int`,
-                dueThisWeek: sql<number>`count(*) filter (where ${task.dueDate} >= ${today} and ${task.dueDate} < ${weekEnd} and ${task.status} in ('pending', 'in_progress'))::int`,
+                overdue: sql<number>`count(*) filter (where ${task.dueDate} < ${nowStr} and ${task.status} in ('pending', 'in_progress'))::int`,
+                dueToday: sql<number>`count(*) filter (where ${task.dueDate} >= ${todayStr} and ${task.dueDate} < ${tomorrowStr} and ${task.status} in ('pending', 'in_progress'))::int`,
+                dueThisWeek: sql<number>`count(*) filter (where ${task.dueDate} >= ${todayStr} and ${task.dueDate} < ${weekEndStr} and ${task.status} in ('pending', 'in_progress'))::int`,
             })
             .from(task)
             .where(and(eq(task.userId, userId), eq(task.isActive, true)));

@@ -3,6 +3,7 @@ import { db } from '@/db';
 import { apiKey, apiKeyLog } from '@/db/schema';
 import { eq, and, desc, gte, sql } from 'drizzle-orm';
 import crypto from 'crypto';
+import { getUser } from '@/app/api/middleware/auth';
 
 /**
  * Generate a secure API key
@@ -30,7 +31,7 @@ export function hashApiKey(key: string): string {
  * Get all API keys for current user
  */
 export async function handleGetApiKeys(c: Context) {
-    const userId = c.get('userId');
+    const userId = getUser(c).id;
 
     const keys = await db
         .select({
@@ -57,7 +58,7 @@ export async function handleGetApiKeys(c: Context) {
  * Create new API key
  */
 export async function handleCreateApiKey(c: Context) {
-    const userId = c.get('userId');
+    const userId = getUser(c).id;
     const body = await c.req.json();
 
     if (!body.name) {
@@ -118,7 +119,7 @@ export async function handleCreateApiKey(c: Context) {
  * Update API key
  */
 export async function handleUpdateApiKey(c: Context) {
-    const userId = c.get('userId');
+    const userId = getUser(c).id;
     const keyId = c.req.param('id');
     const body = await c.req.json();
 
@@ -173,7 +174,7 @@ export async function handleUpdateApiKey(c: Context) {
  * Delete API key
  */
 export async function handleDeleteApiKey(c: Context) {
-    const userId = c.get('userId');
+    const userId = getUser(c).id;
     const keyId = c.req.param('id');
 
     const [existing] = await db
@@ -198,7 +199,7 @@ export async function handleDeleteApiKey(c: Context) {
  * Regenerate API key
  */
 export async function handleRegenerateApiKey(c: Context) {
-    const userId = c.get('userId');
+    const userId = getUser(c).id;
     const keyId = c.req.param('id');
 
     const [existing] = await db
@@ -239,7 +240,7 @@ export async function handleRegenerateApiKey(c: Context) {
  * Get API key usage stats
  */
 export async function handleGetApiKeyStats(c: Context) {
-    const userId = c.get('userId');
+    const userId = getUser(c).id;
     const keyId = c.req.param('id');
 
     const [existing] = await db

@@ -295,13 +295,18 @@ export async function handleBatchCreateCompanies(c: Context) {
         }
 
         // Step 2: Send event to ingest to batch create companies
-        await inngest.send({
-            name: 'batch/company.created',
-            data: {
-                userId: user.id,
-                urls: normalizedUrls,
-            },
-        });
+        try {
+            await inngest.send({
+                name: 'batch/company.created',
+                data: {
+                    userId: user.id,
+                    urls: normalizedUrls,
+                },
+            });
+        } catch (inngestError) {
+            // Log but don't fail the request - Inngest will process later or user can retry
+            console.error('API Handler - Inngest send failed (non-blocking):', inngestError);
+        }
 
         // Step 3: Return success response
         return c.json(

@@ -3,6 +3,7 @@ import { db } from '@/db';
 import { webhook, webhookDelivery } from '@/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import crypto from 'crypto';
+import { getUser } from '@/app/api/middleware/auth';
 
 /**
  * Available webhook events
@@ -47,7 +48,7 @@ function generateWebhookSecret(): string {
  * Get all webhooks for current user
  */
 export async function handleGetWebhooks(c: Context) {
-    const userId = c.get('userId');
+    const userId = getUser(c).id;
 
     const webhooks = await db
         .select({
@@ -74,7 +75,7 @@ export async function handleGetWebhooks(c: Context) {
  * Get single webhook with secret
  */
 export async function handleGetWebhook(c: Context) {
-    const userId = c.get('userId');
+    const userId = getUser(c).id;
     const webhookId = c.req.param('id');
 
     const [record] = await db
@@ -93,7 +94,7 @@ export async function handleGetWebhook(c: Context) {
  * Create new webhook
  */
 export async function handleCreateWebhook(c: Context) {
-    const userId = c.get('userId');
+    const userId = getUser(c).id;
     const body = await c.req.json();
 
     if (!body.name) {
@@ -153,7 +154,7 @@ export async function handleCreateWebhook(c: Context) {
  * Update webhook
  */
 export async function handleUpdateWebhook(c: Context) {
-    const userId = c.get('userId');
+    const userId = getUser(c).id;
     const webhookId = c.req.param('id');
     const body = await c.req.json();
 
@@ -220,7 +221,7 @@ export async function handleUpdateWebhook(c: Context) {
  * Delete webhook
  */
 export async function handleDeleteWebhook(c: Context) {
-    const userId = c.get('userId');
+    const userId = getUser(c).id;
     const webhookId = c.req.param('id');
 
     const [existing] = await db
@@ -245,7 +246,7 @@ export async function handleDeleteWebhook(c: Context) {
  * Regenerate webhook secret
  */
 export async function handleRegenerateWebhookSecret(c: Context) {
-    const userId = c.get('userId');
+    const userId = getUser(c).id;
     const webhookId = c.req.param('id');
 
     const [existing] = await db
@@ -274,7 +275,7 @@ export async function handleRegenerateWebhookSecret(c: Context) {
  * Test webhook by sending a test payload
  */
 export async function handleTestWebhook(c: Context) {
-    const userId = c.get('userId');
+    const userId = getUser(c).id;
     const webhookId = c.req.param('id');
 
     const [wh] = await db
@@ -373,7 +374,7 @@ export async function handleTestWebhook(c: Context) {
  * Get webhook delivery history
  */
 export async function handleGetWebhookDeliveries(c: Context) {
-    const userId = c.get('userId');
+    const userId = getUser(c).id;
     const webhookId = c.req.param('id');
     const limit = Math.min(parseInt(c.req.query('limit') || '50'), 100);
 

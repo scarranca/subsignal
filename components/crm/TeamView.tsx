@@ -7,17 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
-import {
     Dialog,
     DialogContent,
     DialogDescription,
-    DialogFooter,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
@@ -50,9 +42,9 @@ import {
     Loader2,
     Trash2,
     X,
-    Building2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { OrganizationOnboarding } from './OrganizationOnboarding';
 
 interface Member {
     id: string;
@@ -226,75 +218,61 @@ export function TeamView() {
     if (isLoading) {
         return (
             <div className="flex items-center justify-center h-64">
-                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
             </div>
         );
     }
 
     if (!orgData) {
-        return (
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Building2 className="w-5 h-5" />
-                        No Organization
-                    </CardTitle>
-                    <CardDescription>
-                        You need to create or join an organization to manage team members.
-                    </CardDescription>
-                </CardHeader>
-            </Card>
-        );
+        return <OrganizationOnboarding />;
     }
 
     const members = orgData.members || [];
     const invites = invitesData?.invites || [];
 
     return (
-        <div className="space-y-6">
+        <div className="px-4 md:px-8 py-6 max-w-4xl">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 space-y-4 sm:space-y-0">
                 <div>
-                    <h2 className="text-xl font-semibold flex items-center gap-2">
-                        <Users className="w-5 h-5" />
-                        Team Members
-                    </h2>
-                    <p className="text-sm text-muted-foreground">
+                    <h1 className="text-xl font-semibold text-gray-900">Team</h1>
+                    <p className="text-sm text-gray-600 mt-1">
                         Manage your team and their access levels
                     </p>
                 </div>
                 <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button className="gap-2">
+                        <Button className="bg-gray-900 hover:bg-gray-800 text-white gap-2">
                             <UserPlus className="w-4 h-4" />
                             Invite Member
                         </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="bg-white shadow-lg max-w-md">
                         <DialogHeader>
-                            <DialogTitle>Invite Team Member</DialogTitle>
-                            <DialogDescription>
+                            <DialogTitle className="text-lg font-semibold text-gray-900">Invite Team Member</DialogTitle>
+                            <DialogDescription className="text-gray-600">
                                 Send an invitation to join {orgData.name}
                             </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 py-4">
                             <div className="space-y-2">
-                                <Label htmlFor="email">Email Address</Label>
+                                <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email Address</Label>
                                 <Input
                                     id="email"
                                     type="email"
                                     placeholder="colleague@company.com"
                                     value={inviteEmail}
                                     onChange={(e) => setInviteEmail(e.target.value)}
+                                    className="mt-1"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>Role</Label>
+                                <Label className="text-sm font-medium text-gray-700">Role</Label>
                                 <Select value={inviteRole} onValueChange={(v) => setInviteRole(v as typeof inviteRole)}>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="mt-1">
                                         <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="bg-white">
                                         <SelectItem value="admin">
                                             <div className="flex items-center gap-2">
                                                 <Shield className="w-4 h-4" />
@@ -317,13 +295,14 @@ export function TeamView() {
                                 </Select>
                             </div>
                         </div>
-                        <DialogFooter>
-                            <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>
+                        <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
+                            <Button variant="outline" onClick={() => setInviteDialogOpen(false)} className="hover:bg-gray-50 w-full sm:w-auto">
                                 Cancel
                             </Button>
                             <Button
                                 onClick={() => inviteMutation.mutate()}
                                 disabled={!inviteEmail || inviteMutation.isPending}
+                                className="bg-gray-900 hover:bg-gray-800 text-white w-full sm:w-auto"
                             >
                                 {inviteMutation.isPending ? (
                                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -332,35 +311,33 @@ export function TeamView() {
                                 )}
                                 Send Invitation
                             </Button>
-                        </DialogFooter>
+                        </div>
                     </DialogContent>
                 </Dialog>
             </div>
 
             {/* Members List */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Members ({members.length})</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="space-y-4">
+            <div className="space-y-8">
+                <div>
+                    <h2 className="text-sm font-medium text-gray-500 mb-4">Members ({members.length})</h2>
+                    <div className="space-y-3">
                         {members.map((member) => {
                             const RoleIcon = roleIcons[member.role];
                             return (
                                 <div
                                     key={member.id}
-                                    className="flex items-center justify-between p-3 rounded-lg border bg-card"
+                                    className="flex items-center justify-between p-4 rounded-lg border border-gray-200 bg-white hover:shadow-sm transition-shadow"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <Avatar>
+                                        <Avatar className="h-10 w-10">
                                             <AvatarImage src={member.user.image || undefined} />
-                                            <AvatarFallback>
+                                            <AvatarFallback className="bg-gray-100 text-gray-600">
                                                 {member.user.name?.slice(0, 2).toUpperCase() || 'U'}
                                             </AvatarFallback>
                                         </Avatar>
                                         <div>
-                                            <p className="font-medium">{member.user.name}</p>
-                                            <p className="text-sm text-muted-foreground">
+                                            <p className="font-medium text-gray-900">{member.user.name}</p>
+                                            <p className="text-sm text-gray-500">
                                                 {member.user.email}
                                             </p>
                                         </div>
@@ -373,11 +350,11 @@ export function TeamView() {
                                         {member.role !== 'owner' && (
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon">
-                                                        <MoreHorizontal className="w-4 h-4" />
+                                                    <Button variant="ghost" size="icon" className="hover:bg-gray-100">
+                                                        <MoreHorizontal className="w-4 h-4 text-gray-500" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
+                                                <DropdownMenuContent align="end" className="bg-white">
                                                     <DropdownMenuItem
                                                         onClick={() => updateRoleMutation.mutate({
                                                             memberId: member.userId,
@@ -410,7 +387,7 @@ export function TeamView() {
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator />
                                                     <DropdownMenuItem
-                                                        className="text-destructive"
+                                                        className="text-red-600"
                                                         onClick={() => removeMemberMutation.mutate(member.userId)}
                                                     >
                                                         <Trash2 className="w-4 h-4 mr-2" />
@@ -424,30 +401,26 @@ export function TeamView() {
                             );
                         })}
                     </div>
-                </CardContent>
-            </Card>
+                </div>
 
-            {/* Pending Invitations */}
-            {invites.length > 0 && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Pending Invitations ({invites.length})</CardTitle>
-                    </CardHeader>
-                    <CardContent>
+                {/* Pending Invitations */}
+                {invites.length > 0 && (
+                    <div>
+                        <h2 className="text-sm font-medium text-gray-500 mb-4">Pending Invitations ({invites.length})</h2>
                         <div className="space-y-3">
                             {invites.map((invite) => (
                                 <div
                                     key={invite.id}
-                                    className="flex items-center justify-between p-3 rounded-lg border bg-muted/50"
+                                    className="flex items-center justify-between p-4 rounded-lg border border-gray-200 bg-gray-50"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                                            <Mail className="w-5 h-5 text-muted-foreground" />
+                                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                            <Mail className="w-5 h-5 text-gray-500" />
                                         </div>
                                         <div>
-                                            <p className="font-medium">{invite.email}</p>
-                                            <p className="text-sm text-muted-foreground">
-                                                Invited as {roleLabels[invite.role]} - Expires{' '}
+                                            <p className="font-medium text-gray-900">{invite.email}</p>
+                                            <p className="text-sm text-gray-500">
+                                                Invited as {roleLabels[invite.role]} · Expires{' '}
                                                 {new Date(invite.expiresAt).toLocaleDateString()}
                                             </p>
                                         </div>
@@ -457,15 +430,16 @@ export function TeamView() {
                                         size="icon"
                                         onClick={() => revokeInviteMutation.mutate(invite.id)}
                                         disabled={revokeInviteMutation.isPending}
+                                        className="hover:bg-gray-200"
                                     >
-                                        <X className="w-4 h-4" />
+                                        <X className="w-4 h-4 text-gray-500" />
                                     </Button>
                                 </div>
                             ))}
                         </div>
-                    </CardContent>
-                </Card>
-            )}
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

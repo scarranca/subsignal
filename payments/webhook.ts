@@ -3,14 +3,21 @@ import DodoWebhookPayload from './types';
 
 export class DodoPaymentsWebhookHandler {
     private static instance: DodoPaymentsWebhookHandler | null = null;
-    private webhook: Webhook;
+    private webhook: Webhook | null = null;
 
     private constructor() {
-        const webhookKey = process.env.DODO_PAYMENTS_WEBHOOK_KEY;
-        if (!webhookKey) {
-            throw new Error('DODO_PAYMENTS_WEBHOOK_KEY environment variable is required');
+        // Lazy initialization - don't create webhook in constructor
+    }
+
+    private getWebhook(): Webhook {
+        if (!this.webhook) {
+            const webhookKey = process.env.DODO_PAYMENTS_WEBHOOK_KEY;
+            if (!webhookKey) {
+                throw new Error('DODO_PAYMENTS_WEBHOOK_KEY environment variable is required');
+            }
+            this.webhook = new Webhook(webhookKey);
         }
-        this.webhook = new Webhook(webhookKey);
+        return this.webhook;
     }
 
     static getInstance(): DodoPaymentsWebhookHandler {
@@ -44,7 +51,7 @@ export class DodoPaymentsWebhookHandler {
         }
 
         try {
-            const verifiedData = await this.webhook.verify(body, {
+            const verifiedData = await this.getWebhook().verify(body, {
                 'webhook-id': webhookId,
                 'webhook-signature': webhookSignature,
                 'webhook-timestamp': webhookTimestamp,

@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import {
     Dialog,
@@ -12,21 +13,27 @@ import {
     DialogDescription,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import {
     Plus,
     Search,
-    MoreHorizontal,
     Building2,
     User,
-    DollarSign,
     Calendar,
     Sparkles,
     GripVertical,
+    Loader2,
 } from 'lucide-react';
 import { apiClient } from '@/client';
 import { toast } from 'sonner';
+import { OrganizationOnboarding } from './OrganizationOnboarding';
 
 interface DealsViewProps {
     onNavigate?: (view: string, params?: any) => void;
@@ -38,10 +45,34 @@ export function DealsView({ onNavigate }: DealsViewProps) {
     const [showCreateDialog, setShowCreateDialog] = useState(false);
     const queryClient = useQueryClient();
 
+    // Create deal form state
+    const [newDealName, setNewDealName] = useState('');
+    const [newDealValue, setNewDealValue] = useState('');
+    const [newDealStageId, setNewDealStageId] = useState('');
+    const [newDealCompanyId, setNewDealCompanyId] = useState('');
+    const [newDealPriority, setNewDealPriority] = useState<'low' | 'medium' | 'high'>('medium');
+    const [newDealExpectedClose, setNewDealExpectedClose] = useState('');
+
+    // Check for organization
+    const { data: orgData, isLoading: orgLoading } = useQuery({
+        queryKey: ['current-organization'],
+        queryFn: async () => {
+            const res = await apiClient.get('/api/v1/organizations/current');
+            if (!res.ok) return null;
+            return res.json();
+        },
+    });
+
     // Fetch pipeline deals
     const { data: pipelineData, isLoading } = useQuery({
         queryKey: ['deals', 'pipeline'],
         queryFn: () => apiClient.get('/api/v1/deals/pipeline').then((res) => res.json()),
+    });
+
+    // Fetch companies for the create dialog
+    const { data: companiesData } = useQuery({
+        queryKey: ['companies', 'all'],
+        queryFn: () => apiClient.get('/api/v1/companies?pageSize=100&sortBy=name&sortOrder=asc').then((res) => res.json()),
     });
 
     // Move deal mutation
@@ -80,6 +111,44 @@ export function DealsView({ onNavigate }: DealsViewProps) {
         },
     });
 
+    // Create deal mutation
+    const createDealMutation = useMutation({
+        mutationFn: async () => {
+            const res = await apiClient.post('/api/v1/deals', {
+                body: JSON.stringify({
+                    name: newDealName,
+                    value: newDealValue ? parseFloat(newDealValue) : 0,
+                    stageId: newDealStageId,
+                    priority: newDealPriority,
+                    expectedCloseDate: newDealExpectedClose || null,
+                }),
+                headers: { 'Content-Type': 'application/json' },
+            });
+            if (!res.ok) {
+                const error = await res.json();
+                throw new Error(error.error || 'Failed to create deal');
+            }
+            return res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['deals'] });
+            setShowCreateDialog(false);
+            resetCreateForm();
+            toast.success('Deal created successfully');
+        },
+        onError: (error) => {
+            toast.error(error instanceof Error ? error.message : 'Failed to create deal');
+        },
+    });
+
+    const resetCreateForm = () => {
+        setNewDealName('');
+        setNewDealValue('');
+        setNewDealStageId('');
+        setNewDealPriority('medium');
+        setNewDealExpectedClose('');
+    };
+
     const formatCurrency = (value: string | number | null) => {
         if (!value) return '$0';
         const numValue = typeof value === 'string' ? parseFloat(value) : value;
@@ -106,6 +175,20 @@ export function DealsView({ onNavigate }: DealsViewProps) {
             moveDealMutation.mutate({ dealId, stageId });
         }
     };
+
+    // Show loading state while checking organization
+    if (orgLoading) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+            </div>
+        );
+    }
+
+    // Show onboarding if no organization
+    if (!orgData) {
+        return <OrganizationOnboarding />;
+    }
 
     if (isLoading) {
         return (
@@ -260,6 +343,105 @@ export function DealsView({ onNavigate }: DealsViewProps) {
                     ))}
                 </div>
             </div>
+
+            {/* Create Deal Dialog */}
+            <Dialog open={showCreateDialog} onOpenChange={(open) => {
+                setShowCreateDialog(open);
+                if (!open) resetCreateForm();
+            }}>
+                <DialogContent className="bg-white shadow-lg max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="text-lg font-semibold text-gray-900">Create New Deal</DialogTitle>
+                        <DialogDescription className="text-gray-600">
+                            Add a new deal to your pipeline
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="dealName" className="text-sm font-medium text-gray-700">Deal Name</Label>
+                            <Input
+                                id="dealName"
+                                placeholder="e.g., Enterprise contract"
+                                value={newDealName}
+                                onChange={(e) => setNewDealName(e.target.value)}
+                                className="mt-1"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="dealValue" className="text-sm font-medium text-gray-700">Value ($)</Label>
+                            <Input
+                                id="dealValue"
+                                type="number"
+                                placeholder="0"
+                                value={newDealValue}
+                                onChange={(e) => setNewDealValue(e.target.value)}
+                                className="mt-1"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-sm font-medium text-gray-700">Stage</Label>
+                            <Select value={newDealStageId} onValueChange={setNewDealStageId}>
+                                <SelectTrigger className="mt-1">
+                                    <SelectValue placeholder="Select a stage" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-white">
+                                    {pipelineData?.stages?.map((stage: any) => (
+                                        <SelectItem key={stage.id} value={stage.id}>
+                                            <div className="flex items-center gap-2">
+                                                <div
+                                                    className="w-2 h-2 rounded-full"
+                                                    style={{ backgroundColor: stage.color }}
+                                                />
+                                                {stage.name}
+                                            </div>
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-sm font-medium text-gray-700">Priority</Label>
+                            <Select value={newDealPriority} onValueChange={(v) => setNewDealPriority(v as typeof newDealPriority)}>
+                                <SelectTrigger className="mt-1">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-white">
+                                    <SelectItem value="low">Low</SelectItem>
+                                    <SelectItem value="medium">Medium</SelectItem>
+                                    <SelectItem value="high">High</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="expectedClose" className="text-sm font-medium text-gray-700">Expected Close Date</Label>
+                            <Input
+                                id="expectedClose"
+                                type="date"
+                                value={newDealExpectedClose}
+                                onChange={(e) => setNewDealExpectedClose(e.target.value)}
+                                className="mt-1"
+                            />
+                        </div>
+                    </div>
+                    <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
+                        <Button variant="outline" onClick={() => setShowCreateDialog(false)} className="hover:bg-gray-50 w-full sm:w-auto">
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={() => createDealMutation.mutate()}
+                            disabled={!newDealName || !newDealStageId || createDealMutation.isPending}
+                            className="bg-gray-900 hover:bg-gray-800 text-white w-full sm:w-auto"
+                        >
+                            {createDealMutation.isPending ? (
+                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                            ) : (
+                                <Plus className="w-4 h-4 mr-2" />
+                            )}
+                            Create Deal
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             {/* Deal Detail Dialog */}
             <Dialog open={!!selectedDeal} onOpenChange={() => setSelectedDeal(null)}>
