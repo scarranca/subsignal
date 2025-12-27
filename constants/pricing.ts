@@ -31,73 +31,81 @@ export interface PricingPlan {
 }
 
 /**
- * Pricing plans
+ * CRM Pricing Plans
  */
 export const PRICING_PLANS: PricingPlan[] = [
     {
         id: 'solo_plan_monthly',
-        name: 'Solo',
-        price: '$79',
+        name: 'Starter',
+        price: '$49',
         period: '/month',
-        description: 'For individual VCs tracking their deal flow',
+        description: 'For solo founders and small sales teams',
         features: [
-            { text: 'Track up to 10 companies', included: true },
-            { text: 'Monitor up to 50 pages', included: true },
-            { text: 'Refresh every 3 days', included: true },
+            { text: 'Up to 500 contacts', included: true },
+            { text: 'Up to 100 deals', included: true },
+            { text: 'Unlimited interactions', included: true },
+            { text: 'AI-powered insights', included: true },
             { text: 'Email integration', included: true },
-            { text: 'CRM integration (Affinity, AngelList)', included: false },
+            { text: 'Task management', included: true },
+            { text: 'Activity timeline', included: true },
+            { text: 'Team collaboration', included: false },
         ],
-        ctaText: 'Start Tracking',
+        ctaText: 'Start Free Trial',
     },
     {
         id: 'team_plan_monthly',
-        name: 'Fund',
-        price: '$249',
+        name: 'Professional',
+        price: '$99',
         period: '/month',
-        description: 'For investment teams and small funds',
+        description: 'For growing teams and businesses',
         features: [
-            { text: 'Track up to 50 companies', included: true },
-            { text: 'Monitor up to 100 pages', included: true },
-            { text: 'Refresh every 3 days', included: true },
-            { text: 'Email integrations', included: true },
-            { text: 'Dedicated success manager', included: true },
-            { text: 'CRM integrations (Affinity, AngelList)', included: false },
-            // { text: 'Up to 10 seats', included: true },
+            { text: 'Up to 5,000 contacts', included: true },
+            { text: 'Up to 1,000 deals', included: true },
+            { text: 'Unlimited interactions', included: true },
+            { text: 'Advanced AI insights', included: true },
+            { text: 'Email & calendar sync', included: true },
+            { text: 'Custom pipelines', included: true },
+            { text: 'Custom fields', included: true },
+            { text: 'Priority support', included: true },
         ],
-        ctaText: 'Contact Sales',
+        ctaText: 'Start Free Trial',
         isPopular: true,
     },
     {
         id: 'solo_plan_annually',
-        name: 'Solo',
-        price: '$799',
-        period: '/year',
-        description: 'For individual VCs tracking their deal flow',
+        name: 'Starter',
+        price: '$39',
+        period: '/month',
+        description: 'For solo founders and small sales teams (billed annually)',
         features: [
-            { text: 'Track up to 10 companies', included: true },
-            { text: 'Monitor up to 50 pages', included: true },
-            { text: 'Refresh every 3 days', included: true },
+            { text: 'Up to 500 contacts', included: true },
+            { text: 'Up to 100 deals', included: true },
+            { text: 'Unlimited interactions', included: true },
+            { text: 'AI-powered insights', included: true },
             { text: 'Email integration', included: true },
-            { text: 'CRM integration (Affinity, AngelList)', included: false },
+            { text: 'Task management', included: true },
+            { text: 'Activity timeline', included: true },
+            { text: 'Team collaboration', included: false },
         ],
-        ctaText: 'Start Tracking',
+        ctaText: 'Start Free Trial',
     },
     {
         id: 'team_plan_annually',
-        name: 'Fund',
-        price: '$2499',
-        period: '/year',
-        description: 'For investment teams and small funds',
+        name: 'Professional',
+        price: '$79',
+        period: '/month',
+        description: 'For growing teams and businesses (billed annually)',
         features: [
-            { text: 'Track up to 50 companies', included: true },
-            { text: 'Monitor up to 100 pages', included: true },
-            { text: 'Refresh every 3 days', included: true },
-            { text: 'Email integrations', included: true },
-            { text: 'Dedicated success manager', included: true },
-            { text: 'CRM integrations (Affinity, AngelList)', included: false },
-            // { text: 'Up to 10 seats', included: true },
+            { text: 'Up to 5,000 contacts', included: true },
+            { text: 'Up to 1,000 deals', included: true },
+            { text: 'Unlimited interactions', included: true },
+            { text: 'Advanced AI insights', included: true },
+            { text: 'Email & calendar sync', included: true },
+            { text: 'Custom pipelines', included: true },
+            { text: 'Custom fields', included: true },
+            { text: 'Priority support', included: true },
         ],
-        ctaText: 'Contact Sales',
+        ctaText: 'Start Free Trial',
         isPopular: true,
     },
     {
@@ -105,15 +113,17 @@ export const PRICING_PLANS: PricingPlan[] = [
         name: 'Enterprise',
         price: 'Custom',
         period: '/month',
-        description: 'For large funds with extensive deal flow',
+        description: 'For large organizations with advanced needs',
         features: [
-            { text: 'Unlimited company tracking', included: true },
-            { text: 'Unlimited page monitoring', included: true },
-            // { text: 'Unlimited seats', included: true },
-            { text: 'Refresh every 1 day', included: true },
+            { text: 'Unlimited contacts', included: true },
+            { text: 'Unlimited deals', included: true },
+            { text: 'Unlimited team members', included: true },
+            { text: 'Enterprise AI features', included: true },
             { text: 'Custom integrations', included: true },
+            { text: 'Advanced analytics', included: true },
+            { text: 'SSO & SAML', included: true },
             { text: 'Dedicated success manager', included: true },
-            { text: 'Enterprise compliance (SOC2, GDPR)', included: true },
+            { text: 'SLA guarantee', included: true },
         ],
         ctaText: 'Contact Sales',
         isEnterprise: true,
@@ -121,9 +131,41 @@ export const PRICING_PLANS: PricingPlan[] = [
 ];
 
 /**
- * Get the page limit for a given plan
- * @param plan - The plan to get the page limit for
- * @returns
+ * Get the contact limit for a given plan
+ */
+export function getContactLimit(plan: BillingPlan): number {
+    switch (plan) {
+        case 'solo_plan_monthly':
+        case 'solo_plan_annually':
+            return 500;
+        case 'team_plan_monthly':
+        case 'team_plan_annually':
+            return 5000;
+        case 'custom_plan':
+            return 100000; // Proxy for unlimited
+    }
+    return 100;
+}
+
+/**
+ * Get the deal limit for a given plan
+ */
+export function getDealLimit(plan: BillingPlan): number {
+    switch (plan) {
+        case 'solo_plan_monthly':
+        case 'solo_plan_annually':
+            return 100;
+        case 'team_plan_monthly':
+        case 'team_plan_annually':
+            return 1000;
+        case 'custom_plan':
+            return 50000; // Proxy for unlimited
+    }
+    return 50;
+}
+
+/**
+ * Get the page limit for a given plan (legacy - for monitoring feature)
  */
 export function getPageLimit(plan: BillingPlan): number {
     switch (plan) {
@@ -134,36 +176,30 @@ export function getPageLimit(plan: BillingPlan): number {
         case 'team_plan_annually':
             return 100;
         case 'custom_plan':
-            return 1000; // Proxy for unlimited
+            return 1000;
     }
-
     return 10;
 }
 
 /**
  * Get the company limit for a given plan
- * @param plan - The plan to get the company limit for
- * @returns
  */
 export function getCompanyLimit(plan: BillingPlan): number {
     switch (plan) {
         case 'solo_plan_monthly':
         case 'solo_plan_annually':
-            return 10;
+            return 100;
         case 'team_plan_monthly':
         case 'team_plan_annually':
-            return 50;
+            return 500;
         case 'custom_plan':
-            return 250; // Proxy for unlimited
+            return 10000;
     }
-
-    return 10;
+    return 50;
 }
 
 /**
- * Get the record limit for a given plan
- * @param plan - The plan to get the record limit for
- * @returns
+ * Get the briefing limit for a given plan (legacy - for monitoring feature)
  */
 export function getBriefingLimit(plan: BillingPlan): number {
     switch (plan) {
@@ -176,14 +212,11 @@ export function getBriefingLimit(plan: BillingPlan): number {
         case 'custom_plan':
             return 12;
     }
-
     return 4;
 }
 
 /**
- * Get the refresh limit for a given plan
- * @param plan - The plan to get the refresh limit for
- * @returns
+ * Get the refresh limit for a given plan (legacy - for monitoring feature)
  */
 export function getRefreshLimit(plan: BillingPlan): '3_day' | '7_day' {
     switch (plan) {
@@ -194,16 +227,36 @@ export function getRefreshLimit(plan: BillingPlan): '3_day' | '7_day' {
         case 'team_plan_annually':
             return '3_day';
         case 'custom_plan':
-            return '3_day'; // Lowest refresh frequency
+            return '3_day';
     }
-
     return '7_day';
 }
 
 /**
+ * Get if AI features are enabled for a given plan
+ */
+export function getAIEnabled(plan: BillingPlan): boolean {
+    return true; // AI is enabled for all plans
+}
+
+/**
+ * Get if advanced AI features are enabled for a given plan
+ */
+export function getAdvancedAIEnabled(plan: BillingPlan): boolean {
+    switch (plan) {
+        case 'solo_plan_monthly':
+        case 'solo_plan_annually':
+            return false;
+        case 'team_plan_monthly':
+        case 'team_plan_annually':
+        case 'custom_plan':
+            return true;
+    }
+    return false;
+}
+
+/**
  * Get the zapier enabled for a given plan
- * @param plan - The plan to get the zapier enabled for
- * @returns
  */
 function getZapierEnabled(plan: BillingPlan): boolean {
     switch (plan) {
@@ -215,32 +268,18 @@ function getZapierEnabled(plan: BillingPlan): boolean {
         case 'custom_plan':
             return true;
     }
-
     return false;
 }
 
 /**
  * Get the email enabled for a given plan
- * @param plan - The plan to get the email enabled for
- * @returns
  */
 function getEmailEnabled(plan: BillingPlan): boolean {
-    switch (plan) {
-        case 'solo_plan_monthly':
-        case 'solo_plan_annually':
-        case 'team_plan_monthly':
-        case 'team_plan_annually':
-        case 'custom_plan':
-            return true;
-    }
-
-    return false;
+    return true; // Email is enabled for all plans
 }
 
 /**
  * Get the billing entitlement for a given record
- * @param record - The record to get the billing entitlement for
- * @returns
  */
 export function getBillingEntitlement(record: BillingSelect): BillingEntitlement {
     const plan = record.currentPlan || 'solo_plan_monthly';
@@ -269,7 +308,6 @@ export const PLAN_ID_MAPPING: Record<AvailableBillingPlan, AvailableBillingPlan>
 
 /**
  * Dodo Payments product ID mapping for overlay checkout
- * Replace these with your actual product IDs from Dodo Payments dashboard
  */
 export const DODO_PRODUCT_ID_MAPPING: Record<AvailableBillingPlan, string> = {
     solo_plan_monthly:
@@ -284,8 +322,6 @@ export const DODO_PRODUCT_ID_MAPPING: Record<AvailableBillingPlan, string> = {
 
 /**
  * Get the plan type from a Dodo product ID
- * @param productId
- * @returns
  */
 export function getPlanFromProductId(productId: string): BillingPlan {
     const reverseMapping: Record<string, keyof typeof PLAN_ID_MAPPING> = {};
@@ -293,22 +329,17 @@ export function getPlanFromProductId(productId: string): BillingPlan {
         reverseMapping[id] = planType as keyof typeof PLAN_ID_MAPPING;
     }
 
-    // If the product id is not in the mapping, return enterprise plan
-    // These are custom plans that are not available in the pricing page
     return reverseMapping[productId] || 'custom_plan';
 }
 
 /**
  * Get the Dodo product ID for a given plan ID
- * @param planId
- * @returns
  */
 export function getDodoProductIdFromPlanId(planId?: BillingPlan): string | null {
     if (!planId) {
         return null;
     }
 
-    // Only return product ID for available plans
     if (isPlanAvailable(planId)) {
         return DODO_PRODUCT_ID_MAPPING[planId];
     }
@@ -318,8 +349,6 @@ export function getDodoProductIdFromPlanId(planId?: BillingPlan): string | null 
 
 /**
  * Check if a plan is available for purchase
- * @param planId
- * @returns
  */
 export function isPlanAvailable(planId: BillingPlan): planId is AvailableBillingPlan {
     return planId !== 'custom_plan';
@@ -327,7 +356,6 @@ export function isPlanAvailable(planId: BillingPlan): planId is AvailableBilling
 
 /**
  * Get available plans for display
- * @returns
  */
 export function getAvailablePlans(): PricingPlan[] {
     return PRICING_PLANS.filter((plan) => isPlanAvailable(plan.id));

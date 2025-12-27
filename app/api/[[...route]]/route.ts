@@ -14,6 +14,15 @@ import { rateLimit } from '../middleware/ratelimits';
 import { serverTiming } from '../middleware/timing';
 import snapshots from '../routes/snapshot';
 
+// CRM routes
+import contacts from '../routes/contact';
+import pipelines from '../routes/pipeline';
+import deals from '../routes/deal';
+import interactions from '../routes/interaction';
+import tasks from '../routes/task';
+import activities from '../routes/activity';
+import ai from '../routes/ai';
+
 /**
  * Force Node.js runtime to support googleapis and other Node.js modules
  */
@@ -74,6 +83,17 @@ v1.route('/pages', pages);
 v1.route('/payments', payments);
 v1.route('/briefings', briefings);
 v1.route('/snapshots', snapshots);
+
+/**
+ * CRM Routes
+ */
+v1.route('/contacts', contacts);
+v1.route('/pipelines', pipelines);
+v1.route('/deals', deals);
+v1.route('/interactions', interactions);
+v1.route('/tasks', tasks);
+v1.route('/activities', activities);
+v1.route('/ai', ai);
 
 app.route('/v1', v1);
 
