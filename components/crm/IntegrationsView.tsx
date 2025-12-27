@@ -40,6 +40,7 @@ import {
 } from 'lucide-react';
 import { apiClient } from '@/client';
 import { toast } from 'sonner';
+import { WebhooksView } from './WebhooksView';
 
 interface IntegrationsViewProps {
     onNavigate?: (view: string, params?: any) => void;
@@ -407,6 +408,9 @@ export function IntegrationsView({ onNavigate }: IntegrationsViewProps) {
                     </div>
                 </CardContent>
             </Card>
+
+            {/* Webhooks Section */}
+            <WebhooksView />
 
             {/* Create API Key Dialog */}
             <Dialog open={showApiKeyDialog} onOpenChange={(open) => {

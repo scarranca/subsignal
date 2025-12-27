@@ -26,6 +26,7 @@ import ai from '../routes/ai';
 // Integration routes
 import integrations from '../routes/integration';
 import apiKeys from '../routes/apiKey';
+import webhooks from '../routes/webhook';
 import publicApi from '../routes/public';
 
 /**
@@ -105,6 +106,7 @@ v1.route('/ai', ai);
  */
 v1.route('/integrations', integrations);
 v1.route('/api-keys', apiKeys);
+v1.route('/webhooks', webhooks);
 
 app.route('/v1', v1);
 
