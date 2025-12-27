@@ -32,6 +32,13 @@ import {
     scheduledGmailSync,
     scheduledCalendarSync,
 } from './functions/sync';
+import {
+    sendDealCreatedNotification,
+    sendDealStageChangedNotification,
+    sendDealWonNotification,
+    sendDealLostNotification,
+    triggerWebhooks,
+} from './functions/deals';
 
 // Export all functions
 export const functions = [
@@ -72,4 +79,11 @@ export const functions = [
     syncCalendarEvents,
     scheduledGmailSync,
     scheduledCalendarSync,
+
+    // Deal notification functions
+    sendDealCreatedNotification,
+    sendDealStageChangedNotification,
+    sendDealWonNotification,
+    sendDealLostNotification,
+    triggerWebhooks,
 ];

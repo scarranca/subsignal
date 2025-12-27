@@ -40,6 +40,47 @@ interface PlanExpiredEmailData {
     subscriptionId?: string;
 }
 
+// CRM Deal notification interfaces
+interface DealNotificationData {
+    email: string;
+    userName: string;
+    dealName: string;
+    dealValue?: number | null;
+    currency: string;
+    contactName?: string;
+    companyName?: string;
+    eventType: 'created' | 'updated' | 'won' | 'lost';
+}
+
+interface DealStageChangeData {
+    email: string;
+    userName: string;
+    dealName: string;
+    dealValue?: number | null;
+    currency: string;
+    previousStage: string;
+    newStage: string;
+}
+
+interface DealWonNotificationData {
+    email: string;
+    userName: string;
+    dealName: string;
+    dealValue?: number | null;
+    currency: string;
+    contactName?: string;
+    companyName?: string;
+}
+
+interface DealLostNotificationData {
+    email: string;
+    userName: string;
+    dealName: string;
+    dealValue?: number | null;
+    currency: string;
+    lostReason?: string | null;
+}
+
 /**
  * Email service
  * @description This service is responsible for sending emails to users.
@@ -184,6 +225,133 @@ export class EmailService {
         });
 
         await this.outboundEmailService.sendEmail(data.email, subject, emailComponent);
+    }
+
+    // ============== CRM DEAL NOTIFICATIONS ==============
+
+    /**
+     * Format currency value for display
+     */
+    private formatCurrency(value: number | null | undefined, currency: string): string {
+        if (value == null) return 'N/A';
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: currency,
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        }).format(value);
+    }
+
+    /**
+     * Send a deal notification email
+     */
+    async sendDealNotification(data: DealNotificationData): Promise<void> {
+        const valueFormatted = this.formatCurrency(data.dealValue, data.currency);
+        const subject = `New Deal Created: ${data.dealName}`;
+
+        const htmlContent = `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #1a1a1a;">New Deal Created</h2>
+                <p>Hi ${data.userName},</p>
+                <p>A new deal has been created in your CRM:</p>
+                <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <h3 style="margin: 0 0 10px 0; color: #1a1a1a;">${data.dealName}</h3>
+                    <p style="margin: 5px 0; color: #666;">Value: <strong>${valueFormatted}</strong></p>
+                    ${data.contactName ? `<p style="margin: 5px 0; color: #666;">Contact: ${data.contactName}</p>` : ''}
+                    ${data.companyName ? `<p style="margin: 5px 0; color: #666;">Company: ${data.companyName}</p>` : ''}
+                </div>
+                <p style="color: #666; font-size: 14px;">
+                    <a href="${process.env.BETTER_AUTH_URL}/deals" style="color: #4f46e5;">View in CRM</a>
+                </p>
+            </div>
+        `;
+
+        await this.outboundEmailService.sendHtmlEmail(data.email, subject, htmlContent);
+    }
+
+    /**
+     * Send a deal stage change notification
+     */
+    async sendDealStageChangeNotification(data: DealStageChangeData): Promise<void> {
+        const valueFormatted = this.formatCurrency(data.dealValue, data.currency);
+        const subject = `Deal Stage Changed: ${data.dealName}`;
+
+        const htmlContent = `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #1a1a1a;">Deal Stage Changed</h2>
+                <p>Hi ${data.userName},</p>
+                <p>A deal has moved to a new stage:</p>
+                <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <h3 style="margin: 0 0 10px 0; color: #1a1a1a;">${data.dealName}</h3>
+                    <p style="margin: 5px 0; color: #666;">Value: <strong>${valueFormatted}</strong></p>
+                    <div style="display: flex; align-items: center; margin-top: 15px;">
+                        <span style="padding: 5px 12px; background: #e5e5e5; border-radius: 4px;">${data.previousStage}</span>
+                        <span style="margin: 0 10px;">→</span>
+                        <span style="padding: 5px 12px; background: #4f46e5; color: white; border-radius: 4px;">${data.newStage}</span>
+                    </div>
+                </div>
+                <p style="color: #666; font-size: 14px;">
+                    <a href="${process.env.BETTER_AUTH_URL}/deals" style="color: #4f46e5;">View in CRM</a>
+                </p>
+            </div>
+        `;
+
+        await this.outboundEmailService.sendHtmlEmail(data.email, subject, htmlContent);
+    }
+
+    /**
+     * Send a deal won notification (celebratory!)
+     */
+    async sendDealWonNotification(data: DealWonNotificationData): Promise<void> {
+        const valueFormatted = this.formatCurrency(data.dealValue, data.currency);
+        const subject = `🎉 Deal Won: ${data.dealName}`;
+
+        const htmlContent = `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto;">
+                <div style="text-align: center; padding: 30px 0;">
+                    <span style="font-size: 48px;">🎉</span>
+                    <h2 style="color: #16a34a; margin: 10px 0;">Congratulations!</h2>
+                </div>
+                <p>Hi ${data.userName},</p>
+                <p>Great news! You've won a deal:</p>
+                <div style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #16a34a;">
+                    <h3 style="margin: 0 0 10px 0; color: #1a1a1a;">${data.dealName}</h3>
+                    <p style="margin: 5px 0; font-size: 24px; font-weight: bold; color: #16a34a;">${valueFormatted}</p>
+                    ${data.contactName ? `<p style="margin: 5px 0; color: #666;">Contact: ${data.contactName}</p>` : ''}
+                    ${data.companyName ? `<p style="margin: 5px 0; color: #666;">Company: ${data.companyName}</p>` : ''}
+                </div>
+                <p style="color: #666;">Keep up the great work!</p>
+            </div>
+        `;
+
+        await this.outboundEmailService.sendHtmlEmail(data.email, subject, htmlContent);
+    }
+
+    /**
+     * Send a deal lost notification
+     */
+    async sendDealLostNotification(data: DealLostNotificationData): Promise<void> {
+        const valueFormatted = this.formatCurrency(data.dealValue, data.currency);
+        const subject = `Deal Lost: ${data.dealName}`;
+
+        const htmlContent = `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #1a1a1a;">Deal Lost</h2>
+                <p>Hi ${data.userName},</p>
+                <p>Unfortunately, a deal has been marked as lost:</p>
+                <div style="background: #fef2f2; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626;">
+                    <h3 style="margin: 0 0 10px 0; color: #1a1a1a;">${data.dealName}</h3>
+                    <p style="margin: 5px 0; color: #666;">Value: <strong>${valueFormatted}</strong></p>
+                    ${data.lostReason ? `<p style="margin: 10px 0 0 0; color: #dc2626;">Reason: ${data.lostReason}</p>` : ''}
+                </div>
+                <p style="color: #666;">Every loss is a learning opportunity. Review this deal to identify areas for improvement.</p>
+                <p style="color: #666; font-size: 14px;">
+                    <a href="${process.env.BETTER_AUTH_URL}/deals" style="color: #4f46e5;">View in CRM</a>
+                </p>
+            </div>
+        `;
+
+        await this.outboundEmailService.sendHtmlEmail(data.email, subject, htmlContent);
     }
 }
 

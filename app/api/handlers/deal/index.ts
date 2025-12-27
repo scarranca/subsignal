@@ -3,6 +3,7 @@ import { dealQueries, activityQueries, pipelineQueries } from '@/db/queries';
 import { createDealSchema, updateDealSchema, moveDealSchema, dealFilterSchema, paginationSchema } from '@/schema/api';
 import { z } from 'zod';
 import { getUser } from '@/app/api/middleware/auth';
+import { inngest } from '@/ingest/client';
 
 export async function handleGetDeals(c: Context) {
     try {
@@ -110,6 +111,12 @@ export async function handleCreateDeal(c: Context) {
             relatedContactId: deal.contactId || undefined,
         });
 
+        // Trigger deal created notification
+        await inngest.send({
+            name: 'crm/deal.created',
+            data: { dealId: deal.id, userId: user.id },
+        });
+
         return c.json(deal, 201);
     } catch (error) {
         if (error instanceof z.ZodError) {
@@ -205,6 +212,36 @@ export async function handleMoveDeal(c: Context) {
             relatedContactId: updatedDeal.contactId || undefined,
             relatedDealId: updatedDeal.id,
         });
+
+        // Trigger appropriate notification based on deal status
+        if (updatedDeal.status === 'won') {
+            await inngest.send({
+                name: 'crm/deal.won',
+                data: { dealId: updatedDeal.id, userId: user.id },
+            });
+        } else if (updatedDeal.status === 'lost') {
+            await inngest.send({
+                name: 'crm/deal.lost',
+                data: { dealId: updatedDeal.id, userId: user.id, lostReason: validatedData.lostReason },
+            });
+        } else if (dealBefore.stageId !== updatedDeal.stageId) {
+            // Get stage names for the notification
+            const stages = await pipelineQueries.getPipelineStages(updatedDeal.pipelineId, user.id);
+            const previousStage = stages.find(s => s.id === dealBefore.stageId);
+            const newStage = stages.find(s => s.id === updatedDeal.stageId);
+
+            await inngest.send({
+                name: 'crm/deal.stage_changed',
+                data: {
+                    dealId: updatedDeal.id,
+                    userId: user.id,
+                    previousStage: dealBefore.stageId,
+                    newStage: updatedDeal.stageId,
+                    previousStageName: previousStage?.name || 'Unknown',
+                    newStageName: newStage?.name || 'Unknown',
+                },
+            });
+        }
 
         return c.json(updatedDeal);
     } catch (error) {
