@@ -1,5 +1,6 @@
 import { relations } from 'drizzle-orm';
 import { user } from './auth';
+import { organization, organizationMember, organizationInvite, userOrganization } from './organization';
 import { preference } from './preference';
 import { company } from './company';
 import { page } from './page';
@@ -17,12 +18,78 @@ import { customField, customFieldValue } from './customField';
 import { integration, emailSync, calendarSync } from './integration';
 import { apiKey, apiKeyLog, webhook, webhookDelivery } from './apiKey';
 
+// Organization relations
+export const organizationRelations = relations(organization, ({ one, many }) => ({
+    createdByUser: one(user, {
+        fields: [organization.createdBy],
+        references: [user.id],
+    }),
+    members: many(organizationMember),
+    invites: many(organizationInvite),
+    // CRM data
+    companies: many(company),
+    contacts: many(contact),
+    deals: many(deal),
+    pipelines: many(pipeline),
+    interactions: many(interaction),
+    tasks: many(task),
+    activities: many(activity),
+}));
+
+// Organization member relations
+export const organizationMemberRelations = relations(organizationMember, ({ one }) => ({
+    organization: one(organization, {
+        fields: [organizationMember.organizationId],
+        references: [organization.id],
+    }),
+    user: one(user, {
+        fields: [organizationMember.userId],
+        references: [user.id],
+    }),
+    invitedByUser: one(user, {
+        fields: [organizationMember.invitedBy],
+        references: [user.id],
+        relationName: 'invitedMembers',
+    }),
+}));
+
+// Organization invite relations
+export const organizationInviteRelations = relations(organizationInvite, ({ one }) => ({
+    organization: one(organization, {
+        fields: [organizationInvite.organizationId],
+        references: [organization.id],
+    }),
+    invitedByUser: one(user, {
+        fields: [organizationInvite.invitedBy],
+        references: [user.id],
+    }),
+}));
+
+// User organization relations (current org selection)
+export const userOrganizationRelations = relations(userOrganization, ({ one }) => ({
+    user: one(user, {
+        fields: [userOrganization.userId],
+        references: [user.id],
+    }),
+    currentOrganization: one(organization, {
+        fields: [userOrganization.currentOrganizationId],
+        references: [organization.id],
+    }),
+}));
+
 // User relations
 export const userRelations = relations(user, ({ one, many }) => ({
     preference: one(preference, {
         fields: [user.id],
         references: [preference.userId],
     }),
+    // Organization membership
+    organizationMemberships: many(organizationMember),
+    currentOrganization: one(userOrganization, {
+        fields: [user.id],
+        references: [userOrganization.userId],
+    }),
+    // CRM entities (created by user)
     companies: many(company),
     contacts: many(contact),
     deals: many(deal),
@@ -55,9 +122,18 @@ export const preferenceRelations = relations(preference, ({ one }) => ({
 
 // Company relations
 export const companyRelations = relations(company, ({ one, many }) => ({
+    organization: one(organization, {
+        fields: [company.organizationId],
+        references: [organization.id],
+    }),
     user: one(user, {
         fields: [company.userId],
         references: [user.id],
+    }),
+    owner: one(user, {
+        fields: [company.ownerId],
+        references: [user.id],
+        relationName: 'ownedCompanies',
     }),
     contacts: many(contact),
     deals: many(deal),
@@ -70,9 +146,18 @@ export const companyRelations = relations(company, ({ one, many }) => ({
 
 // Contact relations
 export const contactRelations = relations(contact, ({ one, many }) => ({
+    organization: one(organization, {
+        fields: [contact.organizationId],
+        references: [organization.id],
+    }),
     user: one(user, {
         fields: [contact.userId],
         references: [user.id],
+    }),
+    owner: one(user, {
+        fields: [contact.ownerId],
+        references: [user.id],
+        relationName: 'ownedContacts',
     }),
     company: one(company, {
         fields: [contact.companyId],
@@ -85,6 +170,10 @@ export const contactRelations = relations(contact, ({ one, many }) => ({
 
 // Pipeline relations
 export const pipelineRelations = relations(pipeline, ({ one, many }) => ({
+    organization: one(organization, {
+        fields: [pipeline.organizationId],
+        references: [organization.id],
+    }),
     user: one(user, {
         fields: [pipeline.userId],
         references: [user.id],
@@ -104,9 +193,18 @@ export const pipelineStageRelations = relations(pipelineStage, ({ one, many }) =
 
 // Deal relations
 export const dealRelations = relations(deal, ({ one, many }) => ({
+    organization: one(organization, {
+        fields: [deal.organizationId],
+        references: [organization.id],
+    }),
     user: one(user, {
         fields: [deal.userId],
         references: [user.id],
+    }),
+    owner: one(user, {
+        fields: [deal.ownerId],
+        references: [user.id],
+        relationName: 'ownedDeals',
     }),
     company: one(company, {
         fields: [deal.companyId],
@@ -130,6 +228,10 @@ export const dealRelations = relations(deal, ({ one, many }) => ({
 
 // Interaction relations
 export const interactionRelations = relations(interaction, ({ one }) => ({
+    organization: one(organization, {
+        fields: [interaction.organizationId],
+        references: [organization.id],
+    }),
     user: one(user, {
         fields: [interaction.userId],
         references: [user.id],
@@ -150,6 +252,10 @@ export const interactionRelations = relations(interaction, ({ one }) => ({
 
 // Task relations
 export const taskRelations = relations(task, ({ one }) => ({
+    organization: one(organization, {
+        fields: [task.organizationId],
+        references: [organization.id],
+    }),
     user: one(user, {
         fields: [task.userId],
         references: [user.id],
@@ -175,6 +281,10 @@ export const taskRelations = relations(task, ({ one }) => ({
 
 // Activity relations
 export const activityRelations = relations(activity, ({ one }) => ({
+    organization: one(organization, {
+        fields: [activity.organizationId],
+        references: [organization.id],
+    }),
     user: one(user, {
         fields: [activity.userId],
         references: [user.id],

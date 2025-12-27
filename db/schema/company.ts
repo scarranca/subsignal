@@ -1,5 +1,6 @@
 import { pgTable, text, timestamp, boolean, integer, decimal, index, pgEnum, jsonb } from 'drizzle-orm/pg-core';
 import { user } from './auth';
+import { organization } from './organization';
 
 export const companySizeEnum = pgEnum('company_size', [
     'startup',
@@ -22,9 +23,13 @@ export const company = pgTable(
     'company',
     {
         id: text('id').primaryKey(),
+        organizationId: text('organization_id')
+            .notNull()
+            .references(() => organization.id, { onDelete: 'cascade' }),
         userId: text('user_id')
             .notNull()
             .references(() => user.id, { onDelete: 'cascade' }),
+        ownerId: text('owner_id').references(() => user.id, { onDelete: 'set null' }), // Assigned owner
 
         // Basic info
         name: text('name').notNull(),
@@ -87,11 +92,13 @@ export const company = pgTable(
     },
     (table) => [
         // Optimized indexes for actual query patterns
-        index('company_user_active_idx').on(table.userId, table.isActive),
-        index('company_user_active_id_idx').on(table.userId, table.isActive, table.id),
-        index('company_url_user_idx').on(table.url, table.userId),
-        index('company_user_type_idx').on(table.userId, table.type),
-        index('company_user_industry_idx').on(table.userId, table.industry),
+        index('company_org_idx').on(table.organizationId),
+        index('company_org_active_idx').on(table.organizationId, table.isActive),
+        index('company_org_active_id_idx').on(table.organizationId, table.isActive, table.id),
+        index('company_url_org_idx').on(table.url, table.organizationId),
+        index('company_org_type_idx').on(table.organizationId, table.type),
+        index('company_org_industry_idx').on(table.organizationId, table.industry),
+        index('company_owner_idx').on(table.ownerId),
     ],
 );
 

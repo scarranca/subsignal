@@ -1,6 +1,9 @@
 // Auth
 import { user, session, account, verification } from './auth';
 
+// Organization & Team
+import { organization, organizationMember, organizationInvite, userOrganization, orgRoleEnum, inviteStatusEnum } from './organization';
+
 // Core CRM entities
 import { contact, contactStatusEnum, contactSourceEnum } from './contact';
 import { company, companySizeEnum, companyTypeEnum } from './company';
@@ -27,6 +30,10 @@ import { briefing } from './briefing';
 
 // Relations
 import {
+    organizationRelations,
+    organizationMemberRelations,
+    organizationInviteRelations,
+    userOrganizationRelations,
     userRelations,
     preferenceRelations,
     companyRelations,
@@ -61,6 +68,12 @@ export const schema = {
     session,
     account,
     verification,
+
+    // Organization & Team
+    organization,
+    organizationMember,
+    organizationInvite,
+    userOrganization,
 
     // Core CRM entities
     contact,
@@ -97,6 +110,10 @@ export const schema = {
 
 // Relations export
 export const relations = {
+    organizationRelations,
+    organizationMemberRelations,
+    organizationInviteRelations,
+    userOrganizationRelations,
     userRelations,
     preferenceRelations,
     companyRelations,
@@ -131,6 +148,14 @@ export {
     session,
     account,
     verification,
+
+    // Organization & Team
+    organization,
+    organizationMember,
+    organizationInvite,
+    userOrganization,
+    orgRoleEnum,
+    inviteStatusEnum,
 
     // Contact
     contact,
@@ -215,3 +240,4 @@ export type { CustomFieldSelect, CustomFieldInsert, CustomFieldValueSelect, Cust
 export type { BillingSelect, BillingInsert, BillingPlan, BillingEntitlementStatus, BillingEntitlement, BillingProvider, AvailableBillingPlan } from './billing';
 export type { IntegrationSelect, IntegrationInsert, EmailSyncSelect, EmailSyncInsert, CalendarSyncSelect, CalendarSyncInsert, IntegrationProvider, SyncStatus } from './integration';
 export type { ApiKeySelect, ApiKeyInsert, ApiKeyLogSelect, ApiKeyLogInsert, WebhookSelect, WebhookInsert, WebhookDeliverySelect, WebhookDeliveryInsert, ApiKeyScope } from './apiKey';
+export type { OrganizationSelect, OrganizationInsert, OrganizationMemberSelect, OrganizationMemberInsert, OrganizationInviteSelect, OrganizationInviteInsert, UserOrganizationSelect, UserOrganizationInsert, OrgRole, InviteStatus } from './organization';

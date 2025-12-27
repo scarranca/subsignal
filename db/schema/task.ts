@@ -1,5 +1,6 @@
 import { pgTable, text, timestamp, boolean, index, pgEnum, jsonb } from 'drizzle-orm/pg-core';
 import { user } from './auth';
+import { organization } from './organization';
 import { company } from './company';
 import { contact } from './contact';
 import { deal } from './deal';
@@ -33,6 +34,9 @@ export const task = pgTable(
     'task',
     {
         id: text('id').primaryKey(),
+        organizationId: text('organization_id')
+            .notNull()
+            .references(() => organization.id, { onDelete: 'cascade' }),
         userId: text('user_id')
             .notNull()
             .references(() => user.id, { onDelete: 'cascade' }),
@@ -78,14 +82,14 @@ export const task = pgTable(
             .notNull(),
     },
     (table) => [
-        index('task_user_idx').on(table.userId),
+        index('task_org_idx').on(table.organizationId),
         index('task_assigned_to_idx').on(table.assignedToId),
         index('task_company_idx').on(table.companyId),
         index('task_contact_idx').on(table.contactId),
         index('task_deal_idx').on(table.dealId),
-        index('task_user_status_idx').on(table.userId, table.status),
-        index('task_user_due_date_idx').on(table.userId, table.dueDate),
-        index('task_user_priority_status_idx').on(table.userId, table.priority, table.status),
+        index('task_org_status_idx').on(table.organizationId, table.status),
+        index('task_org_due_date_idx').on(table.organizationId, table.dueDate),
+        index('task_org_priority_status_idx').on(table.organizationId, table.priority, table.status),
     ],
 );
 

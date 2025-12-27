@@ -29,6 +29,9 @@ import apiKeys from '../routes/apiKey';
 import webhooks from '../routes/webhook';
 import publicApi from '../routes/public';
 
+// Organization/Team routes
+import organizations from '../routes/organization';
+
 /**
  * Force Node.js runtime to support googleapis and other Node.js modules
  */
@@ -107,6 +110,11 @@ v1.route('/ai', ai);
 v1.route('/integrations', integrations);
 v1.route('/api-keys', apiKeys);
 v1.route('/webhooks', webhooks);
+
+/**
+ * Organization/Team Routes
+ */
+v1.route('/organizations', organizations);
 
 app.route('/v1', v1);
 

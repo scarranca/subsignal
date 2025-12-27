@@ -1,5 +1,6 @@
 import { pgTable, text, timestamp, boolean, integer, decimal, index, pgEnum, jsonb } from 'drizzle-orm/pg-core';
 import { user } from './auth';
+import { organization } from './organization';
 import { company } from './company';
 import { contact } from './contact';
 import { pipeline, pipelineStage } from './pipeline';
@@ -22,9 +23,13 @@ export const deal = pgTable(
     'deal',
     {
         id: text('id').primaryKey(),
+        organizationId: text('organization_id')
+            .notNull()
+            .references(() => organization.id, { onDelete: 'cascade' }),
         userId: text('user_id')
             .notNull()
             .references(() => user.id, { onDelete: 'cascade' }),
+        ownerId: text('owner_id').references(() => user.id, { onDelete: 'set null' }), // Assigned deal owner
         companyId: text('company_id').references(() => company.id, { onDelete: 'set null' }),
         contactId: text('contact_id').references(() => contact.id, { onDelete: 'set null' }),
         pipelineId: text('pipeline_id')
@@ -72,15 +77,16 @@ export const deal = pgTable(
             .notNull(),
     },
     (table) => [
-        index('deal_user_idx').on(table.userId),
-        index('deal_user_active_idx').on(table.userId, table.isActive),
+        index('deal_org_idx').on(table.organizationId),
+        index('deal_org_active_idx').on(table.organizationId, table.isActive),
         index('deal_company_idx').on(table.companyId),
         index('deal_contact_idx').on(table.contactId),
         index('deal_pipeline_idx').on(table.pipelineId),
         index('deal_stage_idx').on(table.stageId),
-        index('deal_user_status_idx').on(table.userId, table.status),
-        index('deal_user_pipeline_stage_idx').on(table.userId, table.pipelineId, table.stageId),
-        index('deal_expected_close_idx').on(table.userId, table.expectedCloseDate),
+        index('deal_org_status_idx').on(table.organizationId, table.status),
+        index('deal_org_pipeline_stage_idx').on(table.organizationId, table.pipelineId, table.stageId),
+        index('deal_expected_close_idx').on(table.organizationId, table.expectedCloseDate),
+        index('deal_owner_idx').on(table.ownerId),
     ],
 );
 

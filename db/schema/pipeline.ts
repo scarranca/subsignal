@@ -1,5 +1,6 @@
 import { pgTable, text, timestamp, boolean, integer, index, pgEnum } from 'drizzle-orm/pg-core';
 import { user } from './auth';
+import { organization } from './organization';
 
 export const defaultPipelineStages = [
     { name: 'Lead', color: '#6B7280', probability: 10 },
@@ -14,6 +15,9 @@ export const pipeline = pgTable(
     'pipeline',
     {
         id: text('id').primaryKey(),
+        organizationId: text('organization_id')
+            .notNull()
+            .references(() => organization.id, { onDelete: 'cascade' }),
         userId: text('user_id')
             .notNull()
             .references(() => user.id, { onDelete: 'cascade' }),
@@ -29,8 +33,8 @@ export const pipeline = pgTable(
             .notNull(),
     },
     (table) => [
-        index('pipeline_user_idx').on(table.userId),
-        index('pipeline_user_default_idx').on(table.userId, table.isDefault),
+        index('pipeline_org_idx').on(table.organizationId),
+        index('pipeline_org_default_idx').on(table.organizationId, table.isDefault),
     ],
 );
 

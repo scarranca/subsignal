@@ -41,6 +41,7 @@ import {
 import { apiClient } from '@/client';
 import { toast } from 'sonner';
 import { WebhooksView } from './WebhooksView';
+import { TeamView } from './TeamView';
 
 interface IntegrationsViewProps {
     onNavigate?: (view: string, params?: any) => void;
@@ -411,6 +412,9 @@ export function IntegrationsView({ onNavigate }: IntegrationsViewProps) {
 
             {/* Webhooks Section */}
             <WebhooksView />
+
+            {/* Team Management Section */}
+            <TeamView />
 
             {/* Create API Key Dialog */}
             <Dialog open={showApiKeyDialog} onOpenChange={(open) => {

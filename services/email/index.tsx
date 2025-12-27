@@ -353,6 +353,44 @@ export class EmailService {
 
         await this.outboundEmailService.sendHtmlEmail(data.email, subject, htmlContent);
     }
+
+    // ============== TEAM MANAGEMENT NOTIFICATIONS ==============
+
+    /**
+     * Send a team invitation email
+     */
+    async sendTeamInvitation(data: {
+        to: string;
+        organizationName: string;
+        inviterName: string;
+        role: string;
+        inviteToken: string;
+    }): Promise<void> {
+        const inviteUrl = `${process.env.BETTER_AUTH_URL}/invite/${data.inviteToken}`;
+        const subject = `You're invited to join ${data.organizationName}`;
+
+        const roleDisplay = data.role.charAt(0).toUpperCase() + data.role.slice(1);
+
+        const htmlContent = `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #1a1a1a;">You've Been Invited!</h2>
+                <p>${data.inviterName} has invited you to join <strong>${data.organizationName}</strong> on Subsignal.</p>
+                <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <p style="margin: 5px 0; color: #666;">Organization: <strong>${data.organizationName}</strong></p>
+                    <p style="margin: 5px 0; color: #666;">Your role: <strong>${roleDisplay}</strong></p>
+                </div>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="${inviteUrl}" style="background: #4f46e5; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 500;">
+                        Accept Invitation
+                    </a>
+                </div>
+                <p style="color: #666; font-size: 14px;">This invitation will expire in 7 days.</p>
+                <p style="color: #999; font-size: 12px;">If you didn't expect this invitation, you can safely ignore this email.</p>
+            </div>
+        `;
+
+        await this.outboundEmailService.sendHtmlEmail(data.to, subject, htmlContent);
+    }
 }
 
 export const emailService = EmailService.getInstance();

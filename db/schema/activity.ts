@@ -1,5 +1,6 @@
 import { pgTable, text, timestamp, index, pgEnum, jsonb } from 'drizzle-orm/pg-core';
 import { user } from './auth';
+import { organization } from './organization';
 
 export const activityEntityTypeEnum = pgEnum('activity_entity_type', [
     'company',
@@ -36,6 +37,9 @@ export const activity = pgTable(
     'activity',
     {
         id: text('id').primaryKey(),
+        organizationId: text('organization_id')
+            .notNull()
+            .references(() => organization.id, { onDelete: 'cascade' }),
         userId: text('user_id')
             .notNull()
             .references(() => user.id, { onDelete: 'cascade' }),
@@ -73,13 +77,13 @@ export const activity = pgTable(
             .notNull(),
     },
     (table) => [
-        index('activity_user_idx').on(table.userId),
+        index('activity_org_idx').on(table.organizationId),
         index('activity_entity_idx').on(table.entityType, table.entityId),
-        index('activity_user_occurred_idx').on(table.userId, table.occurredAt),
+        index('activity_org_occurred_idx').on(table.organizationId, table.occurredAt),
         index('activity_company_idx').on(table.relatedCompanyId),
         index('activity_contact_idx').on(table.relatedContactId),
         index('activity_deal_idx').on(table.relatedDealId),
-        index('activity_action_idx').on(table.userId, table.action),
+        index('activity_org_action_idx').on(table.organizationId, table.action),
     ],
 );
 

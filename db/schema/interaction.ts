@@ -1,5 +1,6 @@
 import { pgTable, text, timestamp, boolean, integer, index, pgEnum, jsonb } from 'drizzle-orm/pg-core';
 import { user } from './auth';
+import { organization } from './organization';
 import { company } from './company';
 import { contact } from './contact';
 import { deal } from './deal';
@@ -32,6 +33,9 @@ export const interaction = pgTable(
     'interaction',
     {
         id: text('id').primaryKey(),
+        organizationId: text('organization_id')
+            .notNull()
+            .references(() => organization.id, { onDelete: 'cascade' }),
         userId: text('user_id')
             .notNull()
             .references(() => user.id, { onDelete: 'cascade' }),
@@ -84,12 +88,12 @@ export const interaction = pgTable(
             .notNull(),
     },
     (table) => [
-        index('interaction_user_idx').on(table.userId),
+        index('interaction_org_idx').on(table.organizationId),
         index('interaction_company_idx').on(table.companyId),
         index('interaction_contact_idx').on(table.contactId),
         index('interaction_deal_idx').on(table.dealId),
-        index('interaction_user_type_idx').on(table.userId, table.type),
-        index('interaction_occurred_at_idx').on(table.userId, table.occurredAt),
+        index('interaction_org_type_idx').on(table.organizationId, table.type),
+        index('interaction_occurred_at_idx').on(table.organizationId, table.occurredAt),
         index('interaction_email_thread_idx').on(table.emailThreadId),
     ],
 );
