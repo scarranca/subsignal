@@ -1,39 +1,243 @@
+// Auth
 import { user, session, account, verification } from './auth';
+
+// Organization & Team
+import { organization, organizationMember, organizationInvite, userOrganization, orgRoleEnum, inviteStatusEnum } from './organization';
+
+// Core CRM entities
+import { contact, contactStatusEnum, contactSourceEnum } from './contact';
+import { company, companySizeEnum, companyTypeEnum } from './company';
+import { deal, dealPriorityEnum, dealStatusEnum } from './deal';
+import { pipeline, pipelineStage, defaultPipelineStages } from './pipeline';
+import { interaction, interactionTypeEnum, interactionDirectionEnum, interactionOutcomeEnum } from './interaction';
+import { task, taskPriorityEnum, taskStatusEnum, taskTypeEnum } from './task';
+import { activity, activityEntityTypeEnum, activityActionEnum } from './activity';
+import { tag, entityTag, tagEntityTypeEnum } from './tag';
+import { customField, customFieldValue, customFieldEntityTypeEnum, customFieldTypeEnum } from './customField';
+
+// Integrations
+import { integration, emailSync, calendarSync, integrationProviderEnum, syncStatusEnum } from './integration';
+import { apiKey, apiKeyLog, webhook, webhookDelivery, apiKeyScopeEnum } from './apiKey';
+
+// Settings & billing
 import { preference } from './preference';
-import { company } from './company';
+import { billing } from './billing';
+
+// Legacy: Website monitoring (optional premium feature)
 import { page } from './page';
 import { snapshot } from './snapshot';
 import { briefing } from './briefing';
-import { billing } from './billing';
+
+// Relations
 import {
+    organizationRelations,
+    organizationMemberRelations,
+    organizationInviteRelations,
+    userOrganizationRelations,
     userRelations,
     preferenceRelations,
     companyRelations,
+    contactRelations,
+    pipelineRelations,
+    pipelineStageRelations,
+    dealRelations,
+    interactionRelations,
+    taskRelations,
+    activityRelations,
+    tagRelations,
+    entityTagRelations,
+    customFieldRelations,
+    customFieldValueRelations,
     pageRelations,
     snapshotRelations,
     briefingRelations,
     billingRelations,
+    integrationRelations,
+    emailSyncRelations,
+    calendarSyncRelations,
+    apiKeyRelations,
+    apiKeyLogRelations,
+    webhookRelations,
+    webhookDeliveryRelations,
 } from './relations';
 
+// Schema export
 export const schema = {
-    user: user,
-    session: session,
-    account: account,
-    verification: verification,
-    preference: preference,
-    company: company,
-    page: page,
-    snapshot: snapshot,
-    briefing: briefing,
-    billing: billing,
+    // Auth
+    user,
+    session,
+    account,
+    verification,
+
+    // Organization & Team
+    organization,
+    organizationMember,
+    organizationInvite,
+    userOrganization,
+
+    // Core CRM entities
+    contact,
+    company,
+    deal,
+    pipeline,
+    pipelineStage,
+    interaction,
+    task,
+    activity,
+    tag,
+    entityTag,
+    customField,
+    customFieldValue,
+
+    // Settings & billing
+    preference,
+    billing,
+
+    // Integrations
+    integration,
+    emailSync,
+    calendarSync,
+    apiKey,
+    apiKeyLog,
+    webhook,
+    webhookDelivery,
+
+    // Legacy: Website monitoring
+    page,
+    snapshot,
+    briefing,
 };
 
+// Relations export
 export const relations = {
-    userRelations: userRelations,
-    preferenceRelations: preferenceRelations,
-    companyRelations: companyRelations,
-    pageRelations: pageRelations,
-    snapshotRelations: snapshotRelations,
-    briefingRelations: briefingRelations,
-    billingRelations: billingRelations,
+    organizationRelations,
+    organizationMemberRelations,
+    organizationInviteRelations,
+    userOrganizationRelations,
+    userRelations,
+    preferenceRelations,
+    companyRelations,
+    contactRelations,
+    pipelineRelations,
+    pipelineStageRelations,
+    dealRelations,
+    interactionRelations,
+    taskRelations,
+    activityRelations,
+    tagRelations,
+    entityTagRelations,
+    customFieldRelations,
+    customFieldValueRelations,
+    pageRelations,
+    snapshotRelations,
+    briefingRelations,
+    billingRelations,
+    integrationRelations,
+    emailSyncRelations,
+    calendarSyncRelations,
+    apiKeyRelations,
+    apiKeyLogRelations,
+    webhookRelations,
+    webhookDeliveryRelations,
 };
+
+// Re-export types and enums
+export {
+    // Auth
+    user,
+    session,
+    account,
+    verification,
+
+    // Organization & Team
+    organization,
+    organizationMember,
+    organizationInvite,
+    userOrganization,
+    orgRoleEnum,
+    inviteStatusEnum,
+
+    // Contact
+    contact,
+    contactStatusEnum,
+    contactSourceEnum,
+
+    // Company
+    company,
+    companySizeEnum,
+    companyTypeEnum,
+
+    // Deal
+    deal,
+    dealPriorityEnum,
+    dealStatusEnum,
+
+    // Pipeline
+    pipeline,
+    pipelineStage,
+    defaultPipelineStages,
+
+    // Interaction
+    interaction,
+    interactionTypeEnum,
+    interactionDirectionEnum,
+    interactionOutcomeEnum,
+
+    // Task
+    task,
+    taskPriorityEnum,
+    taskStatusEnum,
+    taskTypeEnum,
+
+    // Activity
+    activity,
+    activityEntityTypeEnum,
+    activityActionEnum,
+
+    // Tag
+    tag,
+    entityTag,
+    tagEntityTypeEnum,
+
+    // Custom fields
+    customField,
+    customFieldValue,
+    customFieldEntityTypeEnum,
+    customFieldTypeEnum,
+
+    // Settings & billing
+    preference,
+    billing,
+
+    // Integrations
+    integration,
+    emailSync,
+    calendarSync,
+    integrationProviderEnum,
+    syncStatusEnum,
+    apiKey,
+    apiKeyLog,
+    webhook,
+    webhookDelivery,
+    apiKeyScopeEnum,
+
+    // Legacy
+    page,
+    snapshot,
+    briefing,
+};
+
+// Type exports
+export type { ContactSelect, ContactInsert, ContactStatus, ContactSource } from './contact';
+export type { CompanySelect, CompanyInsert, CompanySize, CompanyType } from './company';
+export type { DealSelect, DealInsert, DealPriority, DealStatus } from './deal';
+export type { PipelineSelect, PipelineInsert, PipelineStageSelect, PipelineStageInsert } from './pipeline';
+export type { InteractionSelect, InteractionInsert, InteractionType, InteractionDirection, InteractionOutcome } from './interaction';
+export type { TaskSelect, TaskInsert, TaskPriority, TaskStatus, TaskType } from './task';
+export type { ActivitySelect, ActivityInsert, ActivityEntityType, ActivityAction } from './activity';
+export type { TagSelect, TagInsert, EntityTagSelect, EntityTagInsert, TagEntityType } from './tag';
+export type { CustomFieldSelect, CustomFieldInsert, CustomFieldValueSelect, CustomFieldValueInsert, CustomFieldEntityType, CustomFieldType } from './customField';
+export type { BillingSelect, BillingInsert, BillingPlan, BillingEntitlementStatus, BillingEntitlement, BillingProvider, AvailableBillingPlan } from './billing';
+export type { IntegrationSelect, IntegrationInsert, EmailSyncSelect, EmailSyncInsert, CalendarSyncSelect, CalendarSyncInsert, IntegrationProvider, SyncStatus } from './integration';
+export type { ApiKeySelect, ApiKeyInsert, ApiKeyLogSelect, ApiKeyLogInsert, WebhookSelect, WebhookInsert, WebhookDeliverySelect, WebhookDeliveryInsert, ApiKeyScope } from './apiKey';
+export type { OrganizationSelect, OrganizationInsert, OrganizationMemberSelect, OrganizationMemberInsert, OrganizationInviteSelect, OrganizationInviteInsert, UserOrganizationSelect, UserOrganizationInsert, OrgRole, InviteStatus } from './organization';

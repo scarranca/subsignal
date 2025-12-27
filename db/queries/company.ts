@@ -1,4 +1,4 @@
-import { and, eq, desc, asc, count, inArray } from 'drizzle-orm';
+import { and, eq, desc, asc, count, inArray, ilike, or, sql } from 'drizzle-orm';
 import { db } from '../index';
 import { company } from '../schema/company';
 import { page } from '../schema/page';
@@ -8,8 +8,263 @@ import type { Context } from 'hono';
 import type { ScreenshotOptions } from '@/types/screenshot';
 import type { ScreenshotOptionsInput } from '@/schema/api/page';
 import { DEFAULT_PAGE_OPTIONS } from '@/constants/screenshot';
+import { nanoid } from 'nanoid';
+import type { CompanySelect, CompanyInsert } from '@/db/schema';
+
+export type CompanyWithOwner = CompanySelect & {
+    owner?: { id: string; name: string; email: string } | null;
+};
 
 export const companyQueries = {
+    // ============== Organization-scoped Methods ==============
+
+    async createCompany(
+        organizationId: string,
+        userId: string,
+        data: Omit<CompanyInsert, 'id' | 'organizationId' | 'userId' | 'createdAt' | 'updatedAt'>
+    ): Promise<CompanySelect> {
+        const id = nanoid();
+        const now = new Date();
+
+        const [newCompany] = await db
+            .insert(company)
+            .values({
+                id,
+                organizationId,
+                userId,
+                ownerId: data.ownerId || userId, // Default owner is creator
+                ...data,
+                createdAt: now,
+                updatedAt: now,
+            })
+            .returning();
+
+        return newCompany;
+    },
+
+    async getCompanyByIdForOrg(companyId: string, organizationId: string): Promise<CompanyWithOwner> {
+        const result = await db.query.company.findFirst({
+            where: and(
+                eq(company.id, companyId),
+                eq(company.organizationId, organizationId),
+                eq(company.isActive, true)
+            ),
+            with: {
+                owner: {
+                    columns: { id: true, name: true, email: true },
+                },
+            },
+        });
+
+        if (!result) {
+            throw new Error('Company not found');
+        }
+
+        return result;
+    },
+
+    async getOrganizationCompanies(
+        organizationId: string,
+        options: PaginationOptions & {
+            type?: string;
+            industry?: string;
+            ownerId?: string;
+            search?: string;
+        } = {},
+        context?: Context
+    ): Promise<PaginatedResult<CompanyWithOwner>> {
+        const {
+            page: currentPage = 1,
+            pageSize = 20,
+            sortBy = 'createdAt',
+            sortOrder = 'desc',
+            type,
+            industry,
+            ownerId,
+            search,
+        } = options;
+        const offset = (currentPage - 1) * pageSize;
+
+        const conditions = [eq(company.organizationId, organizationId), eq(company.isActive, true)];
+
+        if (type) {
+            conditions.push(eq(company.type, type as any));
+        }
+        if (industry) {
+            conditions.push(eq(company.industry, industry));
+        }
+        if (ownerId) {
+            conditions.push(eq(company.ownerId, ownerId));
+        }
+        if (search) {
+            conditions.push(
+                or(
+                    ilike(company.name, `%${search}%`),
+                    ilike(company.url, `%${search}%`),
+                    ilike(company.description, `%${search}%`)
+                )!
+            );
+        }
+
+        const orderByColumn =
+            sortBy === 'name'
+                ? company.name
+                : sortBy === 'updatedAt'
+                    ? company.updatedAt
+                    : company.createdAt;
+        const orderDirection = sortOrder === 'asc' ? asc : desc;
+
+        const [companies, countResult] = await Promise.all([
+            withDbTiming(
+                () =>
+                    db.query.company.findMany({
+                        where: and(...conditions),
+                        with: {
+                            owner: {
+                                columns: { id: true, name: true, email: true },
+                            },
+                        },
+                        orderBy: [orderDirection(orderByColumn)],
+                        limit: pageSize,
+                        offset,
+                    }),
+                'org-companies-data',
+                context,
+                `Get organization companies (page ${currentPage}, size ${pageSize})`
+            ),
+            withDbTiming(
+                () =>
+                    db
+                        .select({ count: count() })
+                        .from(company)
+                        .where(and(...conditions)),
+                'org-companies-count',
+                context,
+                'Count total organization companies'
+            ),
+        ]);
+
+        const totalItems = countResult[0].count;
+        const totalPages = Math.ceil(totalItems / pageSize);
+
+        return {
+            data: companies,
+            pagination: {
+                page: currentPage,
+                pageSize,
+                totalItems,
+                totalPages,
+                hasNext: currentPage < totalPages,
+                hasPrevious: currentPage > 1,
+            },
+        };
+    },
+
+    async updateCompanyForOrg(
+        companyId: string,
+        organizationId: string,
+        data: Partial<Omit<CompanyInsert, 'id' | 'organizationId' | 'userId' | 'createdAt'>>
+    ): Promise<CompanySelect> {
+        const [updatedCompany] = await db
+            .update(company)
+            .set({
+                ...data,
+                updatedAt: new Date(),
+            })
+            .where(and(eq(company.id, companyId), eq(company.organizationId, organizationId)))
+            .returning();
+
+        if (!updatedCompany) {
+            throw new Error('Company not found');
+        }
+
+        return updatedCompany;
+    },
+
+    async deleteCompanyForOrg(companyId: string, organizationId: string): Promise<{ success: boolean }> {
+        const [deleted] = await db
+            .update(company)
+            .set({ isActive: false, updatedAt: new Date() })
+            .where(and(eq(company.id, companyId), eq(company.organizationId, organizationId)))
+            .returning();
+
+        if (!deleted) {
+            throw new Error('Company not found');
+        }
+
+        return { success: true };
+    },
+
+    async getCompanyCountForOrg(organizationId: string): Promise<number> {
+        const result = await db
+            .select({ count: sql<number>`count(*)::int` })
+            .from(company)
+            .where(and(eq(company.organizationId, organizationId), eq(company.isActive, true)));
+
+        return result[0]?.count || 0;
+    },
+
+    async assignOwner(companyId: string, organizationId: string, ownerId: string): Promise<CompanySelect> {
+        const [updated] = await db
+            .update(company)
+            .set({ ownerId, updatedAt: new Date() })
+            .where(and(eq(company.id, companyId), eq(company.organizationId, organizationId)))
+            .returning();
+
+        if (!updated) {
+            throw new Error('Company not found');
+        }
+
+        return updated;
+    },
+
+    async getCompaniesByOwner(organizationId: string, ownerId: string): Promise<CompanySelect[]> {
+        return db.query.company.findMany({
+            where: and(
+                eq(company.organizationId, organizationId),
+                eq(company.ownerId, ownerId),
+                eq(company.isActive, true)
+            ),
+        });
+    },
+
+    async getOrCreateCompanyForOrg(
+        organizationId: string,
+        userId: string,
+        url: string,
+        name: string
+    ): Promise<CompanySelect> {
+        // First, try to find an existing company with the same URL for this organization
+        const existingCompany = await db.query.company.findFirst({
+            where: and(
+                eq(company.organizationId, organizationId),
+                eq(company.url, url),
+                eq(company.isActive, true)
+            ),
+        });
+
+        if (existingCompany) {
+            return existingCompany;
+        }
+
+        // If no existing company found, create a new one
+        const [newCompany] = await db
+            .insert(company)
+            .values({
+                id: nanoid(),
+                organizationId,
+                userId,
+                ownerId: userId,
+                name,
+                url,
+            })
+            .returning();
+
+        return newCompany;
+    },
+
+    // ============== Legacy User-scoped Methods (for backwards compatibility) ==============
+
     /**
      * Get companies by URLs
      * @param userId - The user ID

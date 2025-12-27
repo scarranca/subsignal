@@ -14,6 +14,24 @@ import { rateLimit } from '../middleware/ratelimits';
 import { serverTiming } from '../middleware/timing';
 import snapshots from '../routes/snapshot';
 
+// CRM routes
+import contacts from '../routes/contact';
+import pipelines from '../routes/pipeline';
+import deals from '../routes/deal';
+import interactions from '../routes/interaction';
+import tasks from '../routes/task';
+import activities from '../routes/activity';
+import ai from '../routes/ai';
+
+// Integration routes
+import integrations from '../routes/integration';
+import apiKeys from '../routes/apiKey';
+import webhooks from '../routes/webhook';
+import publicApi from '../routes/public';
+
+// Organization/Team routes
+import organizations from '../routes/organization';
+
 /**
  * Force Node.js runtime to support googleapis and other Node.js modules
  */
@@ -41,7 +59,7 @@ app.use(
             'https://www.subsignal.app',
         ],
         allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-        allowHeaders: ['Content-Type', 'Authorization'],
+        allowHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
     }),
 );
 
@@ -75,7 +93,35 @@ v1.route('/payments', payments);
 v1.route('/briefings', briefings);
 v1.route('/snapshots', snapshots);
 
+/**
+ * CRM Routes
+ */
+v1.route('/contacts', contacts);
+v1.route('/pipelines', pipelines);
+v1.route('/deals', deals);
+v1.route('/interactions', interactions);
+v1.route('/tasks', tasks);
+v1.route('/activities', activities);
+v1.route('/ai', ai);
+
+/**
+ * Integration Routes
+ */
+v1.route('/integrations', integrations);
+v1.route('/api-keys', apiKeys);
+v1.route('/webhooks', webhooks);
+
+/**
+ * Organization/Team Routes
+ */
+v1.route('/organizations', organizations);
+
 app.route('/v1', v1);
+
+/**
+ * Public API (API Key authenticated)
+ */
+app.route('/public', publicApi);
 
 /**
  * Error handling
