@@ -23,6 +23,11 @@ import tasks from '../routes/task';
 import activities from '../routes/activity';
 import ai from '../routes/ai';
 
+// Integration routes
+import integrations from '../routes/integration';
+import apiKeys from '../routes/apiKey';
+import publicApi from '../routes/public';
+
 /**
  * Force Node.js runtime to support googleapis and other Node.js modules
  */
@@ -50,7 +55,7 @@ app.use(
             'https://www.subsignal.app',
         ],
         allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-        allowHeaders: ['Content-Type', 'Authorization'],
+        allowHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
     }),
 );
 
@@ -95,7 +100,18 @@ v1.route('/tasks', tasks);
 v1.route('/activities', activities);
 v1.route('/ai', ai);
 
+/**
+ * Integration Routes
+ */
+v1.route('/integrations', integrations);
+v1.route('/api-keys', apiKeys);
+
 app.route('/v1', v1);
+
+/**
+ * Public API (API Key authenticated)
+ */
+app.route('/public', publicApi);
 
 /**
  * Error handling

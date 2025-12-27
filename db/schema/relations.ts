@@ -14,6 +14,8 @@ import { task } from './task';
 import { activity } from './activity';
 import { tag, entityTag } from './tag';
 import { customField, customFieldValue } from './customField';
+import { integration, emailSync, calendarSync } from './integration';
+import { apiKey, apiKeyLog, webhook, webhookDelivery } from './apiKey';
 
 // User relations
 export const userRelations = relations(user, ({ one, many }) => ({
@@ -34,6 +36,13 @@ export const userRelations = relations(user, ({ one, many }) => ({
         fields: [user.id],
         references: [billing.userId],
     }),
+    // Integrations
+    integrations: many(integration),
+    emailSyncs: many(emailSync),
+    calendarSyncs: many(calendarSync),
+    // API access
+    apiKeys: many(apiKey),
+    webhooks: many(webhook),
 }));
 
 // Preference relations
@@ -235,6 +244,82 @@ export const briefingRelations = relations(briefing, ({ one }) => ({
 export const billingRelations = relations(billing, ({ one }) => ({
     user: one(user, {
         fields: [billing.userId],
+        references: [user.id],
+    }),
+}));
+
+// Integration relations
+export const integrationRelations = relations(integration, ({ one, many }) => ({
+    user: one(user, {
+        fields: [integration.userId],
+        references: [user.id],
+    }),
+    emailSyncs: many(emailSync),
+    calendarSyncs: many(calendarSync),
+}));
+
+// Email sync relations
+export const emailSyncRelations = relations(emailSync, ({ one }) => ({
+    integration: one(integration, {
+        fields: [emailSync.integrationId],
+        references: [integration.id],
+    }),
+    user: one(user, {
+        fields: [emailSync.userId],
+        references: [user.id],
+    }),
+}));
+
+// Calendar sync relations
+export const calendarSyncRelations = relations(calendarSync, ({ one }) => ({
+    integration: one(integration, {
+        fields: [calendarSync.integrationId],
+        references: [integration.id],
+    }),
+    user: one(user, {
+        fields: [calendarSync.userId],
+        references: [user.id],
+    }),
+}));
+
+// API Key relations
+export const apiKeyRelations = relations(apiKey, ({ one, many }) => ({
+    user: one(user, {
+        fields: [apiKey.userId],
+        references: [user.id],
+    }),
+    logs: many(apiKeyLog),
+}));
+
+// API Key log relations
+export const apiKeyLogRelations = relations(apiKeyLog, ({ one }) => ({
+    apiKey: one(apiKey, {
+        fields: [apiKeyLog.apiKeyId],
+        references: [apiKey.id],
+    }),
+    user: one(user, {
+        fields: [apiKeyLog.userId],
+        references: [user.id],
+    }),
+}));
+
+// Webhook relations
+export const webhookRelations = relations(webhook, ({ one, many }) => ({
+    user: one(user, {
+        fields: [webhook.userId],
+        references: [user.id],
+    }),
+    deliveries: many(webhookDelivery),
+}));
+
+// Webhook delivery relations
+export const webhookDeliveryRelations = relations(webhookDelivery, ({ one }) => ({
+    webhook: one(webhook, {
+        fields: [webhookDelivery.webhookId],
+        references: [webhook.id],
+    }),
+    user: one(user, {
+        fields: [webhookDelivery.userId],
         references: [user.id],
     }),
 }));

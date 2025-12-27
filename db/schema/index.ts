@@ -12,6 +12,10 @@ import { activity, activityEntityTypeEnum, activityActionEnum } from './activity
 import { tag, entityTag, tagEntityTypeEnum } from './tag';
 import { customField, customFieldValue, customFieldEntityTypeEnum, customFieldTypeEnum } from './customField';
 
+// Integrations
+import { integration, emailSync, calendarSync, integrationProviderEnum, syncStatusEnum } from './integration';
+import { apiKey, apiKeyLog, webhook, webhookDelivery, apiKeyScopeEnum } from './apiKey';
+
 // Settings & billing
 import { preference } from './preference';
 import { billing } from './billing';
@@ -41,6 +45,13 @@ import {
     snapshotRelations,
     briefingRelations,
     billingRelations,
+    integrationRelations,
+    emailSyncRelations,
+    calendarSyncRelations,
+    apiKeyRelations,
+    apiKeyLogRelations,
+    webhookRelations,
+    webhookDeliveryRelations,
 } from './relations';
 
 // Schema export
@@ -69,6 +80,15 @@ export const schema = {
     preference,
     billing,
 
+    // Integrations
+    integration,
+    emailSync,
+    calendarSync,
+    apiKey,
+    apiKeyLog,
+    webhook,
+    webhookDelivery,
+
     // Legacy: Website monitoring
     page,
     snapshot,
@@ -95,6 +115,13 @@ export const relations = {
     snapshotRelations,
     briefingRelations,
     billingRelations,
+    integrationRelations,
+    emailSyncRelations,
+    calendarSyncRelations,
+    apiKeyRelations,
+    apiKeyLogRelations,
+    webhookRelations,
+    webhookDeliveryRelations,
 };
 
 // Re-export types and enums
@@ -157,6 +184,18 @@ export {
     preference,
     billing,
 
+    // Integrations
+    integration,
+    emailSync,
+    calendarSync,
+    integrationProviderEnum,
+    syncStatusEnum,
+    apiKey,
+    apiKeyLog,
+    webhook,
+    webhookDelivery,
+    apiKeyScopeEnum,
+
     // Legacy
     page,
     snapshot,
@@ -174,3 +213,5 @@ export type { ActivitySelect, ActivityInsert, ActivityEntityType, ActivityAction
 export type { TagSelect, TagInsert, EntityTagSelect, EntityTagInsert, TagEntityType } from './tag';
 export type { CustomFieldSelect, CustomFieldInsert, CustomFieldValueSelect, CustomFieldValueInsert, CustomFieldEntityType, CustomFieldType } from './customField';
 export type { BillingSelect, BillingInsert, BillingPlan, BillingEntitlementStatus, BillingEntitlement, BillingProvider, AvailableBillingPlan } from './billing';
+export type { IntegrationSelect, IntegrationInsert, EmailSyncSelect, EmailSyncInsert, CalendarSyncSelect, CalendarSyncInsert, IntegrationProvider, SyncStatus } from './integration';
+export type { ApiKeySelect, ApiKeyInsert, ApiKeyLogSelect, ApiKeyLogInsert, WebhookSelect, WebhookInsert, WebhookDeliverySelect, WebhookDeliveryInsert, ApiKeyScope } from './apiKey';

@@ -8,13 +8,31 @@ import { userHooks, accountHooks, sessionHooks } from '@/hooks';
 export { authCookiePrefix };
 
 /**
- * Google OAuth scopes
+ * Google OAuth scopes for basic auth
  * https://developers.google.com/identity/protocols/oauth2/scopes
  */
 const googleScopes = [
     'openid', // required for Google OAuth
     'email', // read-only access to email
     'profile', // read-only access to profile
+];
+
+/**
+ * Extended Google OAuth scopes for CRM integrations
+ * These are requested when connecting Gmail/Calendar integration
+ */
+export const GOOGLE_CRM_SCOPES = [
+    // Basic
+    'openid',
+    'email',
+    'profile',
+    // Gmail
+    'https://www.googleapis.com/auth/gmail.readonly', // Read emails
+    'https://www.googleapis.com/auth/gmail.send', // Send emails
+    'https://www.googleapis.com/auth/gmail.modify', // Modify emails (labels, etc.)
+    // Calendar
+    'https://www.googleapis.com/auth/calendar.readonly', // Read calendar
+    'https://www.googleapis.com/auth/calendar.events', // Create/edit events
 ];
 
 /**

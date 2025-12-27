@@ -26,6 +26,12 @@ import {
     sendPlanReactivationTriggerEmail,
     sendPlanRenewalConfirmationEmail,
 } from './functions/billing';
+import {
+    syncGmailMessages,
+    syncCalendarEvents,
+    scheduledGmailSync,
+    scheduledCalendarSync,
+} from './functions/sync';
 
 // Export all functions
 export const functions = [
@@ -60,4 +66,10 @@ export const functions = [
     sendPlanDeactivationConfirmationEmail,
     sendPlanReactivationTriggerEmail,
     sendPlanExpiredEmail,
+
+    // Integration sync functions
+    syncGmailMessages,
+    syncCalendarEvents,
+    scheduledGmailSync,
+    scheduledCalendarSync,
 ];
